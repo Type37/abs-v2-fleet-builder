@@ -1,0 +1,51 @@
+import type { Faction } from "../../types.ts";
+import { w } from "../_helpers.ts";
+
+// AEGIS — Armageddon faction (rules p.164-165). HVP are called "Protocol Shards".
+export const AEGIS: Faction = {
+  id: "aegis",
+  name: "AEGIS",
+  era: "Armageddon",
+  initiative: "4D6",
+  cmdTokens: "5",
+  rule: {
+    name: "Protocol Shards",
+    text: "When a unit in this fleet is within 6\" of a friendly unit carrying a friendly HVP (aka a 'Protocol Shard'), it gains the benefit of that HVP, as if it were carrying it.",
+  },
+  ships: [
+    { id: "recon-drone", name: "Recon Drone", mass: 0, thrust: 8, silhouette: 2, shields: 0,
+      primary: [w("Light Blasters", 1, "D6", 0, 3)], auxiliary: [], utilityBays: false, cost: 4 },
+    { id: "defence-drone", name: "Defence Drone", mass: 0, thrust: 4, silhouette: 4, shields: 1,
+      primary: [w("Laser Cannon", 1, "D8", 0, 9)], auxiliary: [], utilityBays: false, cost: 6 },
+    { id: "repair-drone", name: "Repair Drone", mass: 1, thrust: 6, silhouette: 4, shields: 1,
+      primary: [w("Blasters", 2, "D6", 0, 6)], auxiliary: [], utilityBays: true, cost: 10 },
+    { id: "assault-drone", name: "Assault Drone", mass: 0, thrust: 6, silhouette: 3, shields: 1,
+      primary: [w("Torpedoes", 1, "D10", 6, 12)], auxiliary: [], utilityBays: false, cost: 12 },
+    { id: "warden", name: "Warden", mass: 2, thrust: 8, silhouette: 5, shields: 2,
+      primary: [], auxiliary: [w("Turbo Blasters", 4, "D6", 0, 6)], utilityBays: true, cost: 20 },
+    { id: "bastion", name: "Bastion", mass: 2, thrust: 5, silhouette: 6, shields: 3,
+      primary: [w("Heavy Railguns", 2, "D12", 9, 18)], auxiliary: [w("Turbo Blasters", 8, "D6", 0, 6)], utilityBays: false, cost: 45 },
+    { id: "sentinel", name: "Sentinel", mass: 3, thrust: 6, silhouette: 7, shields: 4,
+      primary: [w("Cyclone Array", 12, "D6", 12, 24)], auxiliary: [w("Defence Grid", 4, "D8", 0, 9)], utilityBays: false, cost: 55 },
+    { id: "citadel", name: "Citadel", mass: 3, thrust: 3, silhouette: 8, shields: 5,
+      primary: [w("Cruise Missiles", 4, "D10", 18, 36)], auxiliary: [w("Turbo Blasters", 8, "D6", 0, 6)], utilityBays: false, cost: 65 },
+    { id: "imperator", name: "Imperator", mass: 3, thrust: 5, silhouette: 9, shields: 6,
+      primary: [w("Planet Smasher", 2, "D12", 12, 24)], auxiliary: [w("Defence Grid", 4, "D8", 0, 9)], utilityBays: false, cost: 75 },
+  ],
+  hvp: [
+    { id: "anti-ordnance-protocols", name: "Anti-Ordnance Protocols",
+      rule: "Ships in this unit increase the maximum range of their Auxiliary Weapons by +3\"." },
+    { id: "power-management-protocols", name: "Power Management Protocols",
+      rule: "This unit reduces the cost of the 'Power to Weapons' and 'Power to Shields' commands to 0 CMD tokens." },
+    { id: "repair-protocols", name: "Repair Protocols",
+      rule: "Ships in this unit can scan a friendly unit to transfer one damage token to itself from the scanned unit." },
+    { id: "security-protocols", name: "Security Protocols",
+      rule: "Ships in this unit count their Mass for Blockading as 1 higher." },
+    { id: "snapfire-protocols", name: "Snapfire Protocols",
+      rule: "This unit may reverse the order of the activation steps during its activation, taking them in this order: Action Step, Passive Attacks Step, Movement Step." },
+    { id: "threat-assessment-protocols", name: "Threat Assessment Protocols",
+      rule: "When making Passive Attacks, ships in this unit may attack each active unit within range once (they can attack multiple times in a single Passive Attacks Step if there are multiple active units within range)." },
+    { id: "vulnerability-analysis-protocols", name: "Vulnerability Analysis Protocols",
+      rule: "Ships in this unit increase the damage values of their D10 and D12 weapon systems by 1." },
+  ],
+};

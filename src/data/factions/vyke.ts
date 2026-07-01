@@ -1,0 +1,51 @@
+import type { Faction } from "../../types.ts";
+import { w } from "../_helpers.ts";
+
+// The Vyke — Armageddon faction (rules p.162-163).
+export const VYKE: Faction = {
+  id: "vyke",
+  name: "The Vyke",
+  era: "Armageddon",
+  initiative: "2D6",
+  cmdTokens: "9",
+  rule: {
+    name: "Overwhelm",
+    text: "Enemy units cannot target Vyke units within 3\" of them.",
+  },
+  ships: [
+    { id: "viperfish", name: "Viperfish", mass: 0, thrust: 10, silhouette: 2, shields: 0,
+      primary: [w("Mandibles", 1, "D8", 0, 2)], auxiliary: [], utilityBays: false, cost: 2 },
+    { id: "needlefin", name: "Needlefin", mass: 0, thrust: 8, silhouette: 3, shields: 0,
+      primary: [w("Bioplasm Spitters", 2, "D6", 0, 3)], auxiliary: [], utilityBays: false, cost: 3 },
+    { id: "orbspinner", name: "Orbspinner", mass: 0, thrust: 6, silhouette: 3, shields: 0,
+      primary: [w("Silkorb Spitters", 1, "D8", 0, 12)], auxiliary: [], utilityBays: false, cost: 5 },
+    { id: "snarefang", name: "Snarefang", mass: 1, thrust: 12, silhouette: 3, shields: 0,
+      primary: [], auxiliary: [w("Snarefangs", 1, "D10", 0, 2)], utilityBays: true, cost: 6 },
+    { id: "needlespitter", name: "Needlespitter", mass: 1, thrust: 8, silhouette: 4, shields: 0,
+      primary: [w("Lancespear", 1, "D10", 6, 12)], auxiliary: [w("Mandibles", 1, "D8", 0, 2)], utilityBays: false, cost: 9 },
+    { id: "latchweaver", name: "Latchweaver", mass: 2, thrust: 10, silhouette: 5, shields: 1,
+      primary: [w("Silkorb Spitters", 2, "D8", 0, 12)], auxiliary: [w("Bioplasm Spitters", 2, "D6", 0, 3)], utilityBays: false, cost: 15 },
+    { id: "dragonfish", name: "Dragonfish", mass: 2, thrust: 8, silhouette: 7, shields: 3,
+      primary: [w("Lancespear", 1, "D10", 6, 12)], auxiliary: [w("Mandibles", 4, "D8", 0, 2)], utilityBays: false, cost: 25 },
+    { id: "king-crab", name: "King Crab", mass: 3, thrust: 6, silhouette: 8, shields: 4,
+      primary: [w("Crushing Maw", 2, "D12", 0, 2)], auxiliary: [w("Bioplasm Spitters", 6, "D6", 0, 3)], utilityBays: false, cost: 35 },
+    { id: "leviathan", name: "Leviathan", mass: 3, thrust: 7, silhouette: 9, shields: 5,
+      primary: [w("Bioplasm Ejectors", 4, "D10", 0, 12)], auxiliary: [w("Spore Sack Clouds", 6, "D6", 0, 6)], utilityBays: false, cost: 52 },
+  ],
+  hvp: [
+    { id: "brood-mother", name: "Brood-Mother",
+      rule: "Friendly ships within 12\" of this unit count their Shields value as 1 higher." },
+    { id: "clade-principle", name: "Clade-Principle",
+      rule: "When you Drag to Select, if this unit is selected as the Lead Unit, you can select units within 12\" to join the battlegroup." },
+    { id: "drone-warden", name: "Drone-Warden",
+      rule: "Ships in this fleet increase the range of their Mother's Wing effect to 3Ⓜ\"." },
+    { id: "molt-priest", name: "Molt-Priest",
+      rule: "This unit gains the command Ecdysis (1 CMD): Discard 1 damage token from every friendly unit within 15\". Once per Round." },
+    { id: "seer-empath", name: "Seer-Empath",
+      rule: "Ships in this unit's battlegroup increase the maximum range of all their weapon systems by 3\"." },
+    { id: "warrior-architect", name: "Warrior-Architect",
+      rule: "When ships in this unit's battlegroup use the Power to Weapons command, they subtract 2 from the result of each attack dice, instead of 1." },
+    { id: "war-singer", name: "War-Singer",
+      rule: "Ships in this unit's battlegroup increase the damage values of their D10 and D12 weapon systems by 2." },
+  ],
+};

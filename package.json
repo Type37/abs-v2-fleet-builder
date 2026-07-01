@@ -1,0 +1,23 @@
+{
+  "name": "abs-v2-builder",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Fleet/army builder for A Billion Suns 2E. Phase 1: Armageddon era, validation engine.",
+  "scripts": {
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "typecheck": "tsc --noEmit",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.2"
+  }
+}

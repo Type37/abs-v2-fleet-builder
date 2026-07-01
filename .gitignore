@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+
+# Not part of this app — leave out of the repo.
+Documents/
+competitive-advantages/
+.claude/
