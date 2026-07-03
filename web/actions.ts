@@ -1,8 +1,85 @@
-import type { Faction, GameMode, Mass, Weapon } from "../src/types.ts";
+import type { Faction, GameMode, Mass, PilotClass, Weapon } from "../src/types.ts";
 import { findFaction, isCustom } from "./catalog.ts";
-import { newId, persistCustomFactions, persistLists } from "./storage.ts";
-import { createList, nextUnitIdFor, routeHash, store, updateFleet, updateList } from "./state.ts";
+import { newId, persistCustomFactions, persistLists, persistOutfits } from "./storage.ts";
+import type { SavedOutfit } from "./storage.ts";
+import {
+  createList,
+  createOutfit,
+  nextOutfitShipId,
+  nextUnitIdFor,
+  routeHash,
+  store,
+  updateFleet,
+  updateList,
+  updateOutfit,
+} from "./state.ts";
+import type { LastRoll } from "./state.ts";
+import { RANDOM_BEHAVIOUR, GLITCH_BLIP, type RollRow } from "../src/data/junkspace-solo.ts";
 import { shareUrl } from "./share.ts";
+
+// --- Solo dice roller -------------------------------------------------------
+
+function d(sides: number): number {
+  return Math.floor(Math.random() * sides) + 1;
+}
+
+function rowFor(rows: RollRow[], v: number): RollRow | undefined {
+  return rows.find((r) => {
+    const [lo, hi] = r.roll.includes("-") ? r.roll.split("-").map(Number) : [Number(r.roll), Number(r.roll)];
+    return v >= lo && v <= hi;
+  });
+}
+
+function rollTable(table: string): LastRoll {
+  switch (table) {
+    case "behaviour": {
+      const v = d(6);
+      const row = rowFor(RANDOM_BEHAVIOUR, v);
+      return { table: "Hostile behaviour (D6)", value: v, result: row?.result ?? "" };
+    }
+    case "glitch": {
+      const v = d(6);
+      const row = rowFor(GLITCH_BLIP, v);
+      return { table: "Glitch a Blip (D6)", value: v, result: row?.result ?? "", detail: row?.detail };
+    }
+    case "initiative": {
+      const v = d(6);
+      const result = v === 1 ? "Two successes" : v === 2 || v === 3 ? "One success" : "No success";
+      return { table: "Initiative die (D6)", value: v, result, detail: "A 2 or 3 is one success; a 1 is two successes." };
+    }
+    case "scatter": {
+      const v = d(10);
+      return {
+        table: "Setup scatter (D10)",
+        value: v,
+        result: `Scatter ${v}"`,
+        detail: "Push the object that many inches in the direction of the D10's pointed top. Stop within 2\" of a table edge.",
+      };
+    }
+    case "perk": {
+      const v = d(12);
+      return {
+        table: "Perk (D12)",
+        value: v,
+        result: `Perk ${v}`,
+        detail: "Take that numbered perk from the pilot's class list. If you already have it, pick another from the list.",
+      };
+    }
+    default:
+      return { table, value: d(6), result: "" };
+  }
+}
+
+function currentOutfitId(): string | null {
+  const r = store.getState().route;
+  return r.view === "solo-outfit" ? r.outfitId : null;
+}
+
+function editOutfit(fn: (o: SavedOutfit) => SavedOutfit): void {
+  const id = currentOutfitId();
+  if (!id) return;
+  store.setState((s) => updateOutfit(s, id, fn));
+}
 
 // All interaction goes through delegated listeners on #app. Elements declare
 // intent with data-action attributes; this module mutates state and persists.
@@ -264,6 +341,113 @@ function handleClick(e: MouseEvent): void {
       break;
     }
 
+    // ---- Solo / Junkspace -------------------------------------------------
+    case "new-outfit": {
+      const outfit = createOutfit();
+      store.setState((s) => {
+        const outfits = [...s.outfits, outfit];
+        persistOutfits(outfits);
+        return { ...s, outfits, ui: { ...s.ui, soloTab: "outfit" } };
+      });
+      location.hash = routeHash({ view: "solo-outfit", outfitId: outfit.id });
+      break;
+    }
+    case "duplicate-outfit": {
+      const id = target.dataset["id"];
+      const src = state.outfits.find((o) => o.id === id);
+      if (!src) return;
+      const copy = structuredClone(src);
+      copy.id = newId("of");
+      copy.name = src.name ? `${src.name} (copy)` : "";
+      copy.createdAt = new Date().toISOString();
+      copy.updatedAt = copy.createdAt;
+      store.setState((s) => {
+        const outfits = [...s.outfits, copy];
+        persistOutfits(outfits);
+        return { ...s, outfits };
+      });
+      showToast("Outfit duplicated.");
+      break;
+    }
+    case "delete-outfit": {
+      const id = target.dataset["id"];
+      const doomed = state.outfits.find((o) => o.id === id);
+      if (!doomed) return;
+      if (!confirm(`Delete "${doomed.name || "Unnamed outfit"}"? This cannot be undone.`)) return;
+      store.setState((s) => {
+        const outfits = s.outfits.filter((o) => o.id !== id);
+        persistOutfits(outfits);
+        return { ...s, outfits };
+      });
+      if (currentOutfitId() === id) location.hash = "#/solo";
+      break;
+    }
+    case "solo-tab": {
+      const tab = target.dataset["tab"] as "outfit" | "play" | "campaign" | "reference";
+      store.setState((s) => ({ ...s, ui: { ...s.ui, soloTab: tab } }));
+      break;
+    }
+    case "outfit-add-ship": {
+      const shipId = target.dataset["ship"];
+      if (!shipId) return;
+      editOutfit((o) => {
+        if (o.ships.length >= 5) return o;
+        return {
+          ...o,
+          ships: [...o.ships, { id: nextOutfitShipId(o), shipClassId: shipId, pilotClass: "Gunner" as PilotClass }],
+        };
+      });
+      break;
+    }
+    case "outfit-remove-ship": {
+      const shipId = target.dataset["ship"];
+      editOutfit((o) => ({
+        ...o,
+        ships: o.ships.filter((s) => s.id !== shipId),
+        perks: o.perks.filter((p) => p.shipId !== shipId),
+      }));
+      break;
+    }
+    case "outfit-clear-emblem": {
+      editOutfit((o) => ({ ...o, emblemImage: undefined }));
+      break;
+    }
+    case "alert-adjust": {
+      const delta = Number(target.dataset["delta"]);
+      editOutfit((o) => ({ ...o, alertLevel: Math.max(1, Math.min(10, o.alertLevel + delta)) }));
+      break;
+    }
+    case "round-adjust": {
+      const delta = Number(target.dataset["delta"]);
+      editOutfit((o) => ({ ...o, round: Math.max(1, o.round + delta) }));
+      break;
+    }
+    case "solo-roll": {
+      const table = target.dataset["table"] ?? "behaviour";
+      const roll = rollTable(table);
+      store.setState((s) => ({ ...s, ui: { ...s.ui, lastRoll: roll } }));
+      break;
+    }
+    case "log-game": {
+      const raw = prompt("Credits earned this game (in thousands, ¢k):", "0");
+      if (raw === null) return;
+      const earnedK = Math.max(0, Math.round(Number(raw) || 0));
+      editOutfit((o) => ({
+        ...o,
+        debtK: Math.max(0, o.debtK - earnedK),
+        gamesPlayed: o.gamesPlayed + 1,
+        gameLog: [...o.gameLog, { game: o.gamesPlayed + 1, earnedK }],
+        alertLevel: 1,
+        round: 1,
+      }));
+      break;
+    }
+    case "remove-perk": {
+      const index = Number(target.dataset["index"]);
+      editOutfit((o) => ({ ...o, perks: o.perks.filter((_, i) => i !== index) }));
+      break;
+    }
+
     // ---- Foundry ----------------------------------------------------------
     case "new-faction": {
       const faction: Faction = {
@@ -459,6 +643,56 @@ function handleChange(e: Event): void {
           hvp: f.hvp.map((h, i) => (i === index ? { ...h, assignedUnitId: inputValue || undefined } : h)),
         })),
       );
+      break;
+    }
+
+    // ---- Solo / Junkspace -------------------------------------------------
+    case "outfit-name": {
+      editOutfit((o) => ({ ...o, name: inputValue }));
+      break;
+    }
+    case "outfit-ship-name": {
+      const shipId = target.dataset["ship"];
+      editOutfit((o) => ({
+        ...o,
+        ships: o.ships.map((s) => (s.id === shipId ? { ...s, shipName: inputValue } : s)),
+      }));
+      break;
+    }
+    case "outfit-pilot-name": {
+      const shipId = target.dataset["ship"];
+      editOutfit((o) => ({
+        ...o,
+        ships: o.ships.map((s) => (s.id === shipId ? { ...s, pilotName: inputValue } : s)),
+      }));
+      break;
+    }
+    case "outfit-pilot-class": {
+      const shipId = target.dataset["ship"];
+      editOutfit((o) => ({
+        ...o,
+        ships: o.ships.map((s) => (s.id === shipId ? { ...s, pilotClass: inputValue as PilotClass } : s)),
+      }));
+      break;
+    }
+    case "assign-perk": {
+      const shipId = target.dataset["ship"];
+      if (!shipId || !inputValue) return;
+      editOutfit((o) =>
+        o.perks.some((p) => p.shipId === shipId && p.perk === inputValue)
+          ? o
+          : { ...o, perks: [...o.perks, { shipId, perk: inputValue }] },
+      );
+      target.value = "";
+      break;
+    }
+    case "outfit-emblem-upload": {
+      const file = target.files?.[0];
+      if (!file) return;
+      readEmblemImage(file)
+        .then((dataUrl) => editOutfit((o) => ({ ...o, emblemImage: dataUrl })))
+        .catch(() => showToast("That image could not be used. Try a PNG or JPEG."));
+      target.value = "";
       break;
     }
 

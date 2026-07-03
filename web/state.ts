@@ -1,6 +1,15 @@
 import type { Faction, Fleet, GameMode } from "../src/types.ts";
-import { loadCustomFactions, loadLists, newId, persistCustomFactions, persistLists } from "./storage.ts";
-import type { SavedList } from "./storage.ts";
+import { STARTING_DEBT_K, ALERT_START } from "../src/data/junkspace.ts";
+import {
+  loadCustomFactions,
+  loadLists,
+  loadOutfits,
+  newId,
+  persistCustomFactions,
+  persistLists,
+  persistOutfits,
+} from "./storage.ts";
+import type { SavedList, SavedOutfit } from "./storage.ts";
 
 // A minimal store: state + subscribers, no framework. The whole app re-renders
 // on every change (main.ts).
@@ -38,6 +47,8 @@ export type Route =
   | { view: "builder"; listId: string }
   | { view: "print"; listId: string }
   | { view: "foundry"; factionId?: string }
+  | { view: "solo" }
+  | { view: "solo-outfit"; outfitId: string }
   | { view: "changelog" };
 
 export function parseRoute(hash: string): Route {
@@ -46,6 +57,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === "list" && parts[1]) return { view: "builder", listId: parts[1] };
   if (parts[0] === "print" && parts[1]) return { view: "print", listId: parts[1] };
   if (parts[0] === "foundry") return parts[1] ? { view: "foundry", factionId: parts[1] } : { view: "foundry" };
+  if (parts[0] === "solo") return parts[1] ? { view: "solo-outfit", outfitId: parts[1] } : { view: "solo" };
   if (parts[0] === "changelog") return { view: "changelog" };
   return { view: "home" };
 }
@@ -60,9 +72,22 @@ export function routeHash(route: Route): string {
       return `#/print/${route.listId}`;
     case "foundry":
       return route.factionId ? `#/foundry/${route.factionId}` : "#/foundry";
+    case "solo":
+      return "#/solo";
+    case "solo-outfit":
+      return `#/solo/${route.outfitId}`;
     case "changelog":
       return "#/changelog";
   }
+}
+
+export type SoloTab = "outfit" | "play" | "campaign" | "reference";
+
+export interface LastRoll {
+  table: string;
+  value: number;
+  result: string;
+  detail?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -73,6 +98,7 @@ export interface AppState {
   route: Route;
   lists: SavedList[];
   customFactions: Faction[];
+  outfits: SavedOutfit[];
   /** Monotonic counter for generating unit instance ids within the active list. */
   nextUnitSeq: number;
   /** Transient UI state, never persisted. */
@@ -83,6 +109,10 @@ export interface AppState {
     toast?: string;
     /** Faction picker: show every era, not just the list's era. */
     showAllFactions: boolean;
+    /** Active tab within a solo outfit workspace. */
+    soloTab?: SoloTab;
+    /** Result of the most recent solo dice roll, shown in the roller. */
+    lastRoll?: LastRoll;
   };
 }
 
@@ -91,8 +121,9 @@ export function initialState(): AppState {
     route: parseRoute(location.hash),
     lists: loadLists(),
     customFactions: loadCustomFactions(),
+    outfits: loadOutfits(),
     nextUnitSeq: 1,
-    ui: { showAllFactions: false },
+    ui: { showAllFactions: false, soloTab: "outfit" },
   };
 }
 
@@ -148,4 +179,49 @@ export function nextUnitIdFor(fleet: Fleet): string {
     if (m) max = Math.max(max, Number(m[1]));
   }
   return `u${max + 1}`;
+}
+
+// ---------------------------------------------------------------------------
+// Solo outfit helpers
+// ---------------------------------------------------------------------------
+
+export function activeOutfit(state: AppState): SavedOutfit | undefined {
+  const r = state.route;
+  if (r.view !== "solo-outfit") return undefined;
+  return state.outfits.find((o) => o.id === r.outfitId);
+}
+
+export function createOutfit(): SavedOutfit {
+  const now = new Date().toISOString();
+  return {
+    id: newId("of"),
+    name: "",
+    emblem: "chevrons",
+    ships: [],
+    debtK: STARTING_DEBT_K,
+    gamesPlayed: 0,
+    gameLog: [],
+    perks: [],
+    alertLevel: ALERT_START,
+    round: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+export function updateOutfit(state: AppState, outfitId: string, fn: (o: SavedOutfit) => SavedOutfit): AppState {
+  const outfits = state.outfits.map((o) =>
+    o.id === outfitId ? { ...fn(o), updatedAt: new Date().toISOString() } : o,
+  );
+  persistOutfits(outfits);
+  return { ...state, outfits };
+}
+
+export function nextOutfitShipId(o: SavedOutfit): string {
+  let max = 0;
+  for (const s of o.ships) {
+    const m = /^s(\d+)$/.exec(s.id);
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  return `s${max + 1}`;
 }

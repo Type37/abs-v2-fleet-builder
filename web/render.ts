@@ -9,6 +9,7 @@ import { CHANGELOG } from "./changelog.ts";
 import type { AppState } from "./state.ts";
 import { activeList } from "./state.ts";
 import type { SavedList } from "./storage.ts";
+import { soloListView, soloOutfitView } from "./solo.ts";
 
 // The whole app renders from state into #app. Interactive elements carry
 // data-action attributes; actions.ts owns all event handling.
@@ -71,6 +72,7 @@ function topbar(): string {
   <header class="topbar">
     <a class="wordmark" href="#/">${icon("logo", 26)}<span class="wordmark-text">A Billion Suns</span><span class="wordmark-sub">Shipyard</span></a>
     <nav class="topnav">
+      <a href="#/solo">${icon("flag", 16)} Solo / Junkspace</a>
       <a href="#/foundry">${icon("wrench", 16)} Faction Foundry</a>
       <a href="#/changelog">${icon("scroll", 16)} Changelog</a>
     </nav>
@@ -156,6 +158,11 @@ function homeView(state: AppState): string {
         <h3 class="era-title">Free Play</h3>
         <p class="panel-note">Everything unlocked: mix ships from any faction, set any credits limit, and build outside the rules checks entirely.</p>
         <button class="cta-btn" data-action="new-list" data-mode="armageddon" data-faction="__free__" data-freeplay="1">${icon("plus", 18)} Open a free build</button>
+      </section>
+      <section class="era-block freeplay-block">
+        <h3 class="era-title">Solo Play</h3>
+        <p class="panel-note">Junkspace: a full solo game in the ruins of Jura. Build an outfit, run the roller for the automated enemy, and clear your debt across a campaign.</p>
+        <a class="cta-btn" href="#/solo">${icon("flag", 18)} Enter Junkspace</a>
       </section>
     </section>
 
@@ -807,6 +814,10 @@ export function render(state: AppState): string {
       return printView(state);
     case "foundry":
       return state.route.factionId ? foundryEditView(state, state.route.factionId) : foundryListView(state);
+    case "solo":
+      return `${topbar()}${soloListView(state)}${toast(state)}${footer()}`;
+    case "solo-outfit":
+      return `${topbar()}${soloOutfitView(state)}${toast(state)}${footer()}`;
     case "changelog":
       return changelogView();
   }

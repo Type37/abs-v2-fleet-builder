@@ -1,10 +1,11 @@
-import type { Faction, Fleet, GameMode } from "../src/types.ts";
+import type { Faction, Fleet, GameMode, OutfitShip } from "../src/types.ts";
 
 // localStorage persistence. One key per concern, JSON payloads, versioned so a
 // future format change can migrate instead of clobber.
 
 const LISTS_KEY = "abs2.lists.v1";
 const FACTIONS_KEY = "abs2.customFactions.v1";
+const OUTFITS_KEY = "abs2.outfits.v1";
 
 export interface SavedList {
   id: string;
@@ -52,6 +53,43 @@ export function loadCustomFactions(): Faction[] {
 
 export function persistCustomFactions(factions: Faction[]): void {
   write(FACTIONS_KEY, factions);
+}
+
+// --- Junkspace solo outfits -------------------------------------------------
+
+export interface OutfitGameLog {
+  game: number;
+  earnedK: number;
+  note?: string;
+}
+
+/** A saved solo Junkspace outfit: the ships plus its debt campaign and the
+ *  live state of the game in progress. */
+export interface SavedOutfit {
+  id: string;
+  name: string;
+  emblem: string;
+  emblemImage?: string;
+  ships: OutfitShip[];
+  /** Remaining Debt in ¢k. Starts at 30; clearing it wins the campaign. */
+  debtK: number;
+  gamesPlayed: number;
+  gameLog: OutfitGameLog[];
+  /** Freeform perk tracking: which perk each pilot has taken. */
+  perks: { shipId: string; perk: string }[];
+  /** Live game tracking. */
+  alertLevel: number;
+  round: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function loadOutfits(): SavedOutfit[] {
+  return read<SavedOutfit[]>(OUTFITS_KEY, []);
+}
+
+export function persistOutfits(outfits: SavedOutfit[]): void {
+  write(OUTFITS_KEY, outfits);
 }
 
 export function newId(prefix: string): string {
