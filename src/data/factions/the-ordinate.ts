@@ -1,0 +1,52 @@
+import type { Faction } from "../../types.ts";
+import { w } from "../_helpers.ts";
+
+// The Ordinate: Age of Unity faction (rules p.154-155).
+export const THE_ORDINATE: Faction = {
+  id: "the-ordinate",
+  name: "The Ordinate",
+  era: "Age of Unity",
+  initiative: "5D6",
+  cmdTokens: "5",
+  rule: {
+    name: "Predictive Algorithms",
+    text: "(1 CMD): At the start of any player's battlegroup activation, spend 1 CMD token to reorder the activation steps to be Passive Attacks Step, Move Step, Action Step for this battlegroup's activation only.",
+  },
+  ships: [
+    { id: "light-fighter-wing", name: "Light Fighter Wing", mass: 0, thrust: 8, silhouette: 2, shields: 0,
+      primary: [], auxiliary: [w("Blasters", 2, "D6", 0, 6)], utilityBays: false, cost: 5 },
+    { id: "advanced-fighter-wing", name: "Advanced Fighter Wing", mass: 0, thrust: 4, silhouette: 4, shields: 1,
+      primary: [], auxiliary: [w("Turbo Blasters", 4, "D6", 0, 6)], utilityBays: false, cost: 10 },
+    { id: "epistle-class-gunship", name: "Epistle-Class Gunship", mass: 1, thrust: 6, silhouette: 4, shields: 1,
+      primary: [w("Blasters", 4, "D6", 0, 6)], auxiliary: [w("Turbo Blasters", 4, "D6", 0, 6)], utilityBays: false, cost: 15 },
+    { id: "missionary-vessel", name: "Missionary Vessel", mass: 1, thrust: 6, silhouette: 5, shields: 2,
+      primary: [], auxiliary: [w("Auto Blasters", 3, "D6", 0, 6)], utilityBays: true, primaryUtility: true, cost: 10 },
+    { id: "clerestory-class-monitor", name: "Clerestory-Class Monitor", mass: 2, thrust: 3, silhouette: 6, shields: 3,
+      primary: [w("Particle Beams", 1, "D10", 12, 24)], auxiliary: [], utilityBays: false, cost: 20 },
+    { id: "penance-class-escort-frigate", name: "Penance-Class Escort Frigate", mass: 2, thrust: 6, silhouette: 7, shields: 4,
+      primary: [w("Ion Torpedoes", 2, "D8", 6, 12)], auxiliary: [w("Ion Torpedoes", 2, "D8", 6, 12)], utilityBays: false, cost: 30 },
+    { id: "transept-class-strike-cruiser", name: "Transept-Class Strike Cruiser", mass: 3, thrust: 4, silhouette: 8, shields: 5,
+      primary: [w("Laser Cannon", 2, "D8", 0, 9)], auxiliary: [w("Laser Cannon", 2, "D8", 0, 9)], utilityBays: false, cost: 35 },
+    { id: "oracle-class-gun-carrier", name: "Oracle-Class Gun Carrier", mass: 3, thrust: 4, silhouette: 8, shields: 5,
+      primary: [], auxiliary: [w("Light Railguns", 4, "D8", 9, 18)], utilityBays: true, primaryUtility: true, cost: 40 },
+    { id: "hierophant-cathedral-ship", name: "Hierophant Cathedral Ship", mass: 3, thrust: 4, silhouette: 10, shields: 6,
+      primary: [w("Micro Missiles", 10, "D6", 12, 24)], auxiliary: [w("Defence Grid", 4, "D8", 0, 9)], utilityBays: false, cost: 80 },
+  ],
+  hvp: [
+    { id: "arch-prelate-of-the-registrar", name: "Arch-Prelate of the Registrar",
+      rule: "This fleet gains access to the following command: Algorithmic Liturgy (1 CMD): During an opponent's Passive Attacks Step, spend 1 CMD token to select one of your units and count its Auxiliary arc of fire as 360° for this activation only." },
+    { id: "liturgical-archivist", name: "Liturgical Archivist",
+      rule: "Units in this fleet that have an Activated token gain +1 to their Shields value until the end of the round. (Activated tokens are placed at the end of a unit's activation.)" },
+    { id: "master-of-the-choir-computational", name: "Master of the Choir Computational",
+      rule: "In the Jump Phase, each unit in this fleet may take the Jump Hop action once." },
+    { id: "quantum-seraph", name: "Quantum Seraph",
+      rule: "Ships in this battlegroup may make an additional pivot at the end of their Move Step (which still counts towards their Inertial Strain calculation)." },
+    { id: "relic-keeper", name: "Relic Keeper",
+      rule: "When a friendly unit attacks an enemy unit with an Activated token, they subtract 1 from the result of each of their attack dice, to a minimum of 1. This increases the chance of critical hits but doesn't prevent duds. (Activated tokens are placed at the end of a unit's activation.)" },
+    { id: "technocratic-cabal", name: "Technocratic Cabal",
+      rule: "The units in the first battlegroup in this fleet to activate each round double their Thrust value (for this activation only)." },
+    { id: "the-blessed-lambda", name: "The Blessed Lambda",
+      rule: "If a ship in this fleet attacks from outside of its target's Auxiliary arc of fire, it can re-roll any misses once." },
+  ],
+  playstyle: "Devilish at close range with unparalleled passive fire, but weaker at range. Predictive Algorithms means that wherever your enemy moves, you are already there to counter them. Plan ahead: several HVPs reward activating units early, but don't get left outmanoeuvred and unable to bring your passive fire to bear.",
+};

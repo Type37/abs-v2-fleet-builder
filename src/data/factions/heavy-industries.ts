@@ -1,0 +1,52 @@
+import type { Faction } from "../../types.ts";
+import { w } from "../_helpers.ts";
+
+// Heavy Industries, Hypergrowth faction (rules p.142-143).
+export const HEAVY_INDUSTRIES: Faction = {
+  id: "heavy-industries",
+  name: "Heavy Industries",
+  era: "Hypergrowth",
+  initiative: "3D6",
+  cmdTokens: "7",
+  rule: {
+    name: "Tough",
+    text: "Units in this fleet ignore the first Ⓜ damage received in each Salvo, to a minimum of 1 damage.",
+  },
+  ships: [
+    { id: "pegasus-recon-wing", name: "Pegasus Recon Wing", mass: 0, thrust: 8, silhouette: 2, shields: 0,
+      primary: [w("Light Blasters", 1, "D6", 0, 3)], auxiliary: [], utilityBays: false, cost: 2 },
+    { id: "ursus-bomber-wing", name: "Ursus Bomber Wing", mass: 0, thrust: 4, silhouette: 3, shields: 0,
+      primary: [w("Torpedoes", 1, "D10", 6, 12)], auxiliary: [], utilityBays: false, cost: 7 },
+    { id: "taurus-assault-wing", name: "Taurus Assault Wing", mass: 0, thrust: 4, silhouette: 4, shields: 1,
+      primary: [], auxiliary: [w("Auto Blasters", 3, "D6", 0, 6)], utilityBays: false, cost: 7 },
+    { id: "lyra-light-mining-tug", name: "Lyra Light Mining Tug", mass: 1, thrust: 5, silhouette: 4, shields: 1,
+      primary: [w("Thermal Drill", 1, "D8", 0, 2)], auxiliary: [], utilityBays: true, auxiliaryUtility: true, cost: 10 },
+    { id: "foundry-class-hauler", name: "Foundry-Class Hauler", mass: 2, thrust: 5, silhouette: 6, shields: 3,
+      primary: [w("Thermal Drill", 2, "D8", 0, 2)], auxiliary: [], utilityBays: true, auxiliaryUtility: true, cost: 15 },
+    { id: "poseidon-class-monitor", name: "Poseidon-class Monitor", mass: 2, thrust: 3, silhouette: 6, shields: 3,
+      primary: [w("Cruise Missiles", 2, "D10", 18, 36)], auxiliary: [], utilityBays: true, auxiliaryUtility: true, cost: 25 },
+    { id: "vulcan-class-monitor", name: "Vulcan-class Monitor", mass: 2, thrust: 3, silhouette: 6, shields: 3,
+      primary: [w("Cyclone Array", 10, "D6", 12, 24)], auxiliary: [], utilityBays: true, auxiliaryUtility: true, cost: 25 },
+    { id: "orion-heavy-freighter", name: "Orion Heavy Freighter", mass: 3, thrust: 6, silhouette: 8, shields: 5,
+      primary: [w("Light Railguns", 4, "D8", 9, 18)], auxiliary: [], utilityBays: true, auxiliaryUtility: true, cost: 40 },
+    { id: "andromeda-battlecruiser", name: "Andromeda Battlecruiser", mass: 3, thrust: 4, silhouette: 10, shields: 6,
+      primary: [], auxiliary: [w("Defence Grid", 8, "D8", 0, 9)], utilityBays: true, primaryUtility: true, cost: 75 },
+  ],
+  hvp: [
+    { id: "chief-extraction-strategist", name: "Chief Extraction Strategist",
+      rule: "When attacking a stationary object, or a target with an Easy Target token, critical hits cause two additional hits, rather than one." },
+    { id: "demolition-chief", name: "Demolition Chief",
+      rule: "After damaging an enemy unit or object with this unit, give the target an Easy Target token." },
+    { id: "hyperspatial-gravimetrics-research-fellow", name: "Hyperspatial Gravimetrics Research Fellow",
+      rule: "This unit may target Jump Points with attacks. Once per salvo, if you score at least one hit, discard all the hits and move the target Jump Point 3\" in any direction." },
+    { id: "mining-guild-representative", name: "Mining Guild Representative",
+      rule: "Ships in this unit blockade objectives within 9\"." },
+    { id: "operational-risk-assessor", name: "Operational Risk Assessor",
+      rule: "Units within 12\" of this HVP gain the following: When this unit uses Power to Shields, rolls of a 1 cancel two hits, not one." },
+    { id: "penal-crew-overseer", name: "Penal Crew Overseer",
+      rule: "Friendly units within 12\" of this unit gain the following rule: Once per activation, this unit can suffer 1 damage to use a Command for 0 CMD tokens." },
+    { id: "survey-director", name: "Survey Director",
+      rule: "Ships in this fleet increase the range of their Scan action to 9\"." },
+  ],
+  playstyle: "Tough but slow units that are very hard to shift once seated on objectives. Create defence in depth with longer-ranged ships and lighter squadrons, and in Hypergrowth games the Utility Bays on almost every ship provide tremendous flexibility.",
+};

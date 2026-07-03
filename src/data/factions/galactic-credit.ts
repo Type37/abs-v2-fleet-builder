@@ -1,0 +1,52 @@
+import type { Faction } from "../../types.ts";
+import { w } from "../_helpers.ts";
+
+// Galactic Credit - Hypergrowth faction (rules p.148-150).
+export const GALACTIC_CREDIT: Faction = {
+  id: "galactic-credit",
+  name: "Galactic Credit",
+  era: "Hypergrowth",
+  initiative: "3D6",
+  cmdTokens: "5",
+  rule: {
+    name: "Credit Control",
+    text: "You keep your unspent CMD tokens from one round to the next; they are not discarded in the End Phase.",
+  },
+  ships: [
+    { id: "recon-wing", name: "Recon Wing", mass: 0, thrust: 8, silhouette: 2, shields: 0,
+      primary: [w("Light Blasters", 1, "D6", 0, 3)], auxiliary: [], utilityBays: false, cost: 4 },
+    { id: "fighter-wing", name: "Fighter Wing", mass: 0, thrust: 6, silhouette: 3, shields: 0,
+      primary: [], auxiliary: [w("Auto Blasters", 3, "D6", 0, 6)], utilityBays: false, cost: 8 },
+    { id: "bomber-wing", name: "Bomber Wing", mass: 0, thrust: 4, silhouette: 3, shields: 0,
+      primary: [w("Torpedoes", 1, "D10", 6, 12)], auxiliary: [], utilityBays: false, cost: 8 },
+    { id: "litra-assessment-boat", name: "Litra Assessment Boat", mass: 1, thrust: 5, silhouette: 4, shields: 1,
+      primary: [w("Light Blasters", 2, "D6", 0, 3)], auxiliary: [], utilityBays: true, auxiliaryUtility: true, cost: 10 },
+    { id: "argenteus-gunship", name: "Argenteus Gunship", mass: 1, thrust: 6, silhouette: 4, shields: 1,
+      primary: [w("Blasters", 2, "D6", 0, 6)], auxiliary: [w("Blasters", 2, "D6", 0, 6)], utilityBays: false, cost: 15 },
+    { id: "florin-corvette", name: "Florin Corvette", mass: 2, thrust: 8, silhouette: 5, shields: 2,
+      primary: [w("Turbo Blasters", 4, "D6", 0, 6)], auxiliary: [w("Blasters", 2, "D6", 0, 6)], utilityBays: false, cost: 20 },
+    { id: "denarius-frigate", name: "Denarius Frigate", mass: 2, thrust: 5, silhouette: 6, shields: 3,
+      primary: [w("Light Railguns", 2, "D8", 9, 18)], auxiliary: [w("Turbo Blasters", 4, "D6", 0, 6)], utilityBays: false, cost: 25 },
+    { id: "aureus-carrier", name: "Aureus Carrier", mass: 3, thrust: 6, silhouette: 8, shields: 5,
+      primary: [w("Plasma Torpedoes", 3, "D10", 6, 12)], auxiliary: [w("Defence Grid", 2, "D8", 0, 9)], utilityBays: false, cost: 50 },
+    { id: "sovereign-battleship", name: "Sovereign Battleship", mass: 3, thrust: 6, silhouette: 9, shields: 6,
+      primary: [w("Macro Beam", 2, "D12", 12, 24)], auxiliary: [w("Defence Grid", 4, "D8", 0, 9)], utilityBays: false, cost: 65 },
+  ],
+  hvp: [
+    { id: "chief-auditor", name: "Chief Auditor",
+      rule: "This unit gains access to the following command: Surprise Audit (2 CMD): Select one enemy unit within 6\" of this unit: it cannot Blockade or Escort until the start of the next round." },
+    { id: "customs-officer", name: "Customs Officer",
+      rule: "When an enemy unit Jumps In, Jumps Out, or Jump Hops within 12\" of this unit, its controller must give you one of their CMD tokens." },
+    { id: "executive-coach", name: "Executive Coach",
+      rule: "In this unit's Action Step, it may pick up any/all Free-floating HVP tokens within 9\" as a free action." },
+    { id: "financial-negotiator", name: "Financial Negotiator",
+      rule: "Once per activation, this unit may select an HVP carried by an enemy unit within 6\". You and its owner secretly spend 0, 1 or 2 CMD tokens. Reveal the spent tokens. If you spent a different number of CMD tokens, teleport the selected HVP to this unit." },
+    { id: "hedge-fund-manager", name: "Hedge Fund Manager",
+      rule: "This fleet gains access to the following command: Financial Review (1 CMD): Once per round, during the Jump Phase, if you have fewer VPs or Credits than all your opponents, you may Jump In a new unit costing ¢30bn or less, as if it were in Reserve. (If you are playing Hypergrowth, this unit must come from your shipyard, but does not cost any credits to requisition)." },
+    { id: "senior-lawyer", name: "Senior Lawyer",
+      rule: "This unit gains access to the following command: Obscure Legal Clause (1 CMD): Target an unactivated enemy unit within 6\" of this unit. That enemy unit makes an Open Fire action, under your control." },
+    { id: "junior-lawyer", name: "Junior Lawyer",
+      rule: "This unit gains access to the following command: Nuisance Claim (2 CMD): At the end of this battlegroup's Movement Step, spend 2 CMD tokens to skip the Passive Attacks Step entirely for this battlegroup's activation." },
+  ],
+  playstyle: "Some of the nastiest personnel in the galaxy. Your ships are expensive, but you have multiple other ways to put your thumb on the scales, outside of just outgunning the enemy.",
+};

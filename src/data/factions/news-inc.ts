@@ -1,0 +1,52 @@
+import type { Faction } from "../../types.ts";
+import { w } from "../_helpers.ts";
+
+// News Inc., Hypergrowth faction (rules p.146-147).
+export const NEWS_INC: Faction = {
+  id: "news-inc",
+  name: "News Inc.",
+  era: "Hypergrowth",
+  initiative: "4D6",
+  cmdTokens: "3",
+  rule: {
+    name: "Live News Feeds",
+    text: "Whenever a CMD token is spent on an enemy unit within 3\" of one of your units, roll a D6 and gain a CMD token on a roll of a 1 or 2.",
+  },
+  ships: [
+    { id: "recon-wing", name: "Recon Wing", mass: 0, thrust: 8, silhouette: 2, shields: 0,
+      primary: [w("Light Blasters", 1, "D6", 0, 3)], auxiliary: [], utilityBays: false, cost: 2 },
+    { id: "fighter-wing", name: "Fighter Wing", mass: 0, thrust: 6, silhouette: 3, shields: 0,
+      primary: [], auxiliary: [w("Blasters", 2, "D6", 0, 6)], utilityBays: false, cost: 5 },
+    { id: "bomber-wing", name: "Bomber Wing", mass: 0, thrust: 4, silhouette: 3, shields: 0,
+      primary: [w("Torpedoes", 1, "D10", 6, 12)], auxiliary: [], utilityBays: false, cost: 7 },
+    { id: "rapid-response-ship", name: "Rapid Response Ship", mass: 1, thrust: 10, silhouette: 3, shields: 0,
+      primary: [w("Blasters", 2, "D6", 0, 6)], auxiliary: [w("Blasters", 2, "D6", 0, 6)], utilityBays: false, cost: 8 },
+    { id: "technical-freighter", name: "Technical Freighter", mass: 1, thrust: 6, silhouette: 4, shields: 1,
+      primary: [w("Ion Torpedoes", 2, "D8", 6, 12)], auxiliary: [], utilityBays: true, auxiliaryUtility: true, cost: 9 },
+    { id: "production-frigate", name: "Production Frigate", mass: 2, thrust: 8, silhouette: 5, shields: 2,
+      primary: [w("Turbo Blasters", 4, "D6", 0, 6)], auxiliary: [], utilityBays: true, auxiliaryUtility: true, cost: 15 },
+    { id: "interview-barge", name: "Interview Barge", mass: 2, thrust: 5, silhouette: 6, shields: 3,
+      primary: [w("Particle Beams", 2, "D10", 12, 24)], auxiliary: [w("Light Blasters", 2, "D6", 0, 3)], utilityBays: false, cost: 27 },
+    { id: "pleasure-cruiser", name: "Pleasure Cruiser", mass: 3, thrust: 8, silhouette: 7, shields: 4,
+      primary: [w("Heavy Railguns", 2, "D12", 9, 18)], auxiliary: [w("Defence Grid", 4, "D8", 0, 9)], utilityBays: false, cost: 50 },
+    { id: "grand-arenaship", name: "Grand Arenaship", mass: 3, thrust: 5, silhouette: 8, shields: 5,
+      primary: [w("Cruise Missiles", 4, "D10", 18, 36)], auxiliary: [w("Defence Grid", 4, "D8", 0, 9)], utilityBays: false, cost: 60 },
+  ],
+  hvp: [
+    { id: "beloved-entertainer", name: "Beloved Entertainer",
+      rule: "If this unit has yet to activate this round, enemies count this unit as Silhouette 2 when rolling to hit." },
+    { id: "celebrity-host", name: "Celebrity Host",
+      rule: "While this unit is carrying an enemy HVP, you can benefit from the power of that enemy HVP, as if it were friendly." },
+    { id: "documentary-crew", name: "Documentary Crew",
+      rule: "Enemy units within 12\" double the CMD token costs of their commands." },
+    { id: "hard-hitting-interviewer", name: "Hard-Hitting Interviewer",
+      rule: "At the start of the round, your opponent(s) must give you one of their CMD tokens for each of their HVPs you are carrying." },
+    { id: "miss-universe", name: "Miss Universe",
+      rule: "Enemy units within 6\" of this unit cannot declare the Scan action unless they spend 1 CMD. (Only 1 CMD is needed for the whole unit.)" },
+    { id: "viral-creator", name: "Viral Creator",
+      rule: "Scan an unactivated enemy unit: if their controller does not activate this unit when they next have an opportunity to activate units, it gains Easy Target and you gain a CMD token." },
+    { id: "war-correspondent", name: "War Correspondent",
+      rule: "Whenever the final ship of a unit (friend or foe) is destroyed within 6\" of this unit, you gain 1 CMD token." },
+  ],
+  playstyle: "Reasonably fast units with strong ranged weapons, but the real power is messing with the CMD token economy and your enemy's own capabilities. Stay close and let their futile defences fuel your next assault.",
+};
