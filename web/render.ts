@@ -69,7 +69,7 @@ export function listTotals(list: SavedList, customs: Faction[]): { total: number
 function topbar(): string {
   return `
   <header class="topbar">
-    <a class="wordmark" href="#/">${icon("logo", 26)}<span class="wordmark-text">A Billion Suns</span><span class="wordmark-sub">Fleet Register</span></a>
+    <a class="wordmark" href="#/">${icon("logo", 26)}<span class="wordmark-text">A Billion Suns</span><span class="wordmark-sub">Shipyard</span></a>
     <nav class="topnav">
       <a href="#/foundry">${icon("wrench", 16)} Faction Foundry</a>
       <a href="#/changelog">${icon("scroll", 16)} Changelog</a>
@@ -141,7 +141,7 @@ function homeView(state: AppState): string {
   ${topbar()}
   <section class="hero">
     <div class="hero-inner">
-      <p class="hero-eyebrow">Fleet Register</p>
+      <p class="hero-eyebrow">The Shipyard</p>
       <h1 class="hero-title">A Billion<br />Suns</h1>
       <p class="hero-sub">Build, save, print, and share fleets for the Second Edition. Every faction, every era, every rule written out in full.</p>
     </div>
