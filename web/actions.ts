@@ -45,6 +45,46 @@ function downloadJson(filename: string, data: unknown): void {
   URL.revokeObjectURL(url);
 }
 
+// Read an uploaded image, downscale it to a square emblem, and return a compact
+// data URL. Keeping it small (240px, JPEG) means it survives localStorage and
+// does not bloat the app. Rejects non-images.
+function readEmblemImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      reject(new Error("not an image"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode failed"));
+      img.onload = () => {
+        const size = 240;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("no canvas"));
+          return;
+        }
+        // Cover-fit: crop to a centred square, then scale.
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+        const hasAlpha = file.type === "image/png";
+        resolve(canvas.toDataURL(hasAlpha ? "image/png" : "image/jpeg", 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Click handling
 // ---------------------------------------------------------------------------
@@ -120,6 +160,18 @@ function handleClick(e: MouseEvent): void {
       const emblemId = target.dataset["emblem"];
       if (!id || !emblemId) return;
       store.setState((s) => updateList(s, id, (l) => ({ ...l, emblem: emblemId })));
+      break;
+    }
+    case "clear-emblem-image": {
+      const id = currentListId();
+      if (!id) return;
+      store.setState((s) => updateList(s, id, (l) => ({ ...l, emblemImage: undefined })));
+      break;
+    }
+    case "cf-clear-emblem": {
+      const fid = currentFoundryId();
+      if (!fid) return;
+      editFaction(fid, (f) => ({ ...f, emblemImage: undefined }));
       break;
     }
     case "set-limit": {
@@ -523,6 +575,28 @@ function handleChange(e: Event): void {
           i === hi ? (field === "name" ? { ...h, name: inputValue } : { ...h, rule: inputValue }) : h,
         ),
       }));
+      break;
+    }
+    case "emblem-upload": {
+      const id = currentListId();
+      const file = target.files?.[0];
+      if (!id || !file) return;
+      readEmblemImage(file)
+        .then((dataUrl) => {
+          store.setState((s) => updateList(s, id, (l) => ({ ...l, emblemImage: dataUrl })));
+        })
+        .catch(() => showToast("That image could not be used. Try a PNG or JPEG."));
+      target.value = "";
+      break;
+    }
+    case "cf-emblem-upload": {
+      const fid = currentFoundryId();
+      const file = target.files?.[0];
+      if (!fid || !file) return;
+      readEmblemImage(file)
+        .then((dataUrl) => editFaction(fid, (f) => ({ ...f, emblemImage: dataUrl })))
+        .catch(() => showToast("That image could not be used. Try a PNG or JPEG."));
+      target.value = "";
       break;
     }
     case "import-faction": {

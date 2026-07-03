@@ -11,8 +11,10 @@ export interface SavedList {
   mode: GameMode;
   /** Free Play: no faction lock, no rules enforcement, any limit. */
   freePlay: boolean;
-  /** Emblem id from the emblem set. */
+  /** Emblem id from the built-in emblem set. */
   emblem: string;
+  /** Optional uploaded image (downscaled data URL). Takes priority over emblem. */
+  emblemImage?: string;
   fleet: Fleet;
   createdAt: string;
   updatedAt: string;

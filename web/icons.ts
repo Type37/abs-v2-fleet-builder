@@ -59,4 +59,12 @@ export function massGlyph(mass: number, size = 20): string {
   return icon(`mass${Math.max(0, Math.min(3, mass))}`, size, "mass-glyph");
 }
 
+/** Render an uploaded image if present, otherwise fall back to a built-in emblem glyph. */
+export function emblemMark(emblemId: string, image: string | undefined, size = 28, cls = ""): string {
+  if (image) {
+    return `<img class="emblem emblem-img ${cls}" width="${size}" height="${size}" src="${image}" alt="" />`;
+  }
+  return emblem(emblemId, size, cls);
+}
+
 export const EMBLEM_IDS = Object.keys(EMBLEMS);

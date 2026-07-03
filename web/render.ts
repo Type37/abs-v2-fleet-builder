@@ -4,7 +4,7 @@ import { validateFleet, type ValidationIssue } from "../src/validation.ts";
 import { GENERIC_HVP } from "../src/data/index.ts";
 import { allFactions, factionsByEra, findFaction, makeCatalog, ERA_ORDER } from "./catalog.ts";
 import { auxSlotText, credits, escapeHtml, formatDate, primarySlotText } from "./format.ts";
-import { emblem, EMBLEM_IDS, icon, massGlyph } from "./icons.ts";
+import { emblem, emblemMark, EMBLEM_IDS, icon, massGlyph } from "./icons.ts";
 import { CHANGELOG } from "./changelog.ts";
 import type { AppState } from "./state.ts";
 import { activeList } from "./state.ts";
@@ -122,7 +122,7 @@ function homeView(state: AppState): string {
       const { total } = listTotals(l, state.customFactions);
       return `
       <tr>
-        <td class="cell-emblem"><span class="emblem-chip">${emblem(l.emblem, 22)}</span></td>
+        <td class="cell-emblem"><span class="emblem-chip">${emblemMark(l.emblem, l.emblemImage, 22)}</span></td>
         <td class="cell-name"><a href="#/list/${l.id}">${escapeHtml(l.fleet.name || "Unnamed fleet")}</a></td>
         <td>${escapeHtml(faction?.name ?? "Mixed forces")}</td>
         <td>${l.freePlay ? "Free Play" : MODE_LABEL[l.mode]}</td>
@@ -356,10 +356,16 @@ function builderView(state: AppState): string {
     })
     .join("");
 
-  const emblemPicker = EMBLEM_IDS.map(
-    (id) =>
-      `<button class="emblem-choice ${list.emblem === id ? "selected" : ""}" data-action="set-emblem" data-emblem="${id}" title="Use this emblem">${emblem(id, 24)}</button>`,
-  ).join("");
+  const emblemPicker = `
+    ${EMBLEM_IDS.map(
+      (id) =>
+        `<button class="emblem-choice ${list.emblem === id && !list.emblemImage ? "selected" : ""}" data-action="set-emblem" data-emblem="${id}" title="Use this emblem">${emblem(id, 24)}</button>`,
+    ).join("")}
+    <label class="emblem-choice emblem-upload ${list.emblemImage ? "selected" : ""}" title="Upload your own image">
+      ${list.emblemImage ? emblemMark(list.emblem, list.emblemImage, 24) : icon("upload", 18)}
+      <input type="file" accept="image/*" data-action="emblem-upload" hidden />
+    </label>
+    ${list.emblemImage ? `<button class="emblem-choice" data-action="clear-emblem-image" title="Remove the uploaded image">${icon("close", 16)}</button>` : ""}`;
 
   const limitControl = list.freePlay
     ? `<label class="inline-field">Credits limit
@@ -424,7 +430,7 @@ function builderView(state: AppState): string {
     <aside class="roster">
       <div class="roster-sheet">
         <header class="roster-head">
-          <span class="roster-emblem">${emblem(list.emblem, 34)}</span>
+          <span class="roster-emblem">${emblemMark(list.emblem, list.emblemImage, 34)}</span>
           <div>
             <h2 class="roster-title">${escapeHtml(list.fleet.name || "Unnamed fleet")}</h2>
             <p class="roster-subtitle">${escapeHtml(faction?.name ?? "Mixed forces")}${era ? `, ${era}` : ""}</p>
@@ -541,7 +547,7 @@ function printView(state: AppState): string {
 
     <article class="sheet">
       <header class="sheet-head">
-        <div class="sheet-emblem">${emblem(list.emblem, 44)}</div>
+        <div class="sheet-emblem">${emblemMark(list.emblem, list.emblemImage, 44)}</div>
         <div class="sheet-title-block">
           <h1 class="sheet-title">${escapeHtml(list.fleet.name || "Unnamed fleet")}</h1>
           <p class="sheet-subtitle">${subtitle}</p>
@@ -713,6 +719,14 @@ function foundryEditView(state: AppState, factionId: string): string {
       <div class="cf-grid">
         <label class="field-block wide">Faction name
           <input type="text" value="${escapeHtml(f.name)}" data-action="cf-field" data-field="name" /></label>
+        <div class="field-block">Emblem image
+          <div class="cf-emblem-row">
+            <span class="cf-emblem-preview">${emblemMark("delta", f.emblemImage, 40)}</span>
+            <label class="bar-btn file-btn">${icon("upload", 14)} Upload
+              <input type="file" accept="image/*" data-action="cf-emblem-upload" hidden /></label>
+            ${f.emblemImage ? `<button class="ghost-btn danger" data-action="cf-clear-emblem" title="Remove">${icon("close", 14)}</button>` : ""}
+          </div>
+        </div>
         <label class="field-block">Era
           <select data-action="cf-field" data-field="era">
             ${ERA_ORDER.map((e) => `<option ${f.era === e ? "selected" : ""}>${e}</option>`).join("")}

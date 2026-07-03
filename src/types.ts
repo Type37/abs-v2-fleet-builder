@@ -109,6 +109,8 @@ export interface Faction {
   rule: FactionRule;
   ships: ShipClass[];
   hvp: Hvp[];
+  /** Optional uploaded emblem image (downscaled data URL). Custom factions only. */
+  emblemImage?: string;
   /** When true, every unit in a fleet must declare a species (Alliance only). */
   requiresSpecies?: boolean;
   /**
