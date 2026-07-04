@@ -177,10 +177,21 @@ function topbar(): string {
 }
 
 function footer(): string {
+  // The house footer format shared with the Dropfleet builder: game, publisher,
+  // builder credit, feedback, source. Separators are the red square from the
+  // stat rows, not interpuncts; the project's single interpunct lives in print.
+  const sep = '<span class="foot-sep"></span>';
   return `
   <footer class="app-footer">
-    <p>An unofficial player aid for A Billion Suns, Second Edition, a game by Mike Hutchinson, published by Osprey Games.</p>
-    <p><a href="#/changelog">Version ${CHANGELOG[0]?.version}</a></p>
+    <p class="foot-line">
+      <span class="foot-title">A Billion Suns, Second Edition</span>${sep}
+      <span>by <a href="https://planetsmashergames.com/a-billion-suns/" target="_blank" rel="noopener">Mike Hutchinson</a>, published by Osprey Games</span>${sep}
+      <span>Shipyard by <a href="https://linktr.ee/warlore" target="_blank" rel="noopener">WarLore</a></span>${sep}
+      <a href="mailto:warlore1@outlook.com">Send Feedback</a>${sep}
+      <a href="https://github.com/Type37/abs-v2-fleet-builder" target="_blank" rel="noopener">Source on GitHub</a>${sep}
+      <a href="#/changelog">Version ${CHANGELOG[0]?.version}</a>
+    </p>
+    <p class="foot-fine">An unofficial player aid, not affiliated with the publisher.</p>
   </footer>`;
 }
 

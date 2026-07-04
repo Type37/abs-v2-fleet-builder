@@ -170,10 +170,13 @@ button { font-family: inherit; }
 .app-footer {
   max-width: var(--shell); margin: 80px auto 0; padding: 24px clamp(16px, 4vw, 40px) 48px;
   border-top: 2px solid var(--hair);
-  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
   font-size: 12px; color: var(--ink-3);
 }
 .app-footer a { font-weight: 700; }
+.foot-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.foot-title { font-family: var(--display); font-weight: 800; color: var(--ink); }
+.foot-sep { display: inline-block; width: 4px; height: 4px; background: var(--red); }
+.foot-fine { margin-top: 8px; font-size: 11px; }
 
 /* --------------------------------------------------------------------- toast */
 
