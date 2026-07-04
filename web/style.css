@@ -167,16 +167,23 @@ button { font-family: inherit; }
 }
 .topnav a:hover { background: #fff; color: var(--blue); text-decoration: none; }
 
-.app-footer {
-  max-width: var(--shell); margin: 80px auto 0; padding: 24px clamp(16px, 4vw, 40px) 48px;
-  border-top: 2px solid var(--hair);
-  font-size: 12px; color: var(--ink-3);
+.colophon { background: var(--ink); color: #fff; margin-top: 80px; border-top: 3px solid var(--red); }
+.colophon-inner {
+  max-width: var(--shell); margin: 0 auto; padding: clamp(28px, 4vw, 44px) clamp(16px, 4vw, 40px);
+  display: grid; grid-template-columns: auto 1fr; gap: 24px 56px; align-items: start;
 }
-.app-footer a { font-weight: 700; }
-.foot-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
-.foot-title { font-family: var(--display); font-weight: 800; color: var(--ink); }
-.foot-sep { display: inline-block; width: 4px; height: 4px; background: var(--red); }
-.foot-fine { margin-top: 8px; font-size: 11px; }
+.colophon-word { display: block; font-family: var(--display); font-weight: 900; font-size: 32px; text-transform: uppercase; letter-spacing: -0.02em; line-height: 0.9; }
+.colophon-tag { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #7b8698; margin-top: 6px; }
+.colophon-cols { display: flex; flex-wrap: wrap; gap: 20px 44px; margin: 0; align-self: center; }
+.colophon-cols .col dt { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #7b8698; margin-bottom: 5px; }
+.colophon-cols .col dd { margin: 0; font-size: 13px; line-height: 1.5; color: #cbd1da; max-width: 34ch; }
+.colophon a { color: #fff; font-weight: 700; }
+.colophon a:hover { color: var(--red); text-decoration: none; }
+.colophon-fine { grid-column: 1 / -1; margin: 6px 0 0; padding-top: 14px; border-top: 1px solid #23293a; font-size: 11px; color: #6b7480; }
+@media (max-width: 760px) {
+  .colophon-inner { grid-template-columns: 1fr; gap: 20px; }
+  .colophon { margin-top: 48px; }
+}
 
 /* --------------------------------------------------------------------- toast */
 
