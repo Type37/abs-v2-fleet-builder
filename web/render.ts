@@ -617,7 +617,11 @@ function printView(state: AppState): string {
   const { total } = listTotals(list, customs);
   const era = MODE_ERA[list.mode];
 
-  const unitBlocks = list.fleet.units
+  // One continuous unit-row table, in the manner of Army Forge / Infinity Army
+  // roster printouts: every unit is one scannable row with stat columns, and
+  // per-unit annotations (species, ship names, carried personnel) fold into a
+  // quiet second line under the unit name rather than their own boxes.
+  const unitRows = list.fleet.units
     .map((u, i) => {
       const r = resolveShip(u.shipClassId, faction, customs);
       if (!r) return "";
@@ -630,32 +634,48 @@ function printView(state: AppState): string {
           const def = hvpById(h.hvpId, faction);
           return h.customName ? `${h.customName}, ${def?.name ?? h.hvpId}` : (def?.name ?? h.hvpId);
         });
+      const notes = [
+        u.species ? `Species: ${u.species}` : "",
+        shipNames.length ? `Ships: ${shipNames.join(", ")}` : "",
+        carried.length ? `Carrying: ${carried.join("; ")}` : "",
+      ]
+        .filter(Boolean)
+        .join(". ");
       return `
-      <section class="print-unit">
-        <header class="print-unit-head">
-          <span class="print-unit-index">${i + 1}</span>
-          <h3 class="print-unit-name">${escapeHtml(title)}</h3>
-          <span class="print-unit-cost">${u.count} ${u.count === 1 ? "ship" : "ships"} at ${credits(ship.cost)} each: ${credits(ship.cost * u.count)}</span>
-        </header>
-        <table class="print-stats">
-          <thead><tr><th>Ship class</th><th>Mass</th><th>Thrust</th><th>Silhouette</th><th>Shields</th></tr></thead>
-          <tbody><tr>
-            <td>${escapeHtml(ship.name)}${list.freePlay ? ` (${escapeHtml(r.owner.name)})` : ""}</td>
-            <td>${ship.mass}</td><td>${ship.thrust}"</td><td>${ship.silhouette}</td><td>${ship.shields}</td>
-          </tr></tbody>
-        </table>
-        <table class="print-weapons">
-          <tbody>
-            <tr><th>Primary weapons</th><td>${primarySlotText(ship)}</td></tr>
-            <tr><th>Auxiliary weapons</th><td>${auxSlotText(ship)}</td></tr>
-          </tbody>
-        </table>
-        ${u.species ? `<p class="print-note">Species: ${u.species}</p>` : ""}
-        ${shipNames.length ? `<p class="print-note">Ships: ${shipNames.map(escapeHtml).join(", ")}</p>` : ""}
-        ${carried.length ? `<p class="print-note">Carrying: ${carried.map(escapeHtml).join("; ")}</p>` : ""}
-      </section>`;
+      <tr>
+        <td class="pr-n">${i + 1}</td>
+        <td class="pr-unit">
+          <span class="pr-unit-name">${escapeHtml(title)}</span>
+          <span class="pr-unit-class">${escapeHtml(ship.name)}${list.freePlay ? `, ${escapeHtml(r.owner.name)}` : ""}</span>
+          ${notes ? `<span class="pr-unit-notes">${escapeHtml(notes)}</span>` : ""}
+        </td>
+        <td class="pr-num">${u.count}</td>
+        <td class="pr-num">${ship.mass}</td>
+        <td class="pr-num">${ship.thrust}"</td>
+        <td class="pr-num">${ship.silhouette}</td>
+        <td class="pr-num">${ship.shields}</td>
+        <td class="pr-weap">${primarySlotText(ship)}</td>
+        <td class="pr-weap">${auxSlotText(ship)}</td>
+        <td class="pr-num pr-cost">${credits(ship.cost * u.count)}</td>
+      </tr>`;
     })
     .join("");
+
+  const unitBlocks = unitRows
+    ? `
+    <table class="print-roster">
+      <thead>
+        <tr>
+          <th></th><th>Unit</th><th>Ships</th><th>Mass</th><th>Thrust</th><th>Sil.</th><th>Shields</th>
+          <th>Primary weapons</th><th>Auxiliary weapons</th><th>Cost</th>
+        </tr>
+      </thead>
+      <tbody>${unitRows}</tbody>
+      <tfoot>
+        <tr><td colspan="9" class="pr-total-label">Total</td><td class="pr-num pr-cost">${credits(total)}</td></tr>
+      </tfoot>
+    </table>`
+    : "";
 
   const hvpBlocks = list.fleet.hvp
     .map((sel) => {
@@ -711,15 +731,23 @@ function printView(state: AppState): string {
       ${hvpBlocks || '<p class="print-note">None selected.</p>'}
 
       <h2 class="sheet-section">Score record</h2>
-      <p class="print-note">Games of Armageddon, the Age of Unity, and Hypergrowth all end after the fourth round.</p>
+      ${(() => {
+        const maxRound = list.mode === "management-training" ? 3 : 4;
+        const isCredits = list.mode === "hypergrowth" || list.mode === "management-training";
+        const roundNames = ["Round One", "Round Two", "Round Three", "Round Four"].slice(0, maxRound);
+        const cells = roundNames.map(() => "<td></td>").join("");
+        return `
+      <p class="print-note">${list.mode === "management-training" ? "Management Training ends at the end of the third round; most credits wins." : "The game ends at the end of the fourth round."}</p>
       <table class="print-score">
-        <thead><tr><th></th><th>Round One</th><th>Round Two</th><th>Round Three</th><th>Round Four</th><th>Final</th></tr></thead>
+        <thead><tr><th></th>${roundNames.map((n) => `<th>${n}</th>`).join("")}<th>Final</th></tr></thead>
         <tbody>
-          <tr><th>Victory points or revenue</th><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><th>Command tokens spent</th><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><th>Notes</th><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>${isCredits ? "Credits earned" : "Victory points"}</th>${cells}<td></td></tr>
+          <tr><th>Opponent</th>${cells}<td></td></tr>
+          <tr><th>Command tokens spent</th>${cells}<td></td></tr>
+          <tr><th>Notes</th>${cells}<td></td></tr>
         </tbody>
-      </table>
+      </table>`;
+      })()}
 
       <footer class="sheet-foot">
         <p>A Billion Suns, Second Edition, is a game by Mike Hutchinson — this roster is an unofficial player aid and is not affiliated with the publisher.</p>
