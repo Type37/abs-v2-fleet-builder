@@ -181,7 +181,7 @@ button { font-family: inherit; }
   height: 64px;
   background: var(--color-brand);
   color: #fff;
-  border-bottom: 3px solid var(--red);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 .wordmark { display: inline-flex; align-items: center; gap: 12px; color: #fff; }
 .wordmark:hover { text-decoration: none; }
@@ -250,7 +250,7 @@ button { font-family: inherit; }
 /* The official Second Edition wordmark, recreated: spaced SECOND EDITION, a
    delta-A with solid BILLION and outlined SUNS, spaced INTERSTELLAR FLEET
    BATTLES, on the brand teal. Compact so the index sits near the fold. */
-.nameplate { background: var(--color-brand); color: #fff; border-bottom: 3px solid var(--red); }
+.nameplate { background: var(--color-brand); color: #fff; border-bottom: 5px solid var(--color-brand-deep); }
 .nameplate-inner { max-width: var(--shell); margin: 0 auto; padding: clamp(22px, 3vw, 36px) clamp(16px, 4vw, 40px) clamp(20px, 3vw, 28px); }
 .wordmark-hero { display: flex; flex-direction: column; }
 .wm-edition { font-family: var(--display); font-weight: 600; font-size: clamp(11px, 2.4vw, 17px); letter-spacing: 0.52em; text-transform: uppercase; color: #a9d6d0; padding-left: 0.52em; margin-bottom: 6px; }
