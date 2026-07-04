@@ -206,42 +206,32 @@ function toast(state: AppState): string {
 // ---------------------------------------------------------------------------
 
 function homeView(state: AppState): string {
-  const fleetCount = state.lists.length;
-  const outfitCount = state.outfits.length;
-  const version = CHANGELOG[0]?.version ?? "";
-  const row = (n: string, href: string, name: string, desc: string, meta = "") => `
+  const row = (n: string, href: string, name: string, desc: string) => `
     <a class="index-row" href="${href}">
       <span class="index-num">${n}</span>
       <span class="index-main">
         <span class="index-name">${name}</span>
         <span class="index-desc">${desc}</span>
       </span>
-      <span class="index-meta">${meta}</span>
       <span class="index-go">${icon("chevronRight", 20)}</span>
     </a>`;
   return `
   ${topbar()}
-  <header class="masthead">
-    <div class="masthead-inner">
-      <div class="mast-title">
-        <p class="mast-kicker">A Billion Suns / Second Edition</p>
-        <h1 class="mast-word">Shipyard</h1>
-      </div>
-      <dl class="mast-meta">
-        <div><dt>Fleets</dt><dd>${fleetCount}</dd></div>
-        <div><dt>Outfits</dt><dd>${outfitCount}</dd></div>
-        <div><dt>Version</dt><dd>${escapeHtml(version)}</dd></div>
-      </dl>
+  <header class="nameplate">
+    <div class="nameplate-inner">
+      <p class="np-kicker">A Billion Suns / Second Edition</p>
+      <h1 class="np-title">Shipyard</h1>
+      <p class="np-standfirst">A fleet builder and ship reference for the tabletop game by Mike Hutchinson.</p>
     </div>
   </header>
   <main class="index-wrap">
     <nav class="index">
-      ${row("01", "#/fleets", "Fleets", "Army lists for any faction and era.", fleetCount ? `${fleetCount} saved` : "")}
-      ${row("02", "#/solo", "Solo Play", "Junkspace: outfit, roller, debt campaign.", outfitCount ? `${outfitCount} ${outfitCount === 1 ? "outfit" : "outfits"}` : "")}
-      ${row("03", "#/ships", "Ship Compendium", "Every ship in the game, filterable.")}
-      ${row("04", "#/fleets", "How to Play", "The two Basic Training tutorials.")}
-      ${row("05", "#/foundry", "Custom Rules", "Your own factions, ships, and personnel.")}
-      ${row("06", "#/changelog", "Changelog", "Version history.")}
+      ${row("01", "#/fleets", "Fleets", "Build, save, print, and share army lists for any faction and era.")}
+      ${row("02", "#/solo", "Solo Play", "Junkspace: build an outfit, roll for the enemy, run the debt campaign.")}
+      ${row("03", "#/ships", "Ship Compendium", "Every ship in the game in one filterable, sortable table.")}
+      ${row("04", "#/fleets", "How to Play", "The two Basic Training tutorials, with the Training Fleet pre-loaded.")}
+      ${row("05", "#/foundry", "Custom Rules", "Design your own factions, ship classes, and personnel.")}
+      ${row("06", "#/changelog", "Changelog", "What has changed, version by version.")}
     </nav>
   </main>
   ${toast(state)}

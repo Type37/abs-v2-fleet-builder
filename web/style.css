@@ -209,36 +209,28 @@ button { font-family: inherit; }
 
 /* ------------------------------------------------------------- hub + fleets */
 
-/* Swiss masthead: asymmetric, flush-left title with a right-aligned data
-   column. Not a centered landing-page billboard. */
-.masthead { background: var(--blue); color: #fff; border-bottom: 3px solid var(--red); }
-.masthead-inner {
-  max-width: var(--shell); margin: 0 auto;
-  padding: clamp(34px, 6vw, 68px) clamp(16px, 4vw, 40px) clamp(26px, 4vw, 44px);
-  display: grid; grid-template-columns: 1fr auto; gap: 24px 32px; align-items: end;
-}
-.mast-kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #bcd0f2; margin-bottom: 10px; }
-.mast-word { font-family: var(--display); font-weight: 900; font-size: clamp(56px, 13vw, 150px); line-height: 0.82; letter-spacing: -0.035em; text-transform: uppercase; }
-.mast-meta { display: flex; gap: 22px; margin: 0; }
-.mast-meta div { text-align: right; }
-.mast-meta dt { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #8fb0e0; }
-.mast-meta dd { margin: 3px 0 0; font-family: var(--display); font-weight: 800; font-size: 24px; font-variant-numeric: tabular-nums; }
+/* Restrained nameplate: a title band, not an oversized hero, and no vanity
+   metrics. Flush-left, factual standfirst, red keyline. */
+.nameplate { background: var(--blue); color: #fff; border-bottom: 3px solid var(--red); }
+.nameplate-inner { max-width: var(--shell); margin: 0 auto; padding: clamp(26px, 4vw, 44px) clamp(16px, 4vw, 40px) clamp(22px, 3vw, 30px); }
+.np-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #bcd0f2; margin-bottom: 8px; }
+.np-title { font-family: var(--display); font-weight: 900; font-size: clamp(40px, 7vw, 72px); line-height: 0.9; letter-spacing: -0.03em; text-transform: uppercase; }
+.np-standfirst { margin-top: 12px; max-width: 56ch; font-size: 15px; color: #d0def4; }
 
 /* Home index: a numbered, rule-divided table of contents, flush-left. No cards,
    no hover-lift. Hover advances the row and reddens its accents. */
 .index-wrap { max-width: var(--shell); margin: 0 auto; padding: clamp(20px, 3vw, 34px) clamp(16px, 4vw, 40px) 0; }
 .index { border-top: 2px solid var(--ink); }
 .index-row {
-  display: grid; grid-template-columns: 54px 1fr auto 28px; align-items: center; gap: 18px;
-  padding: 22px 4px; border-bottom: 1px solid var(--hair); color: var(--ink);
+  display: grid; grid-template-columns: 54px 1fr 28px; align-items: center; gap: 18px;
+  padding: 20px 4px; border-bottom: 1px solid var(--hair); color: var(--ink);
   transition: background 0.12s ease, padding-left 0.12s ease;
 }
 .index-row:hover { background: var(--blue-wash); text-decoration: none; padding-left: 14px; }
 .index-num { font-family: var(--display); font-weight: 900; font-size: 20px; color: var(--red); font-variant-numeric: tabular-nums; }
 .index-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.index-name { font-family: var(--display); font-weight: 800; font-size: clamp(22px, 3.4vw, 32px); letter-spacing: -0.015em; line-height: 1; }
-.index-desc { font-size: 13px; color: var(--ink-2); }
-.index-meta { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.index-name { font-family: var(--display); font-weight: 800; font-size: clamp(20px, 3vw, 28px); letter-spacing: -0.015em; line-height: 1.05; }
+.index-desc { font-size: 13.5px; color: var(--ink-2); }
 .index-go { color: var(--ink-3); }
 .index-row:hover .index-go, .index-row:hover .index-num { color: var(--red); }
 
@@ -759,11 +751,7 @@ button { font-family: inherit; }
 
   .foundry-main, .changelog-main, .compendium, .solo-body { padding-left: 14px; padding-right: 14px; }
 
-  .masthead-inner { grid-template-columns: 1fr; gap: 20px; align-items: start; }
-  .mast-meta { gap: 18px; }
-  .mast-meta div { text-align: left; }
-  .index-row { grid-template-columns: 40px 1fr 24px; gap: 12px; padding: 18px 2px; }
-  .index-meta { display: none; }
+  .index-row { grid-template-columns: 38px 1fr 24px; gap: 12px; padding: 18px 2px; }
 }
 
 @media (max-width: 420px) {
