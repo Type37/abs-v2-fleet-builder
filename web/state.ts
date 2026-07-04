@@ -3,13 +3,15 @@ import { STARTING_DEBT_K, ALERT_START } from "../src/data/junkspace.ts";
 import {
   loadCustomFactions,
   loadLists,
+  loadOnboarding,
   loadOutfits,
   newId,
   persistCustomFactions,
   persistLists,
+  persistOnboarding,
   persistOutfits,
 } from "./storage.ts";
-import type { SavedList, SavedOutfit } from "./storage.ts";
+import type { Onboarding, SavedList, SavedOutfit } from "./storage.ts";
 
 // A minimal store: state + subscribers, no framework. The whole app re-renders
 // on every change (main.ts).
@@ -119,6 +121,7 @@ export interface AppState {
   lists: SavedList[];
   customFactions: Faction[];
   outfits: SavedOutfit[];
+  onboarding: Onboarding;
   /** Monotonic counter for generating unit instance ids within the active list. */
   nextUnitSeq: number;
   /** Transient UI state, never persisted. */
@@ -147,11 +150,16 @@ export interface AppState {
 export const EMPTY_SHIP_FILTER: ShipFilter = { era: "", faction: "", mass: "", q: "", sort: "faction" };
 
 export function initialState(): AppState {
+  // Count this visit so the first-run tutorial suggestion can retire itself.
+  const onboarding = loadOnboarding();
+  onboarding.visits += 1;
+  persistOnboarding(onboarding);
   return {
     route: parseRoute(location.hash),
     lists: loadLists(),
     customFactions: loadCustomFactions(),
     outfits: loadOutfits(),
+    onboarding,
     nextUnitSeq: 1,
     ui: { showAllFactions: false, soloTab: "outfit" },
   };

@@ -212,6 +212,25 @@ function toast(state: AppState): string {
 }
 
 
+// A first-run nudge toward the tutorials, shown only on the first two visits
+// (or until dismissed / a tutorial is taken). Stored in localStorage.
+function tutorialCallout(state: AppState): string {
+  const o = state.onboarding;
+  if (o.tutorialsDismissed || o.visits > 2) return "";
+  return `
+  <aside class="onboard">
+    <div class="onboard-main">
+      <p class="onboard-title">New to A Billion Suns?</p>
+      <p class="onboard-note">Basic Training loads a ready-made fleet and walks you through a game, step by step. Learn by playing.</p>
+      <div class="onboard-actions">
+        <button class="bar-btn" data-action="new-training" data-mode="combat-simulator">${icon("book", 14)} Combat Simulator</button>
+        <button class="bar-btn" data-action="new-training" data-mode="management-training">${icon("book", 14)} Management Training</button>
+      </div>
+    </div>
+    <button class="onboard-close" data-action="dismiss-tutorials" aria-label="Dismiss">${icon("close", 16)}</button>
+  </aside>`;
+}
+
 // ---------------------------------------------------------------------------
 // Home hub: decide what you want to do (Dropfleet-builder mental model)
 // ---------------------------------------------------------------------------
@@ -236,6 +255,7 @@ function homeView(state: AppState): string {
     </div>
   </header>
   <main class="index-wrap">
+    ${tutorialCallout(state)}
     <nav class="index">
       ${row("01", "#/fleets", "Fleets", "Build, save, print, and share army lists for any faction and era.")}
       ${row("02", "#/solo", "Solo Play", "Junkspace: build an outfit, roll for the enemy, run the debt campaign.")}

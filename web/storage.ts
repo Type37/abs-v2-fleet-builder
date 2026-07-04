@@ -109,3 +109,23 @@ export function persistOutfits(outfits: SavedOutfit[]): void {
 export function newId(prefix: string): string {
   return `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 }
+
+// --- First-run onboarding ---------------------------------------------------
+
+const ONBOARDING_KEY = "abs2.onboarding.v1";
+
+export interface Onboarding {
+  /** How many times the app has been opened. */
+  visits: number;
+  /** True once the tutorial suggestion has been dismissed or acted on. */
+  tutorialsDismissed: boolean;
+}
+
+export function loadOnboarding(): Onboarding {
+  const o = read<Partial<Onboarding>>(ONBOARDING_KEY, {});
+  return { visits: o.visits ?? 0, tutorialsDismissed: o.tutorialsDismissed ?? false };
+}
+
+export function persistOnboarding(o: Onboarding): void {
+  write(ONBOARDING_KEY, o);
+}

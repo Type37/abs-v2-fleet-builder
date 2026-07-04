@@ -252,6 +252,16 @@ button { font-family: inherit; }
 .np-title { font-family: var(--display); font-weight: 900; font-size: clamp(40px, 7vw, 72px); line-height: 0.9; letter-spacing: -0.03em; text-transform: uppercase; }
 .np-standfirst { margin-top: 12px; max-width: 56ch; font-size: 15px; color: #d0def4; }
 
+/* First-run tutorial nudge: a bordered callout with a red index tick, not a
+   floating toast. Retires itself after the second visit. */
+.onboard { display: flex; align-items: flex-start; gap: 16px; margin: 0 0 22px; padding: 18px 18px 18px 22px; border: 2px solid var(--color-line); border-left: 6px solid var(--color-accent); background: var(--paper); }
+.onboard-main { flex: 1; min-width: 0; }
+.onboard-title { font-family: var(--display); font-weight: 800; font-size: 18px; }
+.onboard-note { font-size: 14px; color: var(--ink-2); margin-top: 4px; max-width: 62ch; }
+.onboard-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.onboard-close { background: transparent; border: 1px solid var(--hair); color: var(--ink-3); cursor: pointer; display: inline-flex; padding: 7px; flex-shrink: 0; }
+.onboard-close:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+
 /* Home index as a command console (after COMP/CON). Angular chamfered rows;
    on hover a skewed colour field sweeps across, a red tab strikes the leading
    edge, the number bay inverts, and the whole row advances with a hard shadow.

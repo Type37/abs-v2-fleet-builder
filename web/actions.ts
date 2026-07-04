@@ -1,6 +1,6 @@
 import type { Faction, GameMode, Mass, PilotClass, Weapon } from "../src/types.ts";
 import { findFaction, isCustom } from "./catalog.ts";
-import { newId, persistCustomFactions, persistLists, persistOutfits } from "./storage.ts";
+import { newId, persistCustomFactions, persistLists, persistOnboarding, persistOutfits } from "./storage.ts";
 import type { SavedOutfit } from "./storage.ts";
 import {
   createList,
@@ -580,6 +580,15 @@ function handleClick(e: MouseEvent): void {
       break;
     }
 
+    case "dismiss-tutorials": {
+      store.setState((s) => {
+        const onboarding = { ...s.onboarding, tutorialsDismissed: true };
+        persistOnboarding(onboarding);
+        return { ...s, onboarding };
+      });
+      break;
+    }
+
     // ---- Basic Training ---------------------------------------------------
     case "new-training": {
       const mode = target.dataset["mode"] as "combat-simulator" | "management-training";
@@ -587,7 +596,10 @@ function handleClick(e: MouseEvent): void {
       store.setState((s) => {
         const lists = [...s.lists, list];
         persistLists(lists);
-        return { ...s, lists, ui: { ...s.ui, modal: undefined } };
+        // Taking a tutorial retires the suggestion.
+        const onboarding = { ...s.onboarding, tutorialsDismissed: true };
+        persistOnboarding(onboarding);
+        return { ...s, lists, onboarding, ui: { ...s.ui, modal: undefined } };
       });
       location.hash = routeHash({ view: "builder", listId: list.id });
       break;
