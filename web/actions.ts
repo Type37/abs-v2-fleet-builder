@@ -18,6 +18,7 @@ import {
 } from "./state.ts";
 import type { LastRoll, ShipFilter } from "./state.ts";
 import { RANDOM_BEHAVIOUR, GLITCH_BLIP, type RollRow } from "../src/data/junkspace-solo.ts";
+import { randomIconId } from "./emblems.ts";
 import { shareUrl } from "./share.ts";
 
 // --- Solo dice roller -------------------------------------------------------
@@ -245,13 +246,50 @@ function handleClick(e: MouseEvent): void {
     case "clear-emblem-image": {
       const id = currentListId();
       if (!id) return;
-      store.setState((s) => updateList(s, id, (l) => ({ ...l, emblemImage: undefined })));
+      store.setState((s) => updateList(s, id, (l) => ({ ...l, emblemImage: undefined, emblemLib: undefined })));
       break;
     }
     case "cf-clear-emblem": {
       const fid = currentFoundryId();
       if (!fid) return;
-      editFaction(fid, (f) => ({ ...f, emblemImage: undefined }));
+      editFaction(fid, (f) => ({ ...f, emblemImage: undefined, emblemLib: undefined }));
+      break;
+    }
+    // --- icon library + random, across the three contexts ---
+    case "set-emblem-lib": {
+      const id = currentListId();
+      const lib = target.dataset["lib"];
+      if (!id || !lib) return;
+      store.setState((s) => updateList(s, id, (l) => ({ ...l, emblemLib: lib, emblemImage: undefined })));
+      break;
+    }
+    case "random-emblem": {
+      const id = currentListId();
+      const lib = randomIconId();
+      if (!id || !lib) return;
+      store.setState((s) => updateList(s, id, (l) => ({ ...l, emblemLib: lib, emblemImage: undefined })));
+      break;
+    }
+    case "outfit-set-lib": {
+      const lib = target.dataset["lib"];
+      if (lib) editOutfit((o) => ({ ...o, emblemLib: lib, emblemImage: undefined }));
+      break;
+    }
+    case "outfit-random-emblem": {
+      const lib = randomIconId();
+      if (lib) editOutfit((o) => ({ ...o, emblemLib: lib, emblemImage: undefined }));
+      break;
+    }
+    case "cf-set-lib": {
+      const fid = currentFoundryId();
+      const lib = target.dataset["lib"];
+      if (fid && lib) editFaction(fid, (f) => ({ ...f, emblemLib: lib, emblemImage: undefined }));
+      break;
+    }
+    case "cf-random-emblem": {
+      const fid = currentFoundryId();
+      const lib = randomIconId();
+      if (fid && lib) editFaction(fid, (f) => ({ ...f, emblemLib: lib, emblemImage: undefined }));
       break;
     }
     case "set-limit": {
@@ -454,6 +492,10 @@ function handleClick(e: MouseEvent): void {
     // ---- Ship compendium --------------------------------------------------
     case "ship-filter-clear": {
       store.setState((s) => ({ ...s, ui: { ...s.ui, shipFilter: { ...EMPTY_SHIP_FILTER } } }));
+      break;
+    }
+    case "toggle-create": {
+      store.setState((s) => ({ ...s, ui: { ...s.ui, showCreate: !(s.ui.showCreate ?? s.lists.length === 0) } }));
       break;
     }
 

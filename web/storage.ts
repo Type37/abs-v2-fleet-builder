@@ -26,6 +26,8 @@ export interface SavedList {
   emblem: string;
   /** Optional uploaded image (downscaled data URL). Takes priority over emblem. */
   emblemImage?: string;
+  /** Optional icon-library id (see emblems.ts). Used when no upload is set. */
+  emblemLib?: string;
   fleet: Fleet;
   play?: PlayState;
   createdAt: string;
@@ -81,6 +83,7 @@ export interface SavedOutfit {
   name: string;
   emblem: string;
   emblemImage?: string;
+  emblemLib?: string;
   ships: OutfitShip[];
   /** Remaining Debt in ¢k. Starts at 30; clearing it wins the campaign. */
   debtK: number;

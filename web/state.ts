@@ -44,6 +44,7 @@ export function createStore<T>(initial: T): Store<T> {
 
 export type Route =
   | { view: "home" }
+  | { view: "fleets" }
   | { view: "builder"; listId: string }
   | { view: "print"; listId: string }
   | { view: "foundry"; factionId?: string }
@@ -56,6 +57,7 @@ export type Route =
 export function parseRoute(hash: string): Route {
   const h = hash.replace(/^#/, "");
   const parts = h.split("/").filter(Boolean);
+  if (parts[0] === "fleets") return { view: "fleets" };
   if (parts[0] === "list" && parts[1]) return { view: "builder", listId: parts[1] };
   if (parts[0] === "print" && parts[1]) return { view: "print", listId: parts[1] };
   if (parts[0] === "foundry") return parts[1] ? { view: "foundry", factionId: parts[1] } : { view: "foundry" };
@@ -70,6 +72,8 @@ export function routeHash(route: Route): string {
   switch (route.view) {
     case "home":
       return "#/";
+    case "fleets":
+      return "#/fleets";
     case "builder":
       return `#/list/${route.listId}`;
     case "print":
@@ -131,6 +135,8 @@ export interface AppState {
     lastRoll?: LastRoll;
     /** Filters on the ship compendium. */
     shipFilter?: ShipFilter;
+    /** The Create-army panel is open on the Fleets page. */
+    showCreate?: boolean;
   };
 }
 

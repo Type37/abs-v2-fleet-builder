@@ -26,6 +26,8 @@ const PATHS: Record<string, string> = {
   download: '<path d="M12 4 V15"/><polyline points="7 10.5 12 15.5 17 10.5"/><path d="M4 15 V20 H20 V15"/>',
   personnel: '<circle cx="12" cy="8" r="4"/><path d="M4 21 C4 16.5 7.5 14 12 14 C16.5 14 20 16.5 20 21"/>',
   filter: '<path d="M3 5 H21 L14 13 V20 L10 18 V13 Z"/>',
+  shuffle: '<path d="M3 6 H7 L17 18 H21"/><polyline points="18 3 21 6 18 9"/><path d="M3 18 H7 L10.5 14"/><path d="M13.5 10 L17 6 H21"/><polyline points="18 15 21 18 18 21"/>',
+  grid: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>',
   compare: '<line x1="6" y1="4" x2="6" y2="20"/><line x1="18" y1="4" x2="18" y2="20"/><rect x="3" y="9" width="6" height="7"/><rect x="15" y="7" width="6" height="9"/>',
   // ship-stat glyphs, drawn on the 24 grid to sit inline with numbers
   "stat-mass": '<path fill="currentColor" stroke="none" d="M12 2 21 7 21 17 12 22 3 17 3 7 Z"/>',
@@ -66,11 +68,15 @@ export function massGlyph(mass: number, size = 20): string {
   return icon(`mass${Math.max(0, Math.min(3, mass))}`, size, "mass-glyph");
 }
 
-/** Four labelled stat chips (Mass, Thrust, Silhouette, Shields) for a ship. */
+/**
+ * Four labelled stat chips for a ship. Each shows an icon, a word, and the
+ * value together, so the meaning is legible and memorable rather than a bare
+ * number that has to be decoded.
+ */
 export function statChips(s: { mass: number; thrust: number; silhouette: number; shields: number }): string {
-  const chip = (name: string, val: string, label: string) =>
-    `<span class="stat-chip" title="${label}">${icon(name, 14, "stat-ico")}<span class="stat-val">${val}</span></span>`;
-  return `<span class="stat-chips">${chip("stat-mass", String(s.mass), "Mass")}${chip("stat-thrust", `${s.thrust}"`, "Thrust")}${chip("stat-silhouette", String(s.silhouette), "Silhouette")}${chip("stat-shields", String(s.shields), "Shields")}</span>`;
+  const chip = (name: string, label: string, val: string) =>
+    `<span class="stat-chip" title="${label}">${icon(name, 14, "stat-ico")}<span class="stat-lbl">${label}</span><span class="stat-val">${val}</span></span>`;
+  return `<span class="stat-chips">${chip("stat-mass", "Mass", String(s.mass))}${chip("stat-thrust", "Thrust", `${s.thrust}"`)}${chip("stat-silhouette", "Sil", String(s.silhouette))}${chip("stat-shields", "Shields", String(s.shields))}</span>`;
 }
 
 /** Render an uploaded image if present, otherwise fall back to a built-in emblem glyph. */

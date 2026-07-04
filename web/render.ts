@@ -6,6 +6,7 @@ import { JUNKSPACE_SHIPS } from "../src/data/junkspace.ts";
 import { allFactions, factionsByEra, findFaction, makeCatalog, ERA_ORDER } from "./catalog.ts";
 import { auxSlotText, credits, escapeHtml, formatDate, primarySlotText } from "./format.ts";
 import { emblem, emblemMark, EMBLEM_IDS, icon, massGlyph, statChips } from "./icons.ts";
+import { iconLibraryControls, libraryUrl } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
 import type { AppState } from "./state.ts";
 import { activeList } from "./state.ts";
@@ -168,10 +169,10 @@ function topbar(): string {
   <header class="topbar">
     <a class="wordmark" href="#/">${icon("logo", 26)}<span class="wordmark-text">A Billion Suns</span><span class="wordmark-sub">Shipyard</span></a>
     <nav class="topnav">
+      <a href="#/fleets">${icon("flag", 16)} Fleets</a>
       <a href="#/ships">${icon("compare", 16)} Compendium</a>
-      <a href="#/solo">${icon("flag", 16)} Solo / Junkspace</a>
-      <a href="#/foundry">${icon("wrench", 16)} Faction Foundry</a>
-      <a href="#/changelog">${icon("scroll", 16)} Changelog</a>
+      <a href="#/solo">${icon("book", 16)} Solo</a>
+      <a href="#/foundry">${icon("wrench", 16)} Foundry</a>
     </nav>
   </header>`;
 }
@@ -199,13 +200,58 @@ function toast(state: AppState): string {
   return state.ui.toast ? `<div class="toast" role="status">${escapeHtml(state.ui.toast)}</div>` : "";
 }
 
+
 // ---------------------------------------------------------------------------
-// Home
+// Home hub: decide what you want to do (Dropfleet-builder mental model)
 // ---------------------------------------------------------------------------
 
 function homeView(state: AppState): string {
+  const fleetCount = state.lists.length;
+  const outfitCount = state.outfits.length;
+  const card = (href: string, ico: string, title: string, note: string, meta = "") => `
+    <a class="hub-card" href="${href}">
+      <span class="hub-ico">${icon(ico, 26)}</span>
+      <span class="hub-body">
+        <span class="hub-title">${title}</span>
+        <span class="hub-note">${note}</span>
+      </span>
+      ${meta ? `<span class="hub-meta">${meta}</span>` : ""}
+      <span class="hub-go">${icon("chevronRight", 18)}</span>
+    </a>`;
+  return `
+  ${topbar()}
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="hero-eyebrow">The Shipyard</p>
+      <h1 class="hero-title">A Billion<br />Suns</h1>
+      <p class="hero-sub">The complete fleet builder for the Second Edition. Every faction, every era, every rule written out in full.</p>
+    </div>
+  </section>
+  <main class="hub-main">
+    <p class="panel-title">What would you like to do?</p>
+    <div class="hub-grid">
+      ${card("#/fleets", "flag", "Fleets", "Build, save, print, and share army lists for any faction and era.", fleetCount ? `${fleetCount} saved` : "")}
+      ${card("#/solo", "book", "Solo / Junkspace", "A full solo game in the ruins of Jura, with a roller and a debt campaign.", outfitCount ? `${outfitCount} outfits` : "")}
+      ${card("#/ships", "compare", "Ship Compendium", "Every ship in the game in one sortable, filterable reference table.")}
+      ${card("#/fleets", "scroll", "How to Play", "Load the two guided Basic Training tutorials and learn the game step by step.")}
+      ${card("#/foundry", "wrench", "Faction Foundry", "Design your own factions, ship classes, and personnel.")}
+      ${card("#/changelog", "grid", "What's New", "The changelog and version history.")}
+    </div>
+  </main>
+  ${toast(state)}
+  ${footer()}`;
+}
+
+// ---------------------------------------------------------------------------
+// Fleets: your saved lists, and a prominent Create-army flow
+// ---------------------------------------------------------------------------
+
+function fleetsView(state: AppState): string {
   const byEra = factionsByEra(state.customFactions);
   const lists = [...state.lists].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  // The create panel is open on request, or automatically when there is nothing
+  // to show yet.
+  const createOpen = state.ui.showCreate ?? lists.length === 0;
 
   const eraCards = ERA_ORDER.map((era) => {
     const factions = byEra.get(era) ?? [];
@@ -232,7 +278,7 @@ function homeView(state: AppState): string {
       const { total } = listTotals(l, state.customFactions);
       return `
       <tr>
-        <td class="cell-emblem"><span class="emblem-chip">${emblemMark(l.emblem, l.emblemImage, 22)}</span></td>
+        <td class="cell-emblem"><span class="emblem-chip">${emblemMark(l.emblem, l.emblemImage ?? libraryUrl(l.emblemLib), 22)}</span></td>
         <td class="cell-name"><a href="#/list/${l.id}">${escapeHtml(l.fleet.name || "Unnamed fleet")}</a></td>
         <td>${escapeHtml(faction?.name ?? "Mixed forces")}</td>
         <td>${l.freePlay ? "Free Play" : MODE_LABEL[l.mode]}</td>
@@ -247,57 +293,52 @@ function homeView(state: AppState): string {
     })
     .join("");
 
+  const createPanel = `
+    <section class="create-panel">
+      <div class="create-head">
+        <h2 class="page-title">Create army</h2>
+        <button class="ghost-btn" data-action="toggle-create">${icon("close", 16)} Close</button>
+      </div>
+      <p class="panel-note">Choose the era you are playing, then a faction. The rulebook allows any faction in any era, and the builder honours that.</p>
+      ${eraCards}
+      <div class="create-extras">
+        <div class="era-block freeplay-block">
+          <h3 class="era-title">Free Play</h3>
+          <p class="panel-note">Everything unlocked: mix ships from any faction, any credits limit, no rules checks.</p>
+          <button class="cta-btn" data-action="new-list" data-mode="armageddon" data-faction="__free__" data-freeplay="1">${icon("plus", 18)} Open a free build</button>
+        </div>
+        <div class="era-block freeplay-block">
+          <h3 class="era-title">Basic Training</h3>
+          <p class="panel-note">Two guided tutorials with the Training Fleet pre-loaded. Combat Simulator teaches moving and shooting; Management Training teaches requisition and jumping between Sectors.</p>
+          <div class="training-row">
+            <button class="cta-btn" data-action="new-training" data-mode="combat-simulator">${icon("book", 18)} Combat Simulator</button>
+            <button class="cta-btn" data-action="new-training" data-mode="management-training">${icon("book", 18)} Management Training</button>
+          </div>
+        </div>
+      </div>
+    </section>`;
+
   return `
   ${topbar()}
-  <section class="hero">
-    <div class="hero-inner">
-      <p class="hero-eyebrow">The Shipyard</p>
-      <h1 class="hero-title">A Billion<br />Suns</h1>
-      <p class="hero-sub">Build, save, print, and share fleets for the Second Edition. Every faction, every era, every rule written out in full.</p>
+  <main class="fleets-main">
+    <div class="fleets-head">
+      <div>
+        <p class="hero-eyebrow" style="color:var(--red)">Fleets</p>
+        <h1 class="page-title">Your army lists</h1>
+      </div>
+      ${createOpen ? "" : `<button class="cta-btn create-cta" data-action="toggle-create">${icon("plus", 18)} Create army</button>`}
     </div>
-  </section>
 
-  <main class="home-main">
-    <section class="commission-panel">
-      <h2 class="panel-title">Commission a new fleet</h2>
-      <p class="panel-note">Choose the era you are playing, then a faction. The rulebook allows any faction to be fielded in any era, and the builder honours that.</p>
-      ${eraCards}
-      <section class="era-block freeplay-block">
-        <h3 class="era-title">Free Play</h3>
-        <p class="panel-note">Everything unlocked: mix ships from any faction, set any credits limit, and build outside the rules checks entirely.</p>
-        <button class="cta-btn" data-action="new-list" data-mode="armageddon" data-faction="__free__" data-freeplay="1">${icon("plus", 18)} Open a free build</button>
-      </section>
-      <section class="era-block freeplay-block">
-        <h3 class="era-title">Solo Play</h3>
-        <p class="panel-note">Junkspace: a full solo game in the ruins of Jura. Build an outfit, run the roller for the automated enemy, and clear your debt across a campaign.</p>
-        <a class="cta-btn" href="#/solo">${icon("flag", 18)} Enter Junkspace</a>
-      </section>
-      <section class="era-block freeplay-block">
-        <h3 class="era-title">Basic Training</h3>
-        <p class="panel-note">Two guided tutorial scenarios with the pre-set Training Fleet loaded for you. Play the Combat Simulator first to learn moving and shooting, then Management Training to learn requisition and jumping between Sectors.</p>
-        <div class="training-row">
-          <button class="cta-btn" data-action="new-training" data-mode="combat-simulator">${icon("book", 18)} Combat Simulator</button>
-          <button class="cta-btn" data-action="new-training" data-mode="management-training">${icon("book", 18)} Management Training</button>
-        </div>
-      </section>
-      <section class="era-block freeplay-block">
-        <h3 class="era-title">Reference</h3>
-        <p class="panel-note">The Ship Compendium: every ship in the game in one table. Filter by era, faction, or mass and sort by any stat to compare.</p>
-        <a class="cta-btn" href="#/ships">${icon("compare", 18)} Open the compendium</a>
-      </section>
-    </section>
+    ${createOpen ? createPanel : ""}
 
-    <section class="fleet-dock">
-      <h2 class="panel-title">Your fleets</h2>
-      ${
-        lists.length === 0
-          ? '<p class="muted">Nothing here yet. Commission your first fleet on the left; everything you build is saved in this browser automatically.</p>'
-          : `<div class="table-scroll"><table class="dock-table">
-              <thead><tr><th></th><th>Fleet</th><th>Faction</th><th>Mode</th><th>Cost</th><th>Updated</th><th></th></tr></thead>
-              <tbody>${rows}</tbody>
-            </table></div>`
-      }
-    </section>
+    ${
+      lists.length === 0
+        ? '<p class="muted" style="margin-top:20px">No fleets yet. Use Create army above; everything you build is saved in this browser automatically.</p>'
+        : `<div class="table-scroll" style="margin-top:22px"><table class="dock-table">
+            <thead><tr><th></th><th>Fleet</th><th>Faction</th><th>Mode</th><th>Cost</th><th>Updated</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table></div>`
+    }
   </main>
   ${toast(state)}
   ${footer()}`;
@@ -493,16 +534,18 @@ function builderView(state: AppState): string {
     })
     .join("");
 
+  const listImg = list.emblemImage ?? libraryUrl(list.emblemLib);
   const emblemPicker = `
     ${EMBLEM_IDS.map(
       (id) =>
-        `<button class="emblem-choice ${list.emblem === id && !list.emblemImage ? "selected" : ""}" data-action="set-emblem" data-emblem="${id}" title="Use this emblem">${emblem(id, 24)}</button>`,
+        `<button class="emblem-choice ${list.emblem === id && !listImg ? "selected" : ""}" data-action="set-emblem" data-emblem="${id}" title="Use this emblem">${emblem(id, 24)}</button>`,
     ).join("")}
     <label class="emblem-choice emblem-upload ${list.emblemImage ? "selected" : ""}" title="Upload your own image">
-      ${list.emblemImage ? emblemMark(list.emblem, list.emblemImage, 24) : icon("upload", 18)}
+      ${icon("upload", 18)}
       <input type="file" accept="image/*" data-action="emblem-upload" hidden />
     </label>
-    ${list.emblemImage ? `<button class="emblem-choice" data-action="clear-emblem-image" title="Remove the uploaded image">${icon("close", 16)}</button>` : ""}`;
+    ${iconLibraryControls("set-emblem-lib", "random-emblem", list.emblemLib)}
+    ${listImg ? `<span class="emblem-choice emblem-current selected" title="Current icon">${emblemMark(list.emblem, listImg, 24)}</span><button class="emblem-choice" data-action="clear-emblem-image" title="Clear the chosen image">${icon("close", 16)}</button>` : ""}`;
 
   const limitControl = list.freePlay
     ? `<input class="limit-input" type="number" min="1" value="${list.fleet.creditsLimit}" data-action="set-limit-free" />`
@@ -576,7 +619,7 @@ function builderView(state: AppState): string {
     <aside class="roster">
       <div class="roster-sheet">
         <header class="roster-head">
-          <span class="roster-emblem">${emblemMark(list.emblem, list.emblemImage, 34)}</span>
+          <span class="roster-emblem">${emblemMark(list.emblem, list.emblemImage ?? libraryUrl(list.emblemLib), 34)}</span>
           <div>
             <h2 class="roster-title">${escapeHtml(list.fleet.name || "Unnamed fleet")}</h2>
             <p class="roster-subtitle">${escapeHtml(faction?.name ?? "Mixed forces")}${era ? `, ${era}` : ""}</p>
@@ -714,7 +757,7 @@ function printView(state: AppState): string {
 
     <article class="sheet">
       <header class="sheet-head">
-        <div class="sheet-emblem">${emblemMark(list.emblem, list.emblemImage, 44)}</div>
+        <div class="sheet-emblem">${emblemMark(list.emblem, list.emblemImage ?? libraryUrl(list.emblemLib), 44)}</div>
         <div class="sheet-title-block">
           <h1 class="sheet-title">${escapeHtml(list.fleet.name || "Unnamed fleet")}</h1>
           <p class="sheet-subtitle">${subtitle}</p>
@@ -894,12 +937,13 @@ function foundryEditView(state: AppState, factionId: string): string {
       <div class="cf-grid">
         <label class="field-block wide">Faction name
           <input type="text" value="${escapeHtml(f.name)}" data-action="cf-field" data-field="name" /></label>
-        <div class="field-block">Emblem image
+        <div class="field-block wide">Emblem
           <div class="cf-emblem-row">
-            <span class="cf-emblem-preview">${emblemMark("delta", f.emblemImage, 40)}</span>
+            <span class="cf-emblem-preview">${emblemMark("delta", f.emblemImage ?? libraryUrl(f.emblemLib), 40)}</span>
             <label class="bar-btn file-btn">${icon("upload", 14)} Upload
               <input type="file" accept="image/*" data-action="cf-emblem-upload" hidden /></label>
-            ${f.emblemImage ? `<button class="ghost-btn danger" data-action="cf-clear-emblem" title="Remove">${icon("close", 14)}</button>` : ""}
+            <div class="emblem-picker">${iconLibraryControls("cf-set-lib", "cf-random-emblem", f.emblemLib)}</div>
+            ${f.emblemImage || f.emblemLib ? `<button class="ghost-btn danger" data-action="cf-clear-emblem" title="Remove">${icon("close", 14)}</button>` : ""}
           </div>
         </div>
         <label class="field-block">Era
@@ -1261,6 +1305,8 @@ export function render(state: AppState): string {
   switch (state.route.view) {
     case "home":
       return homeView(state);
+    case "fleets":
+      return fleetsView(state);
     case "builder":
       return builderView(state);
     case "print":

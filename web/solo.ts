@@ -26,6 +26,7 @@ import {
 } from "../src/data/junkspace-solo.ts";
 import { auxSlotText, escapeHtml, formatDate, primarySlotText } from "./format.ts";
 import { emblem, emblemMark, icon, massGlyph, statChips } from "./icons.ts";
+import { iconLibraryControls, libraryUrl } from "./emblems.ts";
 import type { AppState, SoloTab } from "./state.ts";
 import { activeOutfit } from "./state.ts";
 import type { SavedOutfit } from "./storage.ts";
@@ -49,7 +50,7 @@ export function soloListView(state: AppState): string {
       const cleared = o.debtK <= 0;
       return `
       <tr>
-        <td class="cell-emblem"><span class="emblem-chip">${emblemMark(o.emblem, o.emblemImage, 22)}</span></td>
+        <td class="cell-emblem"><span class="emblem-chip">${emblemMark(o.emblem, o.emblemImage ?? libraryUrl(o.emblemLib), 22)}</span></td>
         <td class="cell-name"><a href="#/solo/${o.id}">${escapeHtml(o.name || "Unnamed outfit")}</a></td>
         <td>${o.ships.length} ${o.ships.length === 1 ? "ship" : "ships"}</td>
         <td class="cell-num">${cleared ? "Debt cleared" : ck(o.debtK) + " debt"}</td>
@@ -174,7 +175,7 @@ function outfitTab(o: SavedOutfit): string {
     <aside class="roster">
       <div class="roster-sheet">
         <header class="roster-head">
-          <span class="roster-emblem">${emblemMark(o.emblem, o.emblemImage, 34)}</span>
+          <span class="roster-emblem">${emblemMark(o.emblem, o.emblemImage ?? libraryUrl(o.emblemLib), 34)}</span>
           <div>
             <h2 class="roster-title">${escapeHtml(o.name || "Unnamed outfit")}</h2>
             <p class="roster-subtitle">Junkspace outfit</p>
@@ -411,10 +412,12 @@ export function soloOutfitView(state: AppState): string {
 }
 
 function outfitEmblemPicker(o: SavedOutfit): string {
+  const img = o.emblemImage ?? libraryUrl(o.emblemLib);
   return `
     <label class="emblem-choice emblem-upload ${o.emblemImage ? "selected" : ""}" title="Upload your own image">
-      ${o.emblemImage ? emblemMark(o.emblem, o.emblemImage, 24) : icon("upload", 18)}
+      ${icon("upload", 18)}
       <input type="file" accept="image/*" data-action="outfit-emblem-upload" hidden />
     </label>
-    ${o.emblemImage ? `<button class="emblem-choice" data-action="outfit-clear-emblem" title="Remove image">${icon("close", 16)}</button>` : ""}`;
+    ${iconLibraryControls("outfit-set-lib", "outfit-random-emblem", o.emblemLib)}
+    ${img ? `<span class="emblem-choice emblem-current selected">${emblemMark(o.emblem, img, 24)}</span><button class="emblem-choice" data-action="outfit-clear-emblem" title="Remove image">${icon("close", 16)}</button>` : ""}`;
 }

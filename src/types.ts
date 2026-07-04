@@ -111,6 +111,8 @@ export interface Faction {
   hvp: Hvp[];
   /** Optional uploaded emblem image (downscaled data URL). Custom factions only. */
   emblemImage?: string;
+  /** Optional icon-library id (see web/emblems.ts). */
+  emblemLib?: string;
   /** When true, every unit in a fleet must declare a species (Alliance only). */
   requiresSpecies?: boolean;
   /**
