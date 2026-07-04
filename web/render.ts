@@ -172,7 +172,7 @@ function topbar(): string {
       <a href="#/fleets">${icon("flag", 16)} Fleets</a>
       <a href="#/ships">${icon("compare", 16)} Compendium</a>
       <a href="#/solo">${icon("book", 16)} Solo</a>
-      <a href="#/foundry">${icon("wrench", 16)} Foundry</a>
+      <a href="#/foundry">${icon("wrench", 16)} Custom Rules</a>
     </nav>
   </header>`;
 }
@@ -234,7 +234,7 @@ function homeView(state: AppState): string {
       ${card("#/solo", "book", "Solo / Junkspace", "A full solo game in the ruins of Jura, with a roller and a debt campaign.", outfitCount ? `${outfitCount} outfits` : "")}
       ${card("#/ships", "compare", "Ship Compendium", "Every ship in the game in one sortable, filterable reference table.")}
       ${card("#/fleets", "scroll", "How to Play", "Load the two guided Basic Training tutorials and learn the game step by step.")}
-      ${card("#/foundry", "wrench", "Faction Foundry", "Design your own factions, ship classes, and personnel.")}
+      ${card("#/foundry", "wrench", "Custom Rules", "Create your own factions, ship classes, and personnel.")}
       ${card("#/changelog", "grid", "What's New", "The changelog and version history.")}
     </div>
   </main>
@@ -834,8 +834,8 @@ function foundryListView(state: AppState): string {
   return `
   ${topbar()}
   <main class="foundry-main">
-    <h1 class="page-title">Faction Foundry</h1>
-    <p class="panel-note">Design your own factions: a faction rule, ship classes with full weapon fits, and High-Value Personnel. They appear in every faction picker and ride along inside share links.</p>
+    <h1 class="page-title">Custom Rules</h1>
+    <p class="panel-note">Create your own factions: a faction rule, ship classes with full weapon fits, and High-Value Personnel. They appear in every faction picker and ride along inside share links.</p>
     <div class="foundry-actions">
       <button class="cta-btn" data-action="new-faction">${icon("plus", 18)} Forge a new faction</button>
       <label class="bar-btn file-btn">${icon("upload", 16)} Import from a file
@@ -929,7 +929,7 @@ function foundryEditView(state: AppState, factionId: string): string {
   return `
   ${topbar()}
   <main class="foundry-main">
-    <p class="breadcrumb"><a href="#/foundry">Faction Foundry</a> / ${escapeHtml(f.name)}</p>
+    <p class="breadcrumb"><a href="#/foundry">Custom Rules</a> / ${escapeHtml(f.name)}</p>
     <h1 class="page-title">${escapeHtml(f.name)}</h1>
 
     <section class="cf-section">
