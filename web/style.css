@@ -209,18 +209,38 @@ button { font-family: inherit; }
 
 /* ------------------------------------------------------------- hub + fleets */
 
-.hub-main { max-width: var(--shell); margin: 0 auto; padding: clamp(28px, 4vw, 48px) clamp(16px, 4vw, 40px) 0; }
-.hub-main .panel-title { font-size: 13px; margin-bottom: 18px; }
-.hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-.hub-card { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--hair); border-left: 4px solid var(--blue); background: var(--paper); color: var(--ink); transition: background 0.12s, border-color 0.12s; }
-.hub-card:hover { background: var(--blue-wash); border-left-color: var(--red); text-decoration: none; }
-.hub-ico { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; background: var(--blue); color: #fff; flex-shrink: 0; }
-.hub-body { flex: 1; min-width: 0; }
-.hub-title { display: block; font-family: var(--display); font-weight: 800; font-size: 18px; }
-.hub-note { display: block; font-size: 13px; color: var(--ink-2); margin-top: 2px; }
-.hub-meta { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
-.hub-go { color: var(--ink-3); flex-shrink: 0; }
-.hub-card:hover .hub-go { color: var(--red); }
+/* Swiss masthead: asymmetric, flush-left title with a right-aligned data
+   column. Not a centered landing-page billboard. */
+.masthead { background: var(--blue); color: #fff; border-bottom: 3px solid var(--red); }
+.masthead-inner {
+  max-width: var(--shell); margin: 0 auto;
+  padding: clamp(34px, 6vw, 68px) clamp(16px, 4vw, 40px) clamp(26px, 4vw, 44px);
+  display: grid; grid-template-columns: 1fr auto; gap: 24px 32px; align-items: end;
+}
+.mast-kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #bcd0f2; margin-bottom: 10px; }
+.mast-word { font-family: var(--display); font-weight: 900; font-size: clamp(56px, 13vw, 150px); line-height: 0.82; letter-spacing: -0.035em; text-transform: uppercase; }
+.mast-meta { display: flex; gap: 22px; margin: 0; }
+.mast-meta div { text-align: right; }
+.mast-meta dt { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #8fb0e0; }
+.mast-meta dd { margin: 3px 0 0; font-family: var(--display); font-weight: 800; font-size: 24px; font-variant-numeric: tabular-nums; }
+
+/* Home index: a numbered, rule-divided table of contents, flush-left. No cards,
+   no hover-lift. Hover advances the row and reddens its accents. */
+.index-wrap { max-width: var(--shell); margin: 0 auto; padding: clamp(20px, 3vw, 34px) clamp(16px, 4vw, 40px) 0; }
+.index { border-top: 2px solid var(--ink); }
+.index-row {
+  display: grid; grid-template-columns: 54px 1fr auto 28px; align-items: center; gap: 18px;
+  padding: 22px 4px; border-bottom: 1px solid var(--hair); color: var(--ink);
+  transition: background 0.12s ease, padding-left 0.12s ease;
+}
+.index-row:hover { background: var(--blue-wash); text-decoration: none; padding-left: 14px; }
+.index-num { font-family: var(--display); font-weight: 900; font-size: 20px; color: var(--red); font-variant-numeric: tabular-nums; }
+.index-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.index-name { font-family: var(--display); font-weight: 800; font-size: clamp(22px, 3.4vw, 32px); letter-spacing: -0.015em; line-height: 1; }
+.index-desc { font-size: 13px; color: var(--ink-2); }
+.index-meta { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.index-go { color: var(--ink-3); }
+.index-row:hover .index-go, .index-row:hover .index-num { color: var(--red); }
 
 .fleets-main { max-width: var(--shell); margin: 0 auto; padding: clamp(24px, 4vw, 44px) clamp(16px, 4vw, 40px) 0; }
 .fleets-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 2px solid var(--hair); }
@@ -738,6 +758,12 @@ button { font-family: inherit; }
   .fleet-dock { position: static; }
 
   .foundry-main, .changelog-main, .compendium, .solo-body { padding-left: 14px; padding-right: 14px; }
+
+  .masthead-inner { grid-template-columns: 1fr; gap: 20px; align-items: start; }
+  .mast-meta { gap: 18px; }
+  .mast-meta div { text-align: left; }
+  .index-row { grid-template-columns: 40px 1fr 24px; gap: 12px; padding: 18px 2px; }
+  .index-meta { display: none; }
 }
 
 @media (max-width: 420px) {

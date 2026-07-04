@@ -208,35 +208,41 @@ function toast(state: AppState): string {
 function homeView(state: AppState): string {
   const fleetCount = state.lists.length;
   const outfitCount = state.outfits.length;
-  const card = (href: string, ico: string, title: string, note: string, meta = "") => `
-    <a class="hub-card" href="${href}">
-      <span class="hub-ico">${icon(ico, 26)}</span>
-      <span class="hub-body">
-        <span class="hub-title">${title}</span>
-        <span class="hub-note">${note}</span>
+  const version = CHANGELOG[0]?.version ?? "";
+  const row = (n: string, href: string, name: string, desc: string, meta = "") => `
+    <a class="index-row" href="${href}">
+      <span class="index-num">${n}</span>
+      <span class="index-main">
+        <span class="index-name">${name}</span>
+        <span class="index-desc">${desc}</span>
       </span>
-      ${meta ? `<span class="hub-meta">${meta}</span>` : ""}
-      <span class="hub-go">${icon("chevronRight", 18)}</span>
+      <span class="index-meta">${meta}</span>
+      <span class="index-go">${icon("chevronRight", 20)}</span>
     </a>`;
   return `
   ${topbar()}
-  <section class="hero">
-    <div class="hero-inner">
-      <p class="hero-eyebrow">The Shipyard</p>
-      <h1 class="hero-title">A Billion<br />Suns</h1>
-      <p class="hero-sub">The complete fleet builder for the Second Edition. Every faction, every era, every rule written out in full.</p>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="mast-title">
+        <p class="mast-kicker">A Billion Suns / Second Edition</p>
+        <h1 class="mast-word">Shipyard</h1>
+      </div>
+      <dl class="mast-meta">
+        <div><dt>Fleets</dt><dd>${fleetCount}</dd></div>
+        <div><dt>Outfits</dt><dd>${outfitCount}</dd></div>
+        <div><dt>Version</dt><dd>${escapeHtml(version)}</dd></div>
+      </dl>
     </div>
-  </section>
-  <main class="hub-main">
-    <p class="panel-title">What would you like to do?</p>
-    <div class="hub-grid">
-      ${card("#/fleets", "flag", "Fleets", "Build, save, print, and share army lists for any faction and era.", fleetCount ? `${fleetCount} saved` : "")}
-      ${card("#/solo", "book", "Solo / Junkspace", "A full solo game in the ruins of Jura, with a roller and a debt campaign.", outfitCount ? `${outfitCount} outfits` : "")}
-      ${card("#/ships", "compare", "Ship Compendium", "Every ship in the game in one sortable, filterable reference table.")}
-      ${card("#/fleets", "scroll", "How to Play", "Load the two guided Basic Training tutorials and learn the game step by step.")}
-      ${card("#/foundry", "wrench", "Custom Rules", "Create your own factions, ship classes, and personnel.")}
-      ${card("#/changelog", "grid", "What's New", "The changelog and version history.")}
-    </div>
+  </header>
+  <main class="index-wrap">
+    <nav class="index">
+      ${row("01", "#/fleets", "Fleets", "Army lists for any faction and era.", fleetCount ? `${fleetCount} saved` : "")}
+      ${row("02", "#/solo", "Solo Play", "Junkspace: outfit, roller, debt campaign.", outfitCount ? `${outfitCount} ${outfitCount === 1 ? "outfit" : "outfits"}` : "")}
+      ${row("03", "#/ships", "Ship Compendium", "Every ship in the game, filterable.")}
+      ${row("04", "#/fleets", "How to Play", "The two Basic Training tutorials.")}
+      ${row("05", "#/foundry", "Custom Rules", "Your own factions, ships, and personnel.")}
+      ${row("06", "#/changelog", "Changelog", "Version history.")}
+    </nav>
   </main>
   ${toast(state)}
   ${footer()}`;
@@ -299,7 +305,7 @@ function fleetsView(state: AppState): string {
         <h2 class="page-title">Create army</h2>
         <button class="ghost-btn" data-action="toggle-create">${icon("close", 16)} Close</button>
       </div>
-      <p class="panel-note">Choose the era you are playing, then a faction. The rulebook allows any faction in any era, and the builder honours that.</p>
+      <p class="panel-note">Era, then faction. Any faction may be fielded in any era (rulebook p.141).</p>
       ${eraCards}
       <div class="create-extras">
         <div class="era-block freeplay-block">
@@ -333,7 +339,7 @@ function fleetsView(state: AppState): string {
 
     ${
       lists.length === 0
-        ? '<p class="muted" style="margin-top:20px">No fleets yet. Use Create army above; everything you build is saved in this browser automatically.</p>'
+        ? '<p class="muted" style="margin-top:20px">No lists yet. Lists are stored in this browser.</p>'
         : `<div class="table-scroll" style="margin-top:22px"><table class="dock-table">
             <thead><tr><th></th><th>Fleet</th><th>Faction</th><th>Mode</th><th>Cost</th><th>Updated</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
