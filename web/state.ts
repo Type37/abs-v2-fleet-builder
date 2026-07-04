@@ -1,4 +1,4 @@
-import type { Faction, Fleet, GameMode } from "../src/types.ts";
+import type { Era, Faction, Fleet, GameMode } from "../src/types.ts";
 import { STARTING_DEBT_K, ALERT_START } from "../src/data/junkspace.ts";
 import {
   loadCustomFactions,
@@ -137,8 +137,10 @@ export interface AppState {
     shipFilter?: ShipFilter;
     /** The Create-army panel is open on the Fleets page. */
     showCreate?: boolean;
-    /** An open modal dialog, e.g. the unit configuration panel. */
-    modal?: { kind: "unit"; unitId: string };
+    /** An open modal dialog. */
+    modal?:
+      | { kind: "unit"; unitId: string }
+      | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean };
   };
 }
 

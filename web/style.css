@@ -906,6 +906,30 @@ button { font-family: inherit; }
 .carry-toggle:hover { border-color: var(--color-line); }
 .carry-toggle.on { background: var(--color-action); border-color: var(--color-action); color: #fff; }
 
+/* New Fleet modal pickers */
+.modal-panel.modal-lg { width: min(680px, 100%); }
+.nf-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.nf-opt {
+  font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 0; text-transform: none;
+  padding: 10px 16px; border: 1px solid var(--hair); background: var(--paper); color: var(--ink-2); cursor: pointer;
+  min-height: var(--tap);
+}
+.nf-opt:hover { border-color: var(--color-line); color: var(--color-ink); }
+.nf-opt.on { background: var(--color-action); border-color: var(--color-action); color: #fff; }
+.modal-body .faction-plaques { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 480px) { .modal-body .faction-plaques { grid-template-columns: 1fr; } }
+.nf-more {
+  align-self: flex-start; margin-top: 4px; background: transparent; border: none; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: var(--color-action);
+  text-transform: none; padding: 4px 0; text-decoration: underline;
+}
+.nf-more:hover { color: var(--color-action-strong); }
+.nf-all { margin-top: 8px; }
+.nf-alt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 16px; border-top: 1px solid var(--hair-soft); }
+.nf-alt .control-label { margin-right: 4px; }
+.cta-btn[disabled] { background: var(--paper); color: var(--ink-3); border-color: var(--hair); cursor: default; }
+.cta-btn[disabled]:hover { background: var(--paper); color: var(--ink-3); border-color: var(--hair); }
+
 /* ============================================================ PRINT MEDIA */
 
 @media print {

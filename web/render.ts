@@ -254,30 +254,7 @@ function homeView(state: AppState): string {
 // ---------------------------------------------------------------------------
 
 function fleetsView(state: AppState): string {
-  const byEra = factionsByEra(state.customFactions);
   const lists = [...state.lists].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  // The create panel is open on request, or automatically when there is nothing
-  // to show yet.
-  const createOpen = state.ui.showCreate ?? lists.length === 0;
-
-  const eraCards = ERA_ORDER.map((era) => {
-    const factions = byEra.get(era) ?? [];
-    const mode: GameMode = era === "Armageddon" ? "armageddon" : era === "Age of Unity" ? "age-of-unity" : "hypergrowth";
-    const plaques = factions
-      .map(
-        (f) => `
-        <button class="faction-plaque" data-action="new-list" data-mode="${mode}" data-faction="${f.id}">
-          <span class="faction-plaque-name">${escapeHtml(f.name)}</span>
-          <span class="faction-plaque-rule">${escapeHtml(f.rule.name)}</span>
-        </button>`,
-      )
-      .join("");
-    return `
-    <section class="era-block">
-      <h3 class="era-title">${era}</h3>
-      <div class="faction-plaques">${plaques || '<p class="muted">Faction records pending.</p>'}</div>
-    </section>`;
-  }).join("");
 
   const rows = lists
     .map((l) => {
@@ -300,55 +277,84 @@ function fleetsView(state: AppState): string {
     })
     .join("");
 
-  const createPanel = `
-    <section class="create-panel">
-      <div class="create-head">
-        <h2 class="page-title">Create army</h2>
-        <button class="ghost-btn" data-action="toggle-create">${icon("close", 16)} Close</button>
-      </div>
-      <p class="panel-note">Era, then faction. Any faction may be fielded in any era (rulebook p.141).</p>
-      ${eraCards}
-      <div class="create-extras">
-        <div class="era-block freeplay-block">
-          <h3 class="era-title">Free Play</h3>
-          <p class="panel-note">Everything unlocked: mix ships from any faction, any credits limit, no rules checks.</p>
-          <button class="cta-btn" data-action="new-list" data-mode="armageddon" data-faction="__free__" data-freeplay="1">${icon("plus", 18)} Open a free build</button>
-        </div>
-        <div class="era-block freeplay-block">
-          <h3 class="era-title">Basic Training</h3>
-          <p class="panel-note">Two guided tutorials with the Training Fleet pre-loaded. Combat Simulator teaches moving and shooting; Management Training teaches requisition and jumping between Sectors.</p>
-          <div class="training-row">
-            <button class="cta-btn" data-action="new-training" data-mode="combat-simulator">${icon("book", 18)} Combat Simulator</button>
-            <button class="cta-btn" data-action="new-training" data-mode="management-training">${icon("book", 18)} Management Training</button>
-          </div>
-        </div>
-      </div>
-    </section>`;
-
   return `
   ${topbar()}
   <main class="fleets-main">
     <div class="fleets-head">
-      <div>
-        <p class="hero-eyebrow" style="color:var(--red)">Fleets</p>
-        <h1 class="page-title">Your army lists</h1>
-      </div>
-      ${createOpen ? "" : `<button class="cta-btn create-cta" data-action="toggle-create">${icon("plus", 18)} Create army</button>`}
+      <h1 class="page-title">Fleets</h1>
+      <button class="cta-btn create-cta" data-action="open-new-fleet">${icon("plus", 18)} Create army</button>
     </div>
-
-    ${createOpen ? createPanel : ""}
 
     ${
       lists.length === 0
-        ? '<p class="muted" style="margin-top:20px">No lists yet. Lists are stored in this browser.</p>'
+        ? '<p class="muted" style="margin-top:20px">No lists yet. Use Create army to begin; lists are stored in this browser.</p>'
         : `<div class="table-scroll" style="margin-top:22px"><table class="dock-table">
             <thead><tr><th></th><th>Fleet</th><th>Faction</th><th>Mode</th><th>Cost</th><th>Updated</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
           </table></div>`
     }
   </main>
+  ${newFleetModal(state, state.customFactions)}
   ${toast(state)}
   ${footer()}`;
+}
+
+// The New Fleet modal (after the Dropfleet builder): pick era, then credits
+// limit, then a faction. The four factions of the chosen era show first; "show
+// all" reveals the rest, since any faction may be played in any era (p.141).
+// This is steps 1 and 2 of the rulebook build sequence.
+function newFleetModal(state: AppState, customs: Faction[]): string {
+  const m = state.ui.modal;
+  if (!m || m.kind !== "new-fleet") return "";
+  const byEra = factionsByEra(customs);
+  const eraFactions = byEra.get(m.era) ?? [];
+  const others = allFactions(customs).filter((f) => !eraFactions.includes(f));
+  const eraBtn = (era: Era) =>
+    `<button class="nf-opt ${m.era === era ? "on" : ""}" data-action="nf-era" data-era="${era}">${era}</button>`;
+  const sizeBtn = (n: number) =>
+    `<button class="nf-opt ${m.limit === n ? "on" : ""}" data-action="nf-size" data-limit="${n}">${credits(n)}</button>`;
+  const plaque = (f: Faction) =>
+    `<button class="faction-plaque ${m.factionId === f.id ? "selected" : ""}" data-action="nf-faction" data-faction="${f.id}">
+      <span class="faction-plaque-name">${escapeHtml(f.name)}</span>
+      <span class="faction-plaque-rule">${escapeHtml(f.rule.name)}</span>
+    </button>`;
+
+  return `
+  <div class="modal-root">
+    <div class="modal-backdrop" data-action="close-modal"></div>
+    <div class="modal-panel modal-lg" role="dialog" aria-modal="true" aria-label="New fleet">
+      <header class="modal-header">
+        <h2 class="modal-title">New fleet</h2>
+        <button class="modal-close" data-action="close-modal" aria-label="Close">${icon("close", 18)}</button>
+      </header>
+      <div class="modal-body">
+        <div class="modal-field">
+          <span class="control-label">1 / Era</span>
+          <div class="nf-opts">${ERA_ORDER.map(eraBtn).join("")}</div>
+        </div>
+        <div class="modal-field">
+          <span class="control-label">2 / Credits limit</span>
+          <div class="nf-opts">${[300, 400, 500].map(sizeBtn).join("")}</div>
+        </div>
+        <div class="modal-field">
+          <span class="control-label">3 / Faction</span>
+          <div class="faction-plaques">${eraFactions.map(plaque).join("")}</div>
+          <button class="nf-more" data-action="nf-toggle-all">${m.showAll ? "Show fewer" : "Show all factions (any faction, any era)"}</button>
+          ${m.showAll ? `<div class="faction-plaques nf-all">${others.map(plaque).join("")}</div>` : ""}
+        </div>
+        <div class="nf-alt">
+          <span class="control-label">Or</span>
+          <button class="bar-btn" data-action="new-list" data-mode="armageddon" data-faction="__free__" data-freeplay="1">${icon("plus", 14)} Free Play</button>
+          <button class="bar-btn" data-action="new-training" data-mode="combat-simulator">${icon("book", 14)} Combat Simulator</button>
+          <button class="bar-btn" data-action="new-training" data-mode="management-training">${icon("book", 14)} Management Training</button>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button class="bar-btn" data-action="close-modal">Cancel</button>
+        <button class="cta-btn" data-action="nf-create" ${m.factionId ? "" : "disabled"}>Create fleet</button>
+      </footer>
+    </div>
+  </div>`;
 }
 
 // ---------------------------------------------------------------------------

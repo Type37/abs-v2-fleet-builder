@@ -185,7 +185,7 @@ function handleClick(e: MouseEvent): void {
       store.setState((s) => {
         const lists = [...s.lists, list];
         persistLists(lists);
-        return { ...s, lists };
+        return { ...s, lists, ui: { ...s.ui, modal: undefined } };
       });
       location.hash = routeHash({ view: "builder", listId: list.id });
       break;
@@ -525,6 +525,61 @@ function handleClick(e: MouseEvent): void {
       break;
     }
 
+    // ---- New Fleet modal (era, size, faction) -----------------------------
+    case "open-new-fleet": {
+      store.setState((s) => ({
+        ...s,
+        ui: { ...s.ui, modal: { kind: "new-fleet", era: "Armageddon", limit: 300, showAll: false } },
+      }));
+      break;
+    }
+    case "nf-era": {
+      const era = target.dataset["era"] as "Hypergrowth" | "Age of Unity" | "Armageddon";
+      store.setState((s) =>
+        s.ui.modal?.kind === "new-fleet"
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, era, factionId: undefined } } }
+          : s,
+      );
+      break;
+    }
+    case "nf-size": {
+      const limit = Number(target.dataset["limit"]);
+      store.setState((s) =>
+        s.ui.modal?.kind === "new-fleet" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, limit } } } : s,
+      );
+      break;
+    }
+    case "nf-faction": {
+      const factionId = target.dataset["faction"];
+      store.setState((s) =>
+        s.ui.modal?.kind === "new-fleet" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, factionId } } } : s,
+      );
+      break;
+    }
+    case "nf-toggle-all": {
+      store.setState((s) =>
+        s.ui.modal?.kind === "new-fleet"
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, showAll: !s.ui.modal.showAll } } }
+          : s,
+      );
+      break;
+    }
+    case "nf-create": {
+      const m = state.ui.modal;
+      if (m?.kind !== "new-fleet" || !m.factionId) return;
+      const mode: GameMode =
+        m.era === "Armageddon" ? "armageddon" : m.era === "Age of Unity" ? "age-of-unity" : "hypergrowth";
+      const list = createList(mode, m.factionId, false);
+      list.fleet.creditsLimit = m.limit;
+      store.setState((s) => {
+        const lists = [...s.lists, list];
+        persistLists(lists);
+        return { ...s, lists, ui: { ...s.ui, modal: undefined } };
+      });
+      location.hash = routeHash({ view: "builder", listId: list.id });
+      break;
+    }
+
     // ---- Basic Training ---------------------------------------------------
     case "new-training": {
       const mode = target.dataset["mode"] as "combat-simulator" | "management-training";
@@ -532,7 +587,7 @@ function handleClick(e: MouseEvent): void {
       store.setState((s) => {
         const lists = [...s.lists, list];
         persistLists(lists);
-        return { ...s, lists };
+        return { ...s, lists, ui: { ...s.ui, modal: undefined } };
       });
       location.hash = routeHash({ view: "builder", listId: list.id });
       break;
