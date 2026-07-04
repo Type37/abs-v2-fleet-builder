@@ -198,6 +198,10 @@ function footer(): string {
           <dd><a href="https://linktr.ee/warlore" target="_blank" rel="noopener">WarLore</a></dd>
         </div>
         <div class="col">
+          <dt>Downloads</dt>
+          <dd><a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">Quick reference (PDF)</a></dd>
+        </div>
+        <div class="col">
           <dt>Contact</dt>
           <dd><a href="mailto:warlore1@outlook.com">Feedback</a>, <a href="https://github.com/Type37/abs-v2-fleet-builder" target="_blank" rel="noopener">Source</a>, <a href="#/changelog">v${escapeHtml(v)}</a></dd>
         </div>
