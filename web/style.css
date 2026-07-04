@@ -32,9 +32,37 @@
   --display: "Archivo", "Libre Franklin", Arial, sans-serif;
   --sans: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
   --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  /* Data only: stats, costs, counters, phase readouts. Never prose. */
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Semantic colour tokens. Colour signals function, not decoration:
+     action = primary/interactive, accent = attention/keyline, and the three
+     feedback tokens are states. Everything else maps to ink/line/ground. */
+  --color-ground: #ffffff;
+  --color-ink: #0a0e14;
+  --color-action: #0b3d91;
+  --color-action-strong: #062a6b;
+  --color-accent: #fc3d21;
+  --color-feedback-error: #d32c12;
+  --color-feedback-warning: #b4520a;
+  --color-feedback-ok: #0b6b3a;
+  --color-line: #0a0e14;
 
   --shell: 1340px;
   --tap: 44px;
+}
+
+/* Data readouts in IBM Plex Mono: the instrument-panel voice. Numbers and the
+   labels that sit with them, never running text. */
+.stat-chip, .stat-lbl, .stat-val,
+.ship-cost, .roster-unit-cost, .readout-value, .readout-label,
+.cell-num, .comp-num, .comp-cost,
+.pr-num, .pr-cost, .print-stats td,
+.round-value, .roll-die, .debt-figure,
+.segment button, .limit-input, .stepper-count,
+.alert-value, .index-num, .mast-meta dd {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
 }
 
 * { box-sizing: border-box; }
