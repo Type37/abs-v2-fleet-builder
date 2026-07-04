@@ -217,22 +217,50 @@ button { font-family: inherit; }
 .np-title { font-family: var(--display); font-weight: 900; font-size: clamp(40px, 7vw, 72px); line-height: 0.9; letter-spacing: -0.03em; text-transform: uppercase; }
 .np-standfirst { margin-top: 12px; max-width: 56ch; font-size: 15px; color: #d0def4; }
 
-/* Home index: a numbered, rule-divided table of contents, flush-left. No cards,
-   no hover-lift. Hover advances the row and reddens its accents. */
+/* Home index as a command console (after COMP/CON). Angular chamfered rows;
+   on hover a skewed colour field sweeps across, a red tab strikes the leading
+   edge, the number bay inverts, and the whole row advances with a hard shadow.
+   Deliberately not flat, not static: the interaction is the point. */
 .index-wrap { max-width: var(--shell); margin: 0 auto; padding: clamp(20px, 3vw, 34px) clamp(16px, 4vw, 40px) 0; }
-.index { border-top: 2px solid var(--ink); }
+.index { border-top: 3px solid var(--ink); display: flex; flex-direction: column; gap: 8px; }
 .index-row {
-  display: grid; grid-template-columns: 54px 1fr 28px; align-items: center; gap: 18px;
-  padding: 20px 4px; border-bottom: 1px solid var(--hair); color: var(--ink);
-  transition: background 0.12s ease, padding-left 0.12s ease;
+  position: relative; isolation: isolate; overflow: hidden;
+  display: grid; grid-template-columns: 68px 1fr 40px; align-items: center; gap: 18px;
+  padding: 22px 20px; border: 1px solid var(--hair); color: var(--ink);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.16s ease, border-color 0.16s;
 }
-.index-row:hover { background: var(--blue-wash); text-decoration: none; padding-left: 14px; }
-.index-num { font-family: var(--display); font-weight: 900; font-size: 20px; color: var(--red); font-variant-numeric: tabular-nums; }
-.index-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.index-name { font-family: var(--display); font-weight: 800; font-size: clamp(20px, 3vw, 28px); letter-spacing: -0.015em; line-height: 1.05; }
-.index-desc { font-size: 13.5px; color: var(--ink-2); }
-.index-go { color: var(--ink-3); }
-.index-row:hover .index-go, .index-row:hover .index-num { color: var(--red); }
+.index-row::before {
+  content: ""; position: absolute; inset: -2px -2px -2px -14px; z-index: -2;
+  background: var(--blue); transform-origin: left;
+  transform: translateX(-102%) skewX(-9deg);
+  transition: transform 0.3s cubic-bezier(0.16, 0.84, 0.44, 1);
+}
+.index-row::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 0; z-index: -1;
+  background: var(--red); transition: width 0.16s ease;
+}
+.index-row:hover {
+  text-decoration: none; color: #fff; border-color: var(--blue-deep);
+  transform: translateX(10px);
+  filter: drop-shadow(-9px 7px 0 rgba(11, 61, 145, 0.22));
+}
+.index-row:hover::before { transform: translateX(0) skewX(-9deg); }
+.index-row:hover::after { width: 7px; }
+.index-num {
+  display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px;
+  border: 2px solid var(--line-2, #c8ccd3);
+  font-family: var(--display); font-weight: 900; font-size: 22px; color: var(--red);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.16s, background 0.16s, border-color 0.16s;
+}
+.index-row:hover .index-num { color: var(--blue); background: #fff; border-color: #fff; }
+.index-main { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.index-name { font-family: var(--display); font-weight: 800; font-size: clamp(20px, 3vw, 30px); letter-spacing: -0.01em; line-height: 1.02; text-transform: uppercase; }
+.index-desc { font-size: 13.5px; color: var(--ink-2); transition: color 0.16s; }
+.index-row:hover .index-desc { color: #cfe0fb; }
+.index-go { color: var(--ink-3); transition: transform 0.18s ease, color 0.16s; }
+.index-row:hover .index-go { color: #fff; transform: translateX(6px); }
 
 .fleets-main { max-width: var(--shell); margin: 0 auto; padding: clamp(24px, 4vw, 44px) clamp(16px, 4vw, 40px) 0; }
 .fleets-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 2px solid var(--hair); }
@@ -751,7 +779,9 @@ button { font-family: inherit; }
 
   .foundry-main, .changelog-main, .compendium, .solo-body { padding-left: 14px; padding-right: 14px; }
 
-  .index-row { grid-template-columns: 38px 1fr 24px; gap: 12px; padding: 18px 2px; }
+  .index-row { grid-template-columns: 44px 1fr 22px; gap: 12px; padding: 16px 14px; }
+  .index-row:hover { transform: translateX(6px); }
+  .index-num { width: 40px; height: 40px; font-size: 18px; }
 }
 
 @media (max-width: 420px) {
