@@ -580,13 +580,15 @@ function builderView(state: AppState): string {
   <section class="setup-band ${remaining < 0 ? "over" : ""}">
     <div class="setup-head">
       <div class="setup-identity">
-        <p class="band-eyebrow">${list.freePlay ? "Free Play" : MODE_LABEL[list.mode]}</p>
         <input class="fleet-name-input" type="text" value="${escapeHtml(list.fleet.name ?? "")}" placeholder="Name this fleet" data-action="fleet-name" />
       </div>
-      <div class="band-readout">
-        <div class="readout"><span class="readout-label">Limit</span><span class="readout-value">${credits(list.fleet.creditsLimit)}</span></div>
-        <div class="readout"><span class="readout-label">Committed</span><span class="readout-value">${credits(total)}</span></div>
-        <div class="readout"><span class="readout-label">Remaining</span><span class="readout-value ${remaining < 0 ? "negative" : ""}">${remaining < 0 ? "&#8722;" : ""}${credits(Math.abs(remaining))}</span></div>
+      <div class="budget ${remaining < 0 ? "over" : ""}">
+        <div class="budget-head">
+          <span class="budget-now">${credits(total)}</span>
+          <span class="budget-cap">/ ${credits(list.fleet.creditsLimit)}</span>
+          <span class="budget-free">${remaining < 0 ? `OVER ${credits(-remaining)}` : `${credits(remaining)} FREE`}</span>
+        </div>
+        <div class="budget-track"><span class="budget-fill" style="width:${list.fleet.creditsLimit > 0 ? Math.min(100, (total / list.fleet.creditsLimit) * 100) : 0}%"></span></div>
       </div>
     </div>
     <div class="setup-controls">
