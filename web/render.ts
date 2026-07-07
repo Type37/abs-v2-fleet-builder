@@ -12,6 +12,7 @@ import type { AppState } from "./state.ts";
 import { activeList } from "./state.ts";
 import type { SavedList } from "./storage.ts";
 import { soloListView, soloOutfitView } from "./solo.ts";
+import { activeTour } from "./tours.ts";
 
 // The whole app renders from state into #app. Interactive elements carry
 // data-action attributes; actions.ts owns all event handling.
@@ -247,15 +248,20 @@ function tutorialCallout(state: AppState): string {
 // ---------------------------------------------------------------------------
 
 function homeView(state: AppState): string {
-  const row = (n: string, href: string, name: string, desc: string) => `
-    <a class="index-row" href="${href}">
+  // Rows are links, except when an action is given (How to Play opens the New
+  // Fleet modal, where the tutorials actually launch, rather than a dead link).
+  const row = (n: string, href: string, name: string, desc: string, action?: string) => {
+    const inner = `
       <span class="index-num">${n}</span>
       <span class="index-main">
         <span class="index-name">${name}</span>
         <span class="index-desc">${desc}</span>
       </span>
-      <span class="index-go">${icon("chevronRight", 20)}</span>
-    </a>`;
+      <span class="index-go">${icon("chevronRight", 20)}</span>`;
+    return action
+      ? `<button class="index-row" data-action="${action}">${inner}</button>`
+      : `<a class="index-row" href="${href}">${inner}</a>`;
+  };
   return `
   ${topbar()}
   <header class="nameplate">
@@ -274,11 +280,12 @@ function homeView(state: AppState): string {
       ${row("01", "#/fleets", "Fleets", "Build, save, print, and share army lists for any faction and era.")}
       ${row("02", "#/solo", "Solo Play", "Junkspace: build an outfit, roll for the enemy, run the debt campaign.")}
       ${row("03", "#/ships", "Ship Compendium", "Every ship in the game in one filterable, sortable table.")}
-      ${row("04", "#/fleets", "How to Play", "The two Basic Training tutorials, with the Training Fleet pre-loaded.")}
+      ${row("04", "#/fleets", "How to Play", "The two Basic Training tutorials, with the Training Fleet pre-loaded.", "open-new-fleet")}
       ${row("05", "#/foundry", "Custom Rules", "Design your own factions, ship classes, and personnel.")}
       ${row("06", "#/changelog", "Changelog", "What has changed, version by version.")}
     </nav>
   </main>
+  ${newFleetModal(state, state.customFactions)}
   ${toast(state)}
   ${footer()}`;
 }
@@ -996,7 +1003,7 @@ function weaponEditor(shipIndex: number, slot: "primary" | "auxiliary", weapons:
 function foundryEditView(state: AppState, factionId: string): string {
   const f = state.customFactions.find((x) => x.id === factionId);
   if (!f)
-    return `${topbar()}<main class="empty-state"><p>That faction was not found.</p><p><a href="#/foundry">Back to the Foundry</a></p></main>`;
+    return `${topbar()}<main class="empty-state"><p>That faction was not found.</p><p><a href="#/foundry">Back to Custom Rules</a></p></main>`;
 
   const shipBlocks = f.ships
     .map(
@@ -1354,33 +1361,58 @@ function shipsView(state: AppState): string {
     .join("");
 
   const statH = (name: string, label: string) => `<th class="comp-stat" title="${label}">${icon(name, 15, "stat-ico")}</th>`;
-  const body = shown
-    .map(
-      (r) => `
-      <tr>
-        <td class="comp-name">${escapeHtml(r.name)}</td>
-        <td>${escapeHtml(r.factionName)}</td>
-        <td class="comp-era">${escapeHtml(r.era)}</td>
-        <td class="comp-num">${r.mass}</td>
-        <td class="comp-num">${r.thrust}"</td>
-        <td class="comp-num">${r.silhouette}</td>
-        <td class="comp-num">${r.shields}</td>
-        <td class="comp-weap">${r.primary || '<span class="muted">None</span>'}</td>
-        <td class="comp-weap">${r.auxiliary || '<span class="muted">None</span>'}</td>
-        <td class="comp-num comp-cost">${r.costLabel}</td>
-      </tr>`,
-    )
-    .join("");
+  const grouped = f.sort === "faction";
+
+  // A ship's data cells (stats + weapons + cost), shared by both layouts.
+  const shipCells = (r: CompRow) => `
+    <td class="comp-num">${r.mass}</td>
+    <td class="comp-num">${r.thrust}"</td>
+    <td class="comp-num">${r.silhouette}</td>
+    <td class="comp-num">${r.shields}</td>
+    <td class="comp-weap">${r.primary || '<span class="muted">None</span>'}</td>
+    <td class="comp-weap">${r.auxiliary || '<span class="muted">None</span>'}</td>
+    <td class="comp-num comp-cost">${r.costLabel}</td>`;
+
+  // Grouped by faction (the default): a full-width faction bar, then its ships,
+  // with the redundant Faction/Era columns dropped. Sorted by a stat instead:
+  // a flat list with a faction tag, so cross-faction comparison stays global.
+  let bodyHtml: string;
+  if (grouped) {
+    const groups: { key: string; name: string; era: string; rows: CompRow[] }[] = [];
+    for (const r of shown) {
+      let g = groups[groups.length - 1];
+      if (!g || g.key !== r.factionKey) {
+        g = { key: r.factionKey, name: r.factionName, era: r.era, rows: [] };
+        groups.push(g);
+      }
+      g.rows.push(r);
+    }
+    bodyHtml = groups
+      .map(
+        (g) => `
+        <tr class="comp-group"><td colspan="8"><span class="cg-name">${escapeHtml(g.name)}</span><span class="cg-era">${escapeHtml(g.era)}</span><span class="cg-count">${g.rows.length} ${g.rows.length === 1 ? "ship" : "ships"}</span></td></tr>
+        ${g.rows.map((r) => `<tr><td class="comp-name">${escapeHtml(r.name)}</td>${shipCells(r)}</tr>`).join("")}`,
+      )
+      .join("");
+  } else {
+    bodyHtml = shown
+      .map(
+        (r) => `<tr><td class="comp-name">${escapeHtml(r.name)}</td><td class="comp-fac">${escapeHtml(r.factionName)}</td>${shipCells(r)}</tr>`,
+      )
+      .join("");
+  }
+
+  const headRow = grouped
+    ? `<tr><th>Ship</th>${statH("stat-mass", "Mass")}${statH("stat-thrust", "Thrust")}${statH("stat-silhouette", "Silhouette")}${statH("stat-shields", "Shields")}<th>Primary</th><th>Auxiliary</th><th>Cost</th></tr>`
+    : `<tr><th>Ship</th><th>Faction</th>${statH("stat-mass", "Mass")}${statH("stat-thrust", "Thrust")}${statH("stat-silhouette", "Silhouette")}${statH("stat-shields", "Shields")}<th>Primary</th><th>Auxiliary</th><th>Cost</th></tr>`;
+  const colspan = grouped ? 8 : 9;
 
   return `
   ${topbar()}
   <main class="compendium">
     <header class="comp-head">
-      <div>
-        <p class="hero-eyebrow">Reference</p>
-        <h1 class="page-title">Ship Compendium</h1>
-        <p class="panel-note">Every ship in the game, side by side. Filter by era, faction, or mass, search by name, and sort by any stat to compare.</p>
-      </div>
+      <h1 class="page-title">Ship Compendium</h1>
+      <p class="panel-note">Every ship in the game. Grouped by faction, or sort by any stat to compare across the whole galaxy.</p>
     </header>
 
     <div class="comp-filters">
@@ -1399,15 +1431,9 @@ function shipsView(state: AppState): string {
 
     <p class="comp-count">${shown.length} of ${rows.length} ships</p>
     <div class="table-scroll comp-scroll">
-      <table class="comp-table">
-        <thead>
-          <tr>
-            <th>Ship</th><th>Faction</th><th>Era</th>
-            ${statH("stat-mass", "Mass")}${statH("stat-thrust", "Thrust")}${statH("stat-silhouette", "Silhouette")}${statH("stat-shields", "Shields")}
-            <th>Primary</th><th>Auxiliary</th><th>Cost</th>
-          </tr>
-        </thead>
-        <tbody>${body || '<tr><td colspan="10" class="muted" style="padding:20px">No ships match these filters.</td></tr>'}</tbody>
+      <table class="comp-table ${grouped ? "grouped" : ""}">
+        <thead>${headRow}</thead>
+        <tbody>${bodyHtml || `<tr><td colspan="${colspan}" class="muted" style="padding:20px">No ships match these filters.</td></tr>`}</tbody>
       </table>
     </div>
   </main>
@@ -1419,27 +1445,58 @@ function shipsView(state: AppState): string {
 // Root
 // ---------------------------------------------------------------------------
 
+// A first-visit coachmark: a small white popover anchored to a live element
+// (positioned in main.ts, since this app re-renders as a plain HTML string).
+// Hidden until positioning finds its target, so it never flashes at 0,0.
+function tourPopover(state: AppState): string {
+  const active = activeTour(state);
+  if (!active) return "";
+  const { tour, step } = active;
+  const s = tour.steps[step];
+  if (!s) return "";
+  const dots = tour.steps
+    .map((_, i) => `<span class="tour-dot ${i === step ? "on" : ""}"></span>`)
+    .join("");
+  const isLast = step >= tour.steps.length - 1;
+  return `
+  <div class="tour-pop" data-target="${escapeHtml(s.selector)}">
+    <div class="tour-pop-arrow"></div>
+    <div class="tour-head">
+      <h4 class="tour-title">${escapeHtml(s.title)}</h4>
+      <button class="tour-close" data-action="tour-dismiss" data-tour="${tour.id}" aria-label="Close">${icon("close", 16)}</button>
+    </div>
+    <p class="tour-body">${escapeHtml(s.body)}</p>
+    <div class="tour-foot">
+      <span class="tour-dots">${dots}</span>
+      <button class="tour-next" data-action="tour-next" data-tour="${tour.id}" data-step="${step}" data-len="${tour.steps.length}" aria-label="${isLast ? "Done" : "Next"}">${icon(isLast ? "check" : "chevronRight", 16)}</button>
+    </div>
+  </div>`;
+}
+
 export function render(state: AppState): string {
-  switch (state.route.view) {
-    case "home":
-      return homeView(state);
-    case "fleets":
-      return fleetsView(state);
-    case "builder":
-      return builderView(state);
-    case "print":
-      return printView(state);
-    case "foundry":
-      return state.route.factionId ? foundryEditView(state, state.route.factionId) : foundryListView(state);
-    case "solo":
-      return `${topbar()}${soloListView(state)}${toast(state)}${footer()}`;
-    case "solo-outfit":
-      return `${topbar()}${soloOutfitView(state)}${toast(state)}${footer()}`;
-    case "ships":
-      return shipsView(state);
-    case "play":
-      return playView(state);
-    case "changelog":
-      return changelogView();
-  }
+  const body = (() => {
+    switch (state.route.view) {
+      case "home":
+        return homeView(state);
+      case "fleets":
+        return fleetsView(state);
+      case "builder":
+        return builderView(state);
+      case "print":
+        return printView(state);
+      case "foundry":
+        return state.route.factionId ? foundryEditView(state, state.route.factionId) : foundryListView(state);
+      case "solo":
+        return `${topbar()}${soloListView(state)}${toast(state)}${footer()}`;
+      case "solo-outfit":
+        return `${topbar()}${soloOutfitView(state)}${toast(state)}${footer()}`;
+      case "ships":
+        return shipsView(state);
+      case "play":
+        return playView(state);
+      case "changelog":
+        return changelogView();
+    }
+  })();
+  return `${body}${tourPopover(state)}`;
 }

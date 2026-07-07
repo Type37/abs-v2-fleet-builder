@@ -119,11 +119,17 @@ export interface Onboarding {
   visits: number;
   /** True once the tutorial suggestion has been dismissed or acted on. */
   tutorialsDismissed: boolean;
+  /** Ids of first-visit coachmark tours the user has finished or closed. */
+  toursSeen: string[];
 }
 
 export function loadOnboarding(): Onboarding {
   const o = read<Partial<Onboarding>>(ONBOARDING_KEY, {});
-  return { visits: o.visits ?? 0, tutorialsDismissed: o.tutorialsDismissed ?? false };
+  return {
+    visits: o.visits ?? 0,
+    tutorialsDismissed: o.tutorialsDismissed ?? false,
+    toursSeen: Array.isArray(o.toursSeen) ? o.toursSeen : [],
+  };
 }
 
 export function persistOnboarding(o: Onboarding): void {

@@ -67,7 +67,6 @@ export function soloListView(state: AppState): string {
   return `
   <section class="solo-hero">
     <div class="hero-inner">
-      <p class="hero-eyebrow">Solo Play</p>
       <h1 class="hero-title">Junkspace</h1>
       <p class="hero-sub">The Unhuman War has shattered the galaxy. In the ruins of the Jura system you lead a rag-tag outfit of scavengers, in debt to a dangerous local gangster, flying Jobs against an automated enemy to clear what you owe. A full solo game: build your outfit, run the roller for the Hostiles, and track the campaign.</p>
     </div>

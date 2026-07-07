@@ -32,8 +32,6 @@
   --display: "Archivo", "Libre Franklin", Arial, sans-serif;
   --sans: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
   --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
-  /* Data only: stats, costs, counters, phase readouts. Never prose. */
-  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   /* Semantic colour tokens. Colour signals function, not decoration:
      action = primary/interactive, accent = attention/keyline, and the three
@@ -55,18 +53,17 @@
   --tap: 44px;
 }
 
-/* Data readouts in IBM Plex Mono: the instrument-panel voice. Numbers and the
-   labels that sit with them, never running text. */
-.stat-chip, .stat-lbl, .stat-val,
-.ship-cost, .roster-unit-cost, .readout-value, .readout-label,
-.cell-num, .comp-num, .comp-cost,
-.pr-num, .pr-cost, .print-stats td,
-.round-value, .roll-die, .debt-figure,
-.segment button, .limit-input, .stepper-count,
-.alert-value, .index-num, .mast-meta dd {
-  font-family: var(--mono);
+/* Tabular figures, so numbers line up in columns. One typeface throughout: the
+   mono experiment is retired because it split identical figures (a fleet's cost)
+   across two voices depending on the screen. */
+.ship-cost, .roster-unit-cost, .readout-value, .cell-num, .comp-num, .comp-cost,
+.print-stats td, .pr-num, .pr-cost, .round-value, .roll-die, .debt-figure,
+.segment button, .limit-input, .stepper-count, .alert-value, .index-num {
   font-variant-numeric: tabular-nums;
 }
+/* Prominent money/quantity figures share one voice (Archivo) everywhere they
+   appear: roster, catalogue, dock, and compendium. */
+.cell-num, .comp-cost { font-family: var(--display); }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -268,7 +265,7 @@ button { font-family: inherit; }
 .wm-delta { height: 0.82em; width: auto; margin-right: 0.05em; color: #fff; flex-shrink: 0; }
 .wm-suns { color: transparent; -webkit-text-stroke: 2.5px #fff; margin-left: 0.06em; }
 .wm-tag { font-family: var(--display); font-weight: 600; font-size: clamp(10px, 2.1vw, 16px); letter-spacing: 0.38em; text-transform: uppercase; color: #d6e2f6; padding-left: 0.38em; margin-top: 8px; }
-.wm-sub { font-family: var(--mono); font-size: 12px; font-weight: 500; color: #8fb0e0; margin-top: 12px; }
+.wm-sub { font-family: var(--sans); font-size: 12px; font-weight: 500; color: #8fb0e0; margin-top: 12px; }
 
 /* First-run tutorial nudge: a bordered callout with a red index tick, not a
    floating toast. Retires itself after the second visit. */
@@ -293,9 +290,10 @@ button { font-family: inherit; }
 .index-wrap { max-width: var(--shell); margin: 0 auto; padding: clamp(20px, 3vw, 34px) clamp(16px, 4vw, 40px) 0; }
 .index { border-top: 3px solid var(--ink); display: flex; flex-direction: column; gap: 6px; }
 .index-row {
-  position: relative; isolation: isolate; overflow: hidden;
+  position: relative; isolation: isolate; overflow: hidden; width: 100%;
   display: grid; grid-template-columns: 60px 1fr 36px; align-items: center; gap: 16px;
-  padding: 15px 18px; border: 1px solid var(--hair); color: var(--ink);
+  padding: 15px 18px; border: 1px solid var(--hair); color: var(--ink); background: var(--paper);
+  font-family: inherit; text-align: left; cursor: pointer;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.16s ease, border-color 0.16s;
 }
@@ -365,7 +363,7 @@ button { font-family: inherit; }
   padding: 13px 15px; display: flex; flex-direction: column; gap: 3px;
   transition: border-color 0.12s ease, background 0.12s ease, transform 0.06s ease;
 }
-.faction-plaque:hover { border-color: var(--hair); border-left-color: var(--red); background: var(--blue-wash); }
+.faction-plaque:hover { border-color: var(--hair); border-left-color: var(--color-action); background: var(--blue-wash); }
 .faction-plaque:active { transform: translateY(1px); }
 .faction-plaque.selected { background: var(--blue); border-color: var(--blue); border-left-color: var(--red); }
 .faction-plaque.selected .faction-plaque-name { color: #fff; }
@@ -466,7 +464,7 @@ button { font-family: inherit; }
 /* Budget as a telemetry gauge, not three stat readouts. Mono figures over a
    ticked track; the fill is the instrument. */
 .budget { flex: 1 1 300px; max-width: 520px; min-width: 260px; }
-.budget-head { display: flex; align-items: baseline; gap: 10px; font-family: var(--mono); }
+.budget-head { display: flex; align-items: baseline; gap: 10px; font-family: var(--sans); }
 .budget-now { font-size: clamp(22px, 3vw, 30px); font-weight: 700; color: var(--color-ink); letter-spacing: -0.02em; }
 .budget-cap { font-size: 15px; font-weight: 500; color: var(--ink-3); }
 .budget-free { margin-left: auto; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--color-action); }
@@ -519,7 +517,7 @@ button { font-family: inherit; }
 .rule-card-text { font-family: var(--serif); font-size: 15px; line-height: 1.55; color: var(--ink); }
 .rule-card-meta { margin-top: 10px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
 
-.catalog-title { position: relative; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink); padding: 0 0 8px 18px; margin: 30px 0 14px; border-bottom: 2px solid var(--color-line); display: flex; justify-content: space-between; align-items: baseline; text-transform: uppercase; }
+.catalog-title { position: relative; font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink); padding: 0 0 8px 18px; margin: 30px 0 14px; border-bottom: 2px solid var(--color-line); display: flex; justify-content: space-between; align-items: baseline; text-transform: uppercase; }
 .catalog-title::before { content: ""; position: absolute; left: 0; top: 3px; width: 10px; height: 10px; background: var(--color-accent); }
 .catalog-title:first-child, .catalog-title:first-of-type { margin-top: 0; }
 .catalog-title .muted { text-transform: none; letter-spacing: 0; font-size: 11px; }
@@ -566,7 +564,7 @@ button { font-family: inherit; }
 .roster-emblem { color: #fff; }
 .roster-title { font-family: var(--display); font-weight: 800; font-size: 21px; letter-spacing: -0.01em; line-height: 1.1; }
 .roster-subtitle { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #bcd0f2; margin-top: 3px; }
-.roster-section { position: relative; font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink); margin: 0; padding: 12px 20px 8px 34px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--hair-soft); text-transform: uppercase; }
+.roster-section { position: relative; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink); margin: 0; padding: 12px 20px 8px 34px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--hair-soft); text-transform: uppercase; }
 .roster-section::before { content: ""; position: absolute; left: 20px; top: 15px; width: 8px; height: 8px; background: var(--color-accent); }
 .roster-section .muted { font-variant-numeric: tabular-nums; }
 .roster-hint { padding: 14px 20px; font-size: 13px; color: var(--ink-3); font-style: italic; }
@@ -759,9 +757,21 @@ button { font-family: inherit; }
 .comp-table tbody tr:hover { background: var(--blue-wash); }
 .comp-name { font-family: var(--display); font-weight: 700; font-size: 14px; white-space: nowrap; }
 .comp-era { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.comp-fac { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
 .comp-num { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .comp-cost { color: var(--blue); }
 .comp-weap { font-family: var(--serif); font-size: 12.5px; min-width: 170px; }
+
+/* Faction group bar: turns the dense list into a scannable, foldered index. */
+.comp-group td {
+  background: var(--ink); color: #fff; padding: 8px 12px;
+  position: sticky; top: 34px; z-index: 1;
+}
+.comp-group .cg-name { font-family: var(--display); font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.01em; }
+.comp-group .cg-era { margin-left: 12px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9fb2d6; }
+.comp-group .cg-count { float: right; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #9fb2d6; }
+.comp-table.grouped tbody td { border-top: 1px solid var(--hair-soft); }
+.comp-table.grouped .comp-group + tr td { border-top: none; }
 
 /* ============================================================ SOLO / JUNKSPACE */
 
@@ -898,8 +908,8 @@ button { font-family: inherit; }
 .ru-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ru-name { font-family: var(--display); font-weight: 700; font-size: 15px; line-height: 1.1; }
 .ru-sub { font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.ru-x { font-family: var(--mono); font-weight: 600; color: var(--ink); }
-.ru-carry { display: inline-flex; align-items: center; gap: 2px; font-family: var(--mono); font-weight: 600; color: var(--color-action); }
+.ru-x { font-family: var(--sans); font-weight: 600; color: var(--ink); }
+.ru-carry { display: inline-flex; align-items: center; gap: 2px; font-family: var(--sans); font-weight: 600; color: var(--color-action); }
 .ru-go { color: var(--ink-3); }
 .roster-sheet .roster-unit:hover .ru-go { color: var(--color-accent); }
 
@@ -913,7 +923,7 @@ button { font-family: inherit; }
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%);
 }
 .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; background: var(--color-action); color: #fff; }
-.modal-title { font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
+.modal-title { font-family: var(--sans); font-weight: 700; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
 .modal-close { background: transparent; border: 1px solid #3a5aa0; color: #fff; cursor: pointer; display: inline-flex; padding: 6px; }
 .modal-close:hover { background: #fff; color: var(--color-action); }
 .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
@@ -924,7 +934,7 @@ button { font-family: inherit; }
 .modal-spec { display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 14px; border: 1px solid var(--hair); border-left: 3px solid var(--color-action); background: #f8f9fc; }
 .spec-glyph { color: var(--color-action); }
 .spec-name { font-family: var(--display); font-weight: 800; font-size: 17px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; text-transform: none; letter-spacing: 0; }
-.spec-cost { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--color-action); }
+.spec-cost { font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--color-action); }
 .spec-body .ship-weapons { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 @media (max-width: 520px) { .modal-grid { grid-template-columns: 1fr; } }
@@ -954,7 +964,7 @@ button { font-family: inherit; }
 @media (max-width: 480px) { .modal-body .faction-plaques { grid-template-columns: 1fr; } }
 .nf-more {
   align-self: flex-start; margin-top: 4px; background: transparent; border: none; cursor: pointer;
-  font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: var(--color-action);
+  font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: var(--color-action);
   text-transform: none; padding: 4px 0; text-decoration: underline;
 }
 .nf-more:hover { color: var(--color-action-strong); }
@@ -963,6 +973,55 @@ button { font-family: inherit; }
 .nf-alt .control-label { margin-right: 4px; }
 .cta-btn[disabled] { background: var(--paper); color: var(--ink-3); border-color: var(--hair); cursor: default; }
 .cta-btn[disabled]:hover { background: var(--paper); color: var(--ink-3); border-color: var(--hair); }
+
+/* First-visit coachmark: a small white popover pinned to a live element by
+   main.ts (positionTour). Hidden until placed, so it never flashes at 0,0. */
+.tour-pop {
+  display: none;
+  position: fixed;
+  z-index: 80;
+  visibility: hidden;
+  flex-direction: column;
+  width: min(300px, calc(100vw - 24px));
+  background: var(--paper);
+  border: 2px solid var(--color-line);
+  box-shadow: 0 6px 0 rgba(10, 14, 20, 0.12);
+}
+.tour-pop.placed { visibility: visible; }
+.tour-pop-arrow {
+  position: absolute;
+  top: 50%;
+  left: -9px;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%) rotate(45deg);
+  background: var(--paper);
+  border-left: 2px solid var(--color-line);
+  border-bottom: 2px solid var(--color-line);
+}
+.tour-pop.arrow-right .tour-pop-arrow {
+  left: auto;
+  right: -9px;
+  border-left: none;
+  border-bottom: none;
+  border-right: 2px solid var(--color-line);
+  border-top: 2px solid var(--color-line);
+}
+.tour-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 0; }
+.tour-title { font-family: var(--display); font-weight: 800; font-size: 15px; letter-spacing: -0.01em; color: var(--color-ink); }
+.tour-close { background: transparent; border: none; color: var(--ink-3); cursor: pointer; display: inline-flex; padding: 4px; margin: -4px; }
+.tour-close:hover { color: var(--color-ink); }
+.tour-body { font-family: var(--sans); font-size: 13px; line-height: 1.45; color: var(--ink-2); padding: 8px 14px 14px; }
+.tour-foot { display: flex; align-items: center; justify-content: space-between; padding: 0 14px 14px; }
+.tour-dots { display: inline-flex; gap: 6px; }
+.tour-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--hair-soft); }
+.tour-dot.on { background: var(--color-action); }
+.tour-next {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0;
+  background: transparent; border: 1px solid var(--hair); color: var(--color-ink); cursor: pointer;
+}
+.tour-next:hover { border-color: var(--color-action); color: var(--color-action); }
 
 /* ============================================================ PRINT MEDIA */
 

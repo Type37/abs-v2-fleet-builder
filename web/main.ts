@@ -22,6 +22,7 @@ function paint(): void {
 
   root.innerHTML = render(store.getState());
   enhanceNav();
+  positionTour();
 
   if (activeId) {
     const restored = document.getElementById(activeId);
@@ -91,7 +92,41 @@ function enhanceNav(): void {
   nav.addEventListener("mouseleave", () => place(active));
 }
 
-window.addEventListener("resize", enhanceNav);
+// The tour popover is a real DOM node in the rendered string, but it targets
+// an arbitrary element elsewhere on the page, so it is positioned here (like
+// enhanceNav's pill) rather than laid out purely in CSS.
+function positionTour(): void {
+  const pop = document.querySelector<HTMLElement>(".tour-pop");
+  if (!pop) return;
+  const selector = pop.dataset["target"];
+  const anchor = selector ? document.querySelector<HTMLElement>(selector) : null;
+  if (!anchor) return; // Target not on this page yet (e.g. an empty roster); stays hidden.
+
+  const a = anchor.getBoundingClientRect();
+  const gap = 14;
+  pop.style.display = "flex";
+  const p = pop.getBoundingClientRect();
+
+  let left = a.right + gap;
+  let arrowRight = false;
+  if (left + p.width > window.innerWidth - 12) {
+    left = a.left - p.width - gap;
+    arrowRight = true;
+  }
+  left = Math.max(12, Math.min(left, window.innerWidth - p.width - 12));
+  let top = a.top + a.height / 2 - p.height / 2;
+  top = Math.max(12, Math.min(top, window.innerHeight - p.height - 12));
+
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
+  pop.classList.toggle("arrow-right", arrowRight);
+  pop.classList.add("placed");
+}
+
+window.addEventListener("resize", () => {
+  enhanceNav();
+  positionTour();
+});
 
 window.addEventListener("hashchange", () => {
   store.setState((s) => ({ ...s, route: parseRoute(location.hash) }));

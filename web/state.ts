@@ -144,6 +144,8 @@ export interface AppState {
     modal?:
       | { kind: "unit"; unitId: string }
       | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean };
+    /** In-progress first-visit coachmark tour, once the user has advanced past step 0. */
+    tour?: { tourId: string; step: number };
   };
 }
 

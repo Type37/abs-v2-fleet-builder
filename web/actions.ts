@@ -167,6 +167,22 @@ function readEmblemImage(file: File): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
+// First-visit coachmark tours
+// ---------------------------------------------------------------------------
+
+/** Marks a tour as seen for good (dedup, since dismiss and the last "next" both call this) and closes it. */
+function finishTour(tourId: string): void {
+  store.setState((s) => {
+    const toursSeen = s.onboarding.toursSeen.includes(tourId)
+      ? s.onboarding.toursSeen
+      : [...s.onboarding.toursSeen, tourId];
+    const onboarding = { ...s.onboarding, toursSeen };
+    persistOnboarding(onboarding);
+    return { ...s, onboarding, ui: { ...s.ui, tour: undefined } };
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Click handling
 // ---------------------------------------------------------------------------
 
@@ -332,6 +348,24 @@ function handleClick(e: MouseEvent): void {
     }
     case "close-modal": {
       store.setState((s) => ({ ...s, ui: { ...s.ui, modal: undefined } }));
+      break;
+    }
+    case "tour-next": {
+      const tourId = target.dataset["tour"];
+      const step = Number(target.dataset["step"]);
+      const len = Number(target.dataset["len"]);
+      if (!tourId) return;
+      if (step + 1 >= len) {
+        finishTour(tourId);
+      } else {
+        store.setState((s) => ({ ...s, ui: { ...s.ui, tour: { tourId, step: step + 1 } } }));
+      }
+      break;
+    }
+    case "tour-dismiss": {
+      const tourId = target.dataset["tour"];
+      if (!tourId) return;
+      finishTour(tourId);
       break;
     }
     case "toggle-carry": {
