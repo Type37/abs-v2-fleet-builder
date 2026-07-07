@@ -554,6 +554,15 @@ function handleClick(e: MouseEvent): void {
       store.setState((s) => ({ ...s, ui: { ...s.ui, shipFilter: { ...EMPTY_SHIP_FILTER } } }));
       break;
     }
+    case "ship-sort": {
+      const sort = target.dataset["sort"];
+      if (!sort) return;
+      store.setState((s) => {
+        const current = s.ui.shipFilter ?? { ...EMPTY_SHIP_FILTER };
+        return { ...s, ui: { ...s.ui, shipFilter: { ...current, sort } } };
+      });
+      break;
+    }
     case "toggle-create": {
       store.setState((s) => ({ ...s, ui: { ...s.ui, showCreate: !(s.ui.showCreate ?? s.lists.length === 0) } }));
       break;

@@ -180,35 +180,20 @@ function topbar(): string {
 }
 
 function footer(): string {
-  // A colophon, not a link bar: a bold dark imprint block with the wordmark and
-  // labelled columns, in the manual/back-matter idiom.
+  // The uniform WarLore builder footer: one centered line, dot-separated. The
+  // separators are styled spans, not literal interpunct characters.
   const v = CHANGELOG[0]?.version ?? "";
+  const sep = '<span class="gif-sep" aria-hidden="true"></span>';
   return `
-  <footer class="colophon">
-    <div class="colophon-inner">
-      <div class="colophon-mark">
-        <span class="colophon-word">Shipyard</span>
-        <span class="colophon-tag">A Billion Suns / Second Edition</span>
-      </div>
-      <dl class="colophon-cols">
-        <div class="col">
-          <dt>Game</dt>
-          <dd>By <a href="https://planetsmashergames.com/a-billion-suns/" target="_blank" rel="noopener">Mike Hutchinson</a>, published by Osprey Games</dd>
-        </div>
-        <div class="col">
-          <dt>Built by</dt>
-          <dd><a href="https://linktr.ee/warlore" target="_blank" rel="noopener">WarLore</a></dd>
-        </div>
-        <div class="col">
-          <dt>Downloads</dt>
-          <dd><a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">Quick reference (PDF)</a></dd>
-        </div>
-        <div class="col">
-          <dt>Contact</dt>
-          <dd><a href="mailto:warlore1@outlook.com">Feedback</a>, <a href="https://github.com/Type37/abs-v2-fleet-builder" target="_blank" rel="noopener">Source</a>, <a href="#/changelog">v${escapeHtml(v)}</a></dd>
-        </div>
-      </dl>
-      <p class="colophon-fine">An unofficial player aid. Not affiliated with the publisher.</p>
+  <footer class="game-info-footer">
+    <div class="gif-inner">
+      <span class="gif-title">A Billion Suns</span>${sep}
+      <span>by <a href="https://planetsmashergames.com/a-billion-suns/" target="_blank" rel="noopener">Mike Hutchinson</a>, Osprey Games</span>${sep}
+      <a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">Quick Reference</a>${sep}
+      <span class="gif-builder">Fleet builder by <a href="https://linktr.ee/warlore" target="_blank" rel="noopener">WarLore</a></span>${sep}
+      <a href="mailto:warlore1@outlook.com">Send Feedback</a>${sep}
+      <a href="https://github.com/Type37/abs-v2-fleet-builder" target="_blank" rel="noopener">Source on GitHub</a>${sep}
+      <a href="#/changelog">v${escapeHtml(v)}</a>
     </div>
   </footer>`;
 }
@@ -268,9 +253,8 @@ function homeView(state: AppState): string {
     <div class="nameplate-inner">
       <h1 class="wordmark-hero">
         <span class="wm-edition">Second Edition</span>
-        <span class="wm-lockup"><svg class="wm-delta" viewBox="0 0 116 104" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="10.5" stroke-linejoin="miter"><path d="M58 8 L108 96 L8 96 Z"/><path d="M31 71 H85"/></svg><span class="wm-billion">Billion</span><span class="wm-suns">Suns</span></span>
+        <span class="wm-lockup"><svg class="wm-delta" viewBox="0 0 104 104" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="11" stroke-linejoin="miter"><path d="M52 7 L92 97 L12 97 Z"/><path d="M30 72 H74"/></svg><span class="wm-billion">Billion</span><span class="wm-suns">Suns</span></span>
         <span class="wm-tag">Interstellar Fleet Battles</span>
-        <span class="wm-sub">Fleet builder and ship reference</span>
       </h1>
     </div>
   </header>
@@ -282,7 +266,6 @@ function homeView(state: AppState): string {
       ${row("03", "#/ships", "Ship Compendium", "Every ship in the game in one filterable, sortable table.")}
       ${row("04", "#/fleets", "How to Play", "The two Basic Training tutorials, with the Training Fleet pre-loaded.", "open-new-fleet")}
       ${row("05", "#/foundry", "Custom Rules", "Design your own factions, ship classes, and personnel.")}
-      ${row("06", "#/changelog", "Changelog", "What has changed, version by version.")}
     </nav>
   </main>
   ${newFleetModal(state, state.customFactions)}
@@ -728,9 +711,12 @@ function builderView(state: AppState): string {
       ${
         faction && !list.freePlay
           ? `<article class="rule-card">
+              <div class="rule-card-stats">
+                <div class="rc-stat"><span class="rc-stat-label">Initiative</span><span class="rc-stat-val">${escapeHtml(faction.initiative)}</span></div>
+                <div class="rc-stat"><span class="rc-stat-label">Command tokens / round</span><span class="rc-stat-val">${escapeHtml(faction.cmdTokens)}</span></div>
+              </div>
               <h3 class="rule-card-title">${escapeHtml(faction.rule.name)}</h3>
               <p class="rule-card-text">${escapeHtml(faction.rule.text)}</p>
-              <p class="rule-card-meta">Initiative ${escapeHtml(faction.initiative)}. Command tokens each round: ${escapeHtml(faction.cmdTokens)}.</p>
             </article>`
           : ""
       }
@@ -1348,20 +1334,14 @@ function shipsView(state: AppState): string {
   const massOptions = [0, 1, 2, 3]
     .map((m) => `<option value="${m}" ${f.mass === String(m) ? "selected" : ""}>Mass ${m}</option>`)
     .join("");
-  const sortOptions = [
-    ["faction", "Era and faction"],
-    ["name", "Name"],
-    ["cost", "Cost (high to low)"],
-    ["mass", "Mass (low to high)"],
-    ["silhouette", "Silhouette (high to low)"],
-    ["thrust", "Thrust (high to low)"],
-    ["shields", "Shields (high to low)"],
-  ]
-    .map(([v, l]) => `<option value="${v}" ${f.sort === v ? "selected" : ""}>${l}</option>`)
-    .join("");
-
-  const statH = (name: string, label: string) => `<th class="comp-stat" title="${label}">${icon(name, 15, "stat-ico")}</th>`;
   const grouped = f.sort === "faction";
+  // Clickable sort headers, each showing icon AND text. Click a column to sort
+  // by it; click Faction to fold back into groups. No sort dropdown.
+  const sortH = (key: string, ico: string, label: string) =>
+    `<th class="comp-stat comp-sortable ${f.sort === key ? "sorted" : ""}" data-action="ship-sort" data-sort="${key}" title="Sort by ${label}">${icon(ico, 13, "stat-ico")}<span class="comp-hlabel">${label}</span></th>`;
+  const textH = (key: string, label: string) =>
+    `<th class="comp-sortable ${f.sort === key ? "sorted" : ""}" data-action="ship-sort" data-sort="${key}">${label}</th>`;
+  const statHeaders = `${sortH("mass", "stat-mass", "Mass")}${sortH("thrust", "stat-thrust", "Thr")}${sortH("silhouette", "stat-silhouette", "Sil")}${sortH("shields", "stat-shields", "Shd")}`;
 
   // A ship's data cells (stats + weapons + cost), shared by both layouts.
   const shipCells = (r: CompRow) => `
@@ -1403,8 +1383,8 @@ function shipsView(state: AppState): string {
   }
 
   const headRow = grouped
-    ? `<tr><th>Ship</th>${statH("stat-mass", "Mass")}${statH("stat-thrust", "Thrust")}${statH("stat-silhouette", "Silhouette")}${statH("stat-shields", "Shields")}<th>Primary</th><th>Auxiliary</th><th>Cost</th></tr>`
-    : `<tr><th>Ship</th><th>Faction</th>${statH("stat-mass", "Mass")}${statH("stat-thrust", "Thrust")}${statH("stat-silhouette", "Silhouette")}${statH("stat-shields", "Shields")}<th>Primary</th><th>Auxiliary</th><th>Cost</th></tr>`;
+    ? `<tr>${textH("name", "Ship")}${statHeaders}<th>Primary</th><th>Auxiliary</th>${textH("cost", "Cost")}</tr>`
+    : `<tr>${textH("name", "Ship")}${textH("faction", "Faction")}${statHeaders}<th>Primary</th><th>Auxiliary</th>${textH("cost", "Cost")}</tr>`;
   const colspan = grouped ? 8 : 9;
 
   return `
@@ -1424,8 +1404,6 @@ function shipsView(state: AppState): string {
         <select data-action="ship-filter" data-field="faction"><option value="">All factions</option>${facOptions}</select></label>
       <label class="control-group"><span class="control-label">Mass</span>
         <select data-action="ship-filter" data-field="mass"><option value="">All masses</option>${massOptions}</select></label>
-      <label class="control-group"><span class="control-label">Sort</span>
-        <select data-action="ship-filter" data-field="sort">${sortOptions}</select></label>
       ${f.era || f.faction || f.mass || f.q ? '<button class="ghost-btn" data-action="ship-filter-clear">Clear filters</button>' : ""}
     </div>
 

@@ -9,6 +9,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.5.0",
+    date: "2026-07-07",
+    title: "Sharper type, a sortable compendium",
+    items: [
+      "The wordmark now leans with the official Second Edition logotype, and its A is the leaning delta from the cover.",
+      "The Ship Compendium sorts by clicking any column heading, each shown with both its icon and its name. The old sort menu is gone; click Faction to fold the list back into faction groups.",
+      "A faction's Initiative and per-round Command tokens now read as two large figures at the top of its rule card, instead of a small line of text.",
+      "One typeface family retired: the interface is now Archivo, Libre Franklin, and Source Serif 4 throughout, with the monospace dropped.",
+      "A single-line credits footer matched to the other WarLore builders.",
+    ],
+  },
+  {
     version: "0.4.0",
     date: "2026-07-03",
     title: "Basic Training and the table companion",
