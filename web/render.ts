@@ -5,7 +5,7 @@ import { GENERIC_HVP } from "../src/data/index.ts";
 import { JUNKSPACE_SHIPS } from "../src/data/junkspace.ts";
 import { allFactions, factionsByEra, findFaction, makeCatalog, ERA_ORDER } from "./catalog.ts";
 import { auxSlotText, credits, escapeHtml, formatDate, primarySlotText } from "./format.ts";
-import { emblem, emblemMark, EMBLEM_IDS, icon, massGlyph, statChips } from "./icons.ts";
+import { emblem, emblemMark, EMBLEM_IDS, icon, initiativeDice, massGlyph, statChips } from "./icons.ts";
 import { iconLibraryControls, libraryUrl } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
 import type { AppState } from "./state.ts";
@@ -405,8 +405,8 @@ function speciesSelect(unit: FleetUnit): string {
 function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boolean): string {
   const addId = composite ? `${ownerFaction.id}/${ship.id}` : ship.id;
   return `
-  <article class="ship-row">
-    <div class="ship-row-glyph">${massGlyph(ship.mass, 26)}</div>
+  <article class="ship-row ${ship.image ? "has-art" : ""}">
+    <div class="ship-row-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" loading="lazy" />` : massGlyph(ship.mass, 26)}</div>
     <div class="ship-row-body">
       <div class="ship-row-head">
         <h4 class="ship-name">${escapeHtml(ship.name)}</h4>
@@ -460,8 +460,8 @@ function unitModal(state: AppState, list: SavedList, faction: Faction | undefine
         </label>
         ${
           ship
-            ? `<div class="modal-spec">
-                <div class="spec-glyph">${massGlyph(ship.mass, 30)}</div>
+            ? `<div class="modal-spec ${ship.image ? "has-art" : ""}">
+                <div class="spec-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" />` : massGlyph(ship.mass, 30)}</div>
                 <div class="spec-body">
                   <p class="spec-name">${escapeHtml(ship.name)}<span class="spec-cost">${credits(ship.cost)} / ship</span></p>
                   <p class="ship-stats">${statChips(ship)}</p>
@@ -712,7 +712,7 @@ function builderView(state: AppState): string {
         faction && !list.freePlay
           ? `<article class="rule-card">
               <div class="rule-card-stats">
-                <div class="rc-stat"><span class="rc-stat-label">Initiative</span><span class="rc-stat-val">${escapeHtml(faction.initiative)}</span></div>
+                <div class="rc-stat"><span class="rc-stat-label">Initiative</span><span class="rc-stat-val">${escapeHtml(faction.initiative)}${initiativeDice(faction.initiative)}</span></div>
                 <div class="rc-stat"><span class="rc-stat-label">Command tokens / round</span><span class="rc-stat-val">${escapeHtml(faction.cmdTokens)}</span></div>
               </div>
               <h3 class="rule-card-title">${escapeHtml(faction.rule.name)}</h3>
@@ -1012,6 +1012,14 @@ function foundryEditView(state: AppState, factionId: string): string {
           <input type="number" min="0" value="${s.shields}" data-action="cf-ship" data-ship="${si}" data-field="shields" /></label>
         <label class="field-block">Cost in billions
           <input type="number" min="1" value="${s.cost}" data-action="cf-ship" data-ship="${si}" data-field="cost" /></label>
+        <div class="field-block wide">Ship image
+          <div class="cf-shipimg-row">
+            <span class="cf-shipimg-preview ${s.image ? "has-img" : ""}">${s.image ? `<img src="${s.image}" alt="" />` : icon("image", 22)}</span>
+            <label class="bar-btn file-btn">${icon("upload", 14)} Upload
+              <input type="file" accept="image/*" data-action="cf-ship-image-upload" data-ship="${si}" hidden /></label>
+            ${s.image ? `<button class="ghost-btn danger" data-action="cf-ship-image-clear" data-ship="${si}" title="Remove image">${icon("close", 14)}</button>` : ""}
+          </div>
+        </div>
       </div>
       <div class="cf-slots">
         <div class="cf-slot">

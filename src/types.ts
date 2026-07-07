@@ -82,6 +82,8 @@ export interface ShipClass {
   auxiliaryFitting?: string;
   /** Cost in billions of credits, per single ship of this class. */
   cost: number;
+  /** Optional uploaded ship art (downscaled data URL). Shown in catalog/roster. */
+  image?: string;
 }
 
 export interface Hvp {

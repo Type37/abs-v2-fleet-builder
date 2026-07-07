@@ -189,6 +189,48 @@ function readEmblemImage(file: File): Promise<string> {
   });
 }
 
+// Ship art is landscape, not a square badge: cover-fit into a 5:3 frame so a
+// hull keeps its proportions instead of being centre-cropped to a square.
+function readShipImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      reject(new Error("not an image"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode failed"));
+      img.onload = () => {
+        const w = 320;
+        const h = 192; // 5:3
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("no canvas"));
+          return;
+        }
+        // Cover-fit: scale so the frame is filled, crop the overflow, centred.
+        const scale = Math.max(w / img.width, h / img.height);
+        const dw = img.width * scale;
+        const dh = img.height * scale;
+        const dx = (w - dw) / 2;
+        const dy = (h - dh) / 2;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, dx, dy, dw, dh);
+        const hasAlpha = file.type === "image/png";
+        resolve(canvas.toDataURL(hasAlpha ? "image/png" : "image/jpeg", 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // ---------------------------------------------------------------------------
 // First-visit coachmark tours
 // ---------------------------------------------------------------------------
@@ -637,6 +679,11 @@ function handleClick(e: MouseEvent): void {
         m.era === "Armageddon" ? "armageddon" : m.era === "Age of Unity" ? "age-of-unity" : "hypergrowth";
       const list = createList(mode, m.factionId, false);
       list.fleet.creditsLimit = m.limit;
+      // A new fleet inherits its faction's emblem, if that faction has one set
+      // (custom factions can carry an uploaded image or a library icon).
+      const chosen = findFaction(m.factionId, state.customFactions);
+      if (chosen?.emblemImage) list.emblemImage = chosen.emblemImage;
+      else if (chosen?.emblemLib) list.emblemLib = chosen.emblemLib;
       store.setState((s) => {
         const lists = [...s.lists, list];
         persistLists(lists);
@@ -823,6 +870,16 @@ function handleClick(e: MouseEvent): void {
       const si = Number(target.dataset["ship"]);
       if (!fid || !Number.isInteger(si)) return;
       editFaction(fid, (f) => ({ ...f, ships: f.ships.filter((_, i) => i !== si) }));
+      break;
+    }
+    case "cf-ship-image-clear": {
+      const fid = currentFoundryId();
+      const si = Number(target.dataset["ship"]);
+      if (!fid || !Number.isInteger(si)) return;
+      editFaction(fid, (f) => ({
+        ...f,
+        ships: f.ships.map((s, i) => (i === si ? { ...s, image: undefined } : s)),
+      }));
       break;
     }
     case "cf-weapon-add": {
@@ -1148,6 +1205,22 @@ function handleChange(e: Event): void {
       if (!fid || !file) return;
       readEmblemImage(file)
         .then((dataUrl) => editFaction(fid, (f) => ({ ...f, emblemImage: dataUrl })))
+        .catch(() => showToast("That image could not be used. Try a PNG or JPEG."));
+      target.value = "";
+      break;
+    }
+    case "cf-ship-image-upload": {
+      const fid = currentFoundryId();
+      const si = Number(target.dataset["ship"]);
+      const file = target.files?.[0];
+      if (!fid || !file || !Number.isInteger(si)) return;
+      readShipImage(file)
+        .then((dataUrl) =>
+          editFaction(fid, (f) => ({
+            ...f,
+            ships: f.ships.map((s, i) => (i === si ? { ...s, image: dataUrl } : s)),
+          })),
+        )
         .catch(() => showToast("That image could not be used. Try a PNG or JPEG."));
       target.value = "";
       break;

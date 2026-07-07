@@ -18,6 +18,7 @@ export const COVENANT_SEED: Faction = {
   era: "Armageddon",
   initiative: "3D6",
   cmdTokens: "8",
+  emblemLib: "Halo/covenant-remnant.jpg",
   playstyle: "Durable energy shields and long-range plasma; fragile once the shields fall.",
   rule: {
     name: "Energy Shielding",
