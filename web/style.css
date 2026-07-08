@@ -538,7 +538,9 @@ button { font-family: inherit; }
 .workspace {
   max-width: var(--shell); margin: 0 auto;
   padding: clamp(16px, 2.4vw, 28px) clamp(16px, 4vw, 40px) 0;
-  display: grid; grid-template-columns: minmax(340px, 430px) 1fr; gap: clamp(18px, 2.4vw, 32px); align-items: start;
+  /* Roster (order:-1, left) is the primary pane and gets the room; the ship
+     picker sits in a narrower support column on the right. */
+  display: grid; grid-template-columns: minmax(440px, 1fr) minmax(300px, 420px); gap: clamp(18px, 2.4vw, 32px); align-items: start;
 }
 @media (max-width: 1080px) { .workspace { grid-template-columns: 1fr; } }
 
