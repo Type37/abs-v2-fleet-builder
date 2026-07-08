@@ -90,10 +90,15 @@ export function initiativeDice(initiative: string, size = 16): string {
  * value together, so the meaning is legible and memorable rather than a bare
  * number that has to be decoded.
  */
-export function statChips(s: { mass: number; thrust: number; silhouette: number; shields: number }): string {
+export function statChips(
+  s: { mass: number; thrust: number; silhouette: number; shields: number },
+  compact = false,
+): string {
   const chip = (name: string, label: string, val: string) =>
-    `<span class="stat-chip" title="${label}">${icon(name, 14, "stat-ico")}<span class="stat-lbl">${label}</span><span class="stat-val">${val}</span></span>`;
-  return `<span class="stat-chips">${chip("stat-mass", "Mass", String(s.mass))}${chip("stat-thrust", "Thrust", `${s.thrust}"`)}${chip("stat-silhouette", "Sil", String(s.silhouette))}${chip("stat-shields", "Shields", String(s.shields))}</span>`;
+    compact
+      ? `<span class="stat-chip stat-chip-mini" title="${label}">${icon(name, 13, "stat-ico")}<span class="stat-val">${val}</span></span>`
+      : `<span class="stat-chip" title="${label}">${icon(name, 14, "stat-ico")}<span class="stat-lbl">${label}</span><span class="stat-val">${val}</span></span>`;
+  return `<span class="stat-chips ${compact ? "stat-chips-mini" : ""}">${chip("stat-mass", "Mass", String(s.mass))}${chip("stat-thrust", "Thrust", `${s.thrust}"`)}${chip("stat-silhouette", "Sil", String(s.silhouette))}${chip("stat-shields", "Shields", String(s.shields))}</span>`;
 }
 
 /** Render an uploaded image if present, otherwise fall back to a built-in emblem glyph. */

@@ -9,6 +9,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.0",
+    date: "2026-07-08",
+    title: "Far less scrolling, notes, bigger monochrome emblems",
+    items: [
+      "A much shorter builder: compact catalogue rows, an inline faction summary, and a collapsible personnel list mean a whole fleet fits with little scrolling.",
+      "Every fleet now has a Notes field for tactics and reminders, saved with the fleet and printed on the roster.",
+      "Emblems are bigger throughout and render in black and white, so the whole set reads as one monochrome family.",
+      "Removed the emblem hover animation on the faction picker.",
+      "Catalogue rows are separated by a single hairline instead of full boxes, cutting visual clutter.",
+      "Removed the affiliation disclaimer from the printed roster.",
+    ],
+  },
+  {
     version: "0.6.3",
     date: "2026-07-08",
     title: "Emblem picker out of the way, tighter builder",

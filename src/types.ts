@@ -166,6 +166,8 @@ export interface Fleet {
   creditsLimit: number;
   units: FleetUnit[];
   hvp: FleetHvp[];
+  /** Freeform player notes (tactics, list rationale, reminders). */
+  notes?: string;
 }
 
 // ---------------------------------------------------------------------------

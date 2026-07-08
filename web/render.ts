@@ -286,7 +286,7 @@ function fleetsView(state: AppState): string {
       const { total } = listTotals(l, state.customFactions);
       return `
       <tr>
-        <td class="cell-emblem"><span class="emblem-chip">${emblemMark(l.emblem, l.emblemImage ?? libraryUrl(l.emblemLib), 22)}</span></td>
+        <td class="cell-emblem"><span class="emblem-chip">${emblemMark(l.emblem, l.emblemImage ?? libraryUrl(l.emblemLib), 28)}</span></td>
         <td class="cell-name"><a href="#/list/${l.id}">${escapeHtml(l.fleet.name || "Unnamed fleet")}</a></td>
         <td>${escapeHtml(faction?.name ?? "Mixed forces")}</td>
         <td>${l.freePlay ? "Free Play" : MODE_LABEL[l.mode]}</td>
@@ -348,7 +348,6 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
     `<button class="nf-opt ${m.limit === n ? "on" : ""}" data-action="nf-size" data-limit="${n}">${credits(n)}</button>`;
   const plaque = (f: Faction) =>
     `<button class="faction-plaque ${m.factionId === f.id ? "selected" : ""}" data-action="nf-faction" data-faction="${f.id}">
-      ${factionPlaqueBg(f)}
       <span class="faction-plaque-name">${escapeHtml(f.name)}</span>
       <span class="faction-plaque-rule">${escapeHtml(f.rule.name)}</span>
     </button>`;
@@ -415,36 +414,24 @@ function speciesSelect(unit: FleetUnit): string {
     </label>`;
 }
 
-// A large emblem that fades in behind a faction plaque on hover (after the
-// roundels in the Pacific Command builder). Uses the faction's own image when
-// it has one; otherwise a geometric mark picked deterministically from its id,
-// so each faction keeps a stable, distinct backdrop.
-function factionPlaqueBg(f: Faction): string {
-  const img = f.emblemImage ?? libraryUrl(f.emblemLib);
-  let id = "delta";
-  if (!img) {
-    let h = 0;
-    for (let i = 0; i < f.id.length; i++) h = (h * 31 + f.id.charCodeAt(i)) >>> 0;
-    id = EMBLEM_IDS[h % EMBLEM_IDS.length] ?? "delta";
-  }
-  return `<span class="fp-bg" aria-hidden="true">${emblemMark(id, img, 132)}</span>`;
-}
-
 function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boolean): string {
   const addId = composite ? `${ownerFaction.id}/${ship.id}` : ship.id;
+  const wp = primarySlotText(ship).replace(/<br \/>/g, ", ");
+  const wa = auxSlotText(ship).replace(/<br \/>/g, ", ");
+  const weapons = [wp === "None" ? "" : wp, wa === "None" ? "" : wa].filter(Boolean).join(" / ") || "No weapons";
+  // Two tight lines: name + cost, then compact stats. Weapon loadout lives in
+  // the tooltip, the add dialog, and the compendium, so the row stays short.
   return `
-  <article class="ship-row ${ship.image ? "has-art" : ""}">
-    <div class="ship-row-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" loading="lazy" />` : massGlyph(ship.mass, 26)}</div>
+  <article class="ship-row ${ship.image ? "has-art" : ""}" title="${escapeHtml(weapons)}">
+    <div class="ship-row-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" loading="lazy" />` : massGlyph(ship.mass, 22)}</div>
     <div class="ship-row-body">
       <div class="ship-row-head">
         <h4 class="ship-name">${escapeHtml(ship.name)}</h4>
+        ${statChips(ship, true)}
         <span class="ship-cost">${credits(ship.cost)}</span>
       </div>
-      <p class="ship-stats">${statChips(ship)}</p>
-      <p class="ship-weapons"><span class="slot-label">Primary</span> ${primarySlotText(ship)}</p>
-      <p class="ship-weapons"><span class="slot-label">Auxiliary</span> ${auxSlotText(ship)}</p>
     </div>
-    <button class="add-btn" data-action="add-unit" data-ship="${addId}" title="Add a unit of ${escapeHtml(ship.name)}">${icon("plus", 18)}<span>Add</span></button>
+    <button class="add-btn" data-action="add-unit" data-ship="${addId}" title="Add a unit of ${escapeHtml(ship.name)}">${icon("plus", 18)}</button>
   </article>`;
 }
 
@@ -573,7 +560,6 @@ function builderView(state: AppState): string {
       .map(
         (f) => `
       <button class="faction-plaque ${f.id === list.fleet.factionId && !list.freePlay ? "selected" : ""}" data-action="set-faction" data-faction="${f.id}">
-        ${factionPlaqueBg(f)}
         <span class="faction-plaque-name">${escapeHtml(f.name)}</span>
         <span class="faction-plaque-rule">${escapeHtml(f.rule.name)}</span>
       </button>`,
@@ -602,12 +588,12 @@ function builderView(state: AppState): string {
   const hvpMin = faction?.hvpMin ?? 3;
   const atHvpCap = list.fleet.hvp.length >= hvpMax;
   const personnelCard = (h: Hvp, source: string) => `
-    <article class="personnel-row ${chosenIds.has(h.id) ? "chosen" : ""}">
+    <article class="personnel-row ${chosenIds.has(h.id) ? "chosen" : ""}" title="${escapeHtml(h.rule)}">
       <div class="personnel-body">
-        <h4 class="personnel-name">${escapeHtml(h.name)} <span class="muted">${source}</span></h4>
-        <p class="personnel-rule">${escapeHtml(h.rule)}</p>
+        <span class="personnel-name">${escapeHtml(h.name)}</span>
+        <span class="personnel-rule">${escapeHtml(h.rule)}</span>
       </div>
-      <button class="add-btn" data-action="add-hvp" data-hvp="${h.id}" ${chosenIds.has(h.id) || atHvpCap ? "disabled" : ""}>${icon("plus", 16)}<span>Select</span></button>
+      <button class="add-btn add-btn-mini" data-action="add-hvp" data-hvp="${h.id}" ${chosenIds.has(h.id) || atHvpCap ? "disabled" : ""} title="Select ${escapeHtml(h.name)}">${icon("plus", 16)}</button>
     </article>`;
   const personnelCatalog = faction
     ? faction.hvp.map((h) => personnelCard(h, escapeHtml(faction.name))).join("") +
@@ -685,7 +671,7 @@ function builderView(state: AppState): string {
   const listImg = list.emblemImage ?? libraryUrl(list.emblemLib);
   const emblemPicker = `
     <details class="emblem-menu">
-      <summary class="emblem-current-btn" title="Choose an emblem">${emblemMark(list.emblem, listImg, 24)}${icon("chevronDown", 14, "emblem-caret")}</summary>
+      <summary class="emblem-current-btn" title="Choose an emblem">${emblemMark(list.emblem, listImg, 34)}${icon("chevronDown", 14, "emblem-caret")}</summary>
       <div class="emblem-menu-panel">
         <div class="emblem-menu-tools">
           <label class="bar-btn file-btn">${icon("upload", 14)} Upload<input type="file" accept="image/*" data-action="emblem-upload" hidden /></label>
@@ -758,10 +744,7 @@ function builderView(state: AppState): string {
       ${
         faction && !list.freePlay
           ? `<article class="rule-card">
-              <div class="rule-card-stats">
-                <div class="rc-stat"><span class="rc-stat-label">Initiative</span><span class="rc-stat-val">${escapeHtml(faction.initiative)}${initiativeDice(faction.initiative)}</span></div>
-                <div class="rc-stat"><span class="rc-stat-label">Command tokens / round</span><span class="rc-stat-val">${escapeHtml(faction.cmdTokens)}</span></div>
-              </div>
+              <p class="rule-card-meta"><span class="rcm-k">Initiative</span> <span class="rcm-v">${escapeHtml(faction.initiative)}</span>${initiativeDice(faction.initiative, 14)}<span class="rcm-gap"></span><span class="rcm-k">CMD / round</span> <span class="rcm-v">${escapeHtml(faction.cmdTokens)}</span></p>
               <h3 class="rule-card-title">${escapeHtml(faction.rule.name)}</h3>
               <p class="rule-card-text">${escapeHtml(faction.rule.text)}</p>
             </article>`
@@ -769,14 +752,16 @@ function builderView(state: AppState): string {
       }
       <h3 class="catalog-title">Ship classes</h3>
       <div class="catalog-list">${catalogHtml || '<p class="muted">Pick a faction to see its ships.</p>'}</div>
-      <h3 class="catalog-title">High-Value Personnel <span class="muted">${list.freePlay ? "select any number" : hvpMin === hvpMax ? `select ${hvpMax}` : `select ${hvpMin} to ${hvpMax}`}</span></h3>
-      <div class="catalog-list">${personnelCatalog}</div>
+      <details class="catalog-fold" ${list.fleet.hvp.length > 0 ? "open" : ""}>
+        <summary class="catalog-title">High-Value Personnel <span class="muted">${list.freePlay ? "select any number" : hvpMin === hvpMax ? `select ${hvpMax}` : `select ${hvpMin} to ${hvpMax}`}${list.fleet.hvp.length ? `, ${list.fleet.hvp.length} chosen` : ""}</span></summary>
+        <div class="catalog-list personnel-grid">${personnelCatalog}</div>
+      </details>
     </section>
 
     <aside class="roster">
       <div class="roster-sheet">
         <header class="roster-head">
-          <span class="roster-emblem">${emblemMark(list.emblem, list.emblemImage ?? libraryUrl(list.emblemLib), 34)}</span>
+          <span class="roster-emblem">${emblemMark(list.emblem, list.emblemImage ?? libraryUrl(list.emblemLib), 52)}</span>
           <div>
             <h2 class="roster-title">${escapeHtml(list.fleet.name || "Unnamed fleet")}</h2>
             <p class="roster-subtitle">${escapeHtml(faction?.name ?? "Mixed forces")}${era ? `, ${era}` : ""}</p>
@@ -801,6 +786,11 @@ function builderView(state: AppState): string {
                 }
               </div>`
         }
+
+        <details class="roster-notes" ${list.fleet.notes ? "open" : ""}>
+          <summary class="roster-section">Notes${list.fleet.notes ? ` <span class="muted">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
+          <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
+        </details>
 
         <div class="roster-actions">
           <a class="cta-btn" href="#/print/${list.id}">${icon("print", 17)} Print roster</a>
@@ -960,10 +950,7 @@ function printView(state: AppState): string {
         </tbody>
       </table>`;
       })()}
-
-      <footer class="sheet-foot">
-        <p>A Billion Suns, Second Edition, is a game by Mike Hutchinson — this roster is an unofficial player aid and is not affiliated with the publisher.</p>
-      </footer>
+      ${list.fleet.notes ? `<section class="print-notes"><h3 class="sheet-section">Notes</h3><p>${escapeHtml(list.fleet.notes)}</p></section>` : ""}
     </article>
   </div>`;
 }

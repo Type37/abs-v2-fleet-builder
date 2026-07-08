@@ -939,6 +939,11 @@ function handleChange(e: Event): void {
       store.setState((s) => updateFleet(s, listId, (f) => ({ ...f, name: inputValue })));
       break;
     }
+    case "fleet-notes": {
+      if (!listId) return;
+      store.setState((s) => updateFleet(s, listId, (f) => ({ ...f, notes: inputValue })));
+      break;
+    }
     case "set-limit-free": {
       if (!listId) return;
       const n = Math.max(1, Math.round(Number(inputValue) || 1));
