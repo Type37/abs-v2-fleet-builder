@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.1",
+    date: "2026-07-08",
+    title: "Now A Billion Suns 2e Shipyard",
+    items: [
+      "Renamed to A Billion Suns 2e Shipyard, and the site moved to type37.github.io/a-billion-suns-shipyard.",
+    ],
+  },
+  {
     version: "0.7.0",
     date: "2026-07-08",
     title: "Far less scrolling, notes, bigger monochrome emblems",

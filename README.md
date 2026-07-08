@@ -1,69 +1,85 @@
-# ABS-V2 — A Billion Suns 2E Fleet Builder
+# A Billion Suns 2e Shipyard
 
-A fleet/army builder for **A Billion Suns, 2nd Edition** (Mike Hutchinson / Osprey Games).
+A fleet and shipyard builder for **A Billion Suns, 2nd Edition** (Mike Hutchinson / Osprey Games).
 
-**Phase 1 — Armageddon era, validation engine first.** No UI yet. The goal of this
-phase is a correct, well-tested rules engine for building and validating a fleet
-list, which later phases (UI, Age of Unity, Hypergrowth) build on top of.
+**Live:** https://type37.github.io/a-billion-suns-shipyard/
 
-## Running
+Pick an era, pick a faction, build a legal list (or fill a Shipyard), give it an emblem, then print or share it. The app is a static site — everything runs in the browser and lists are stored locally.
 
-Requires Node ≥ 22.6 (TypeScript runs natively via type-stripping — no build step,
-no dependencies).
+## Features
+
+- **All three eras**, with the builder shape each one uses:
+  - **Armageddon** and **Age of Unity** — pre-built Fleet Lists (units + High-Value Personnel to a credits limit).
+  - **Hypergrowth** — a Shipyard: buy a pool of ships up front, requisition units in play.
+- **Twelve factions**, transcribed from the book and auto-discovered from data files:
+  - *Hypergrowth:* Heavy Industries, MegaMart, News Inc, Galactic Credit.
+  - *Age of Unity:* The Unity, The Ordinate, The Discord, Golem Mega-Systems.
+  - *Armageddon:* Vyke, AEGIS, Gen Ω, Alliance.
+- **Live rules validation** — the builder flags over-budget lists, illegal unit sizes, HVP-count and assignment problems, and the other list-building constraints as you edit.
+- **Custom faction Foundry** — define your own faction; it merges on top of the built-in catalogue at runtime.
+- **Emblems** — a set of built-in vector marks per faction, plus colour and upload options.
+- **Learn to play** — the rulebook's tutorial fleets (Combat Simulator, Management Training) load as ready-made lists, with guided tours.
+- **Fleet notes**, a **printable roster**, **share links**, and a bundled **Quick Reference PDF**.
+
+## Running locally
+
+Requires Node ≥ 22.6.
 
 ```bash
-npm test          # run the validation + data test suites
-npm run test:watch
+npm install       # dev-only deps: Vite + TypeScript
+npm run dev       # dev server at http://localhost:5731
+npm run build     # production build to dist/
+npm run preview   # serve the built site
 ```
 
-Type-checking is optional and needs TypeScript installed (`npm i -D typescript`),
-then `npm run typecheck`.
+The rules engine has its own test suite (no build step — TypeScript runs natively via type-stripping):
+
+```bash
+npm test          # validation + data-integrity suites
+npm run typecheck # optional type-check
+```
 
 ## Layout
 
 ```
-src/
-  types.ts              Domain model (Faction, ShipClass, Hvp, Fleet, ...)
-  validation.ts         validateFleet() — the rules engine
+src/                    Rules engine (framework-free, tested)
+  types.ts              Domain model (Era, GameMode, Faction, Fleet, Shipyard, ...)
+  validation.ts         validateFleet() — the list-building rules
   data/
-    factions/           The 4 Armageddon factions (Vyke, AEGIS, Gen Ω, Alliance)
-    generic-hvp.ts      The 5 generic High-Value Personnel
+    factions/           The 12 faction rosters (auto-discovered by the web app)
+    generic-hvp.ts      Generic High-Value Personnel
+    training-fleet.ts   Tutorial fleets
+    junkspace*.ts       Solo / Junkspace content
     index.ts            Catalog registry
 test/
   data.test.ts          Roster data-integrity checks
   validation.test.ts    Rule-by-rule validation coverage
+
+web/                    The browser app (Vite root)
+  index.html main.ts    Entry point
+  render.ts state.ts    View + app state
+  catalog.ts            Build-time faction discovery + era ordering
+  emblems/ *.ts         Emblems, seed factions, sharing, tours, changelog
 ```
 
-## Armageddon list-building rules enforced
+The in-app changelog (`web/changelog.ts`, shown at `#/changelog`) tracks what's changed release to release.
 
-A fleet = a chosen **faction**, an agreed **credits limit**, a set of **units**, and
-exactly **3 HVP**.
+## Deploying
 
-| Code | Severity | Rule |
-|------|----------|------|
-| `FACTION_UNKNOWN` | error | Faction id must exist. |
-| `FLEET_EMPTY` | error | At least one unit required. |
-| `LIMIT_INVALID` | error | Credits limit must be a positive integer. |
-| `LIMIT_NONSTANDARD` | warning | Armageddon uses ¢300 / 400 / 500bn; others are allowed but flagged. |
-| `OVER_BUDGET` | error | Σ(ship cost × count) must not exceed the limit. |
-| `UNIT_NOT_IN_ROSTER` | error | Each unit's ship class must belong to the faction. |
-| `UNIT_COUNT_INVALID` | error | A unit must hold ≥ 1 ship. |
-| `UNIT_SIZE_EXCEEDED` | error | Max 3 ships/unit; **Mass 3 ships → exactly 1**. |
-| `UNIT_ID_DUPLICATE` | error | Unit instance ids must be unique. |
-| `UNIT_SPECIES_REQUIRED` | error | Alliance only: every unit declares a species. |
-| `UNIT_SPECIES_INVALID` | error | Species must be Rannari / Yynnx / Gorgronti. |
-| `UNIT_SPECIES_UNEXPECTED` | warning | Species set on a non-Alliance faction (ignored). |
-| `HVP_COUNT` | error | Exactly 3 HVP. |
-| `HVP_DUPLICATE` | error | Each HVP is unique. |
-| `HVP_NOT_AVAILABLE` | error | HVP must be a faction HVP or a generic one. |
-| `HVP_ASSIGN_UNKNOWN_UNIT` | error | An assigned HVP must reference a real unit. |
-| `HVP_ASSIGN_MASS0` | error | HVP ride Mass ≥ 1 units (except Gen Ω *The Nameless Punk*). |
-| `HVP_NO_CARRIER` | warning | No Mass 1+ unit exists to carry the chosen HVP. |
+GitHub Pages serves the site from the **`gh-pages` branch** (legacy Pages build, not Actions). Source lives on `main`; `dist/` is gitignored. To publish a new build:
 
-`validateFleet(fleet)` returns `{ valid, totalCost, creditsRemaining, errors, warnings, issues }`.
+```bash
+npm run build
+cd dist
+touch .nojekyll
+git init && git checkout -b gh-pages
+git add -A && git commit -m "Deploy"
+git push -f https://github.com/Type37/a-billion-suns-shipyard.git gh-pages
+rm -rf .git        # remove the nested repo
+```
 
-## What this phase deliberately omits
+`base: "./"` in `vite.config.ts` keeps asset paths relative, so the site works from the Pages subpath without extra config. The live CDN can take a few minutes to flip after a push.
 
-Play-time concepts that are **not** list-building constraints: battlegroups,
-squadron carry capacity, Mother's Wing, jump points, missions, scoring. These belong
-to a future game-state layer, not the builder.
+---
+
+*A Billion Suns is © Mike Hutchinson, published by Osprey Games. This is an unofficial fan-made tool. Fleet builder by [WarLore](https://linktr.ee/warlore).*

@@ -168,7 +168,7 @@ export function listTotals(list: SavedList, customs: Faction[]): { total: number
 function topbar(): string {
   return `
   <header class="topbar">
-    <a class="wordmark" href="#/">${icon("logo", 26)}<span class="wordmark-text">A Billion Suns</span><span class="wordmark-sub">Shipyard</span></a>
+    <a class="wordmark" href="#/">${icon("logo", 26)}<span class="wordmark-text">A Billion Suns 2e</span><span class="wordmark-sub">Shipyard</span></a>
     <nav class="topnav">
       <span class="nav-pill" aria-hidden="true"></span>
       <a href="#/fleets">${icon("flag", 16)} Fleets</a>
@@ -192,7 +192,7 @@ function footer(): string {
       <a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">Quick Reference</a>${sep}
       <span class="gif-builder">Fleet builder by <a href="https://linktr.ee/warlore" target="_blank" rel="noopener">WarLore</a></span>${sep}
       <a href="mailto:warlore1@outlook.com">Send Feedback</a>${sep}
-      <a href="https://github.com/Type37/abs-v2-fleet-builder" target="_blank" rel="noopener">Source on GitHub</a>${sep}
+      <a href="https://github.com/Type37/a-billion-suns-shipyard" target="_blank" rel="noopener">Source on GitHub</a>${sep}
       <a href="#/changelog">v${escapeHtml(v)}</a>
     </div>
   </footer>`;
