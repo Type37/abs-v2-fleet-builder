@@ -20,6 +20,7 @@ import type { LastRoll, ShipFilter } from "./state.ts";
 import { RANDOM_BEHAVIOUR, GLITCH_BLIP, type RollRow } from "../src/data/junkspace-solo.ts";
 import { randomIconId } from "./emblems.ts";
 import { shareUrl } from "./share.ts";
+import { fleetToMarkdown } from "./export-text.ts";
 
 // --- Solo dice roller -------------------------------------------------------
 
@@ -519,6 +520,32 @@ function handleClick(e: MouseEvent): void {
     }
     case "do-print": {
       window.print();
+      break;
+    }
+    case "print-format": {
+      const format = target.dataset["format"] === "cards" ? "cards" : "roster";
+      store.setState((s) => ({
+        ...s,
+        ui: { ...s.ui, print: { format, trackers: s.ui.print?.trackers ?? false } },
+      }));
+      break;
+    }
+    case "print-trackers": {
+      store.setState((s) => ({
+        ...s,
+        ui: { ...s.ui, print: { format: s.ui.print?.format ?? "roster", trackers: !(s.ui.print?.trackers ?? false) } },
+      }));
+      break;
+    }
+    case "copy-list-text": {
+      const id = target.dataset["id"];
+      const list = state.lists.find((l) => l.id === id);
+      if (!list) return;
+      const text = fleetToMarkdown(list, state.customFactions);
+      navigator.clipboard
+        .writeText(text)
+        .then(() => showToast("Fleet copied as text."))
+        .catch(() => prompt("Copy this list:", text));
       break;
     }
 

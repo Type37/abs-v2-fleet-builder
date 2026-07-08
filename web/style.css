@@ -685,6 +685,33 @@ button { font-family: inherit; }
 .notes-input { display: block; width: 100%; border: none; border-top: 1px solid var(--hair-soft); padding: 10px 20px 14px; font-family: var(--sans); font-size: 13px; line-height: 1.5; color: var(--ink); resize: vertical; background: var(--paper); }
 .notes-input::placeholder { color: var(--ink-3); font-style: italic; }
 .notes-input:focus { outline: none; background: var(--blue-wash); }
+/* Print setup: options bar (screen only), per-unit cards, and trackers. */
+.print-opts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.print-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.print-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.print-card { border: 1px solid var(--ink); padding: 10px 12px; break-inside: avoid; page-break-inside: avoid; }
+.pc-head { display: flex; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--hair); padding-bottom: 5px; margin-bottom: 5px; }
+.pc-index { font-family: var(--display); font-weight: 900; color: var(--blue); }
+.pc-name { font-family: var(--display); font-weight: 800; font-size: 15px; flex: 1; }
+.pc-cost { font-weight: 700; font-variant-numeric: tabular-nums; }
+.pc-sub { font-size: 11px; color: var(--ink-2); margin-bottom: 6px; }
+.pc-stats { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+.pc-stats th { font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); text-align: left; padding: 2px 6px 2px 0; font-weight: 800; }
+.pc-stats td { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 2px 12px 2px 0; }
+.pc-weap { font-size: 11.5px; line-height: 1.35; color: var(--ink-2); margin-top: 2px; }
+.pc-wlabel { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); display: inline-block; margin-right: 4px; }
+.pc-carry { font-size: 11px; font-style: italic; color: var(--ink-2); margin-top: 4px; }
+.pc-track { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+.pc-track-row { display: flex; align-items: center; gap: 6px; }
+.pc-track-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); min-width: 30px; }
+.pr-hp { display: inline-flex; flex-wrap: wrap; gap: 3px; }
+.pr-hp-box { width: 11px; height: 11px; border: 1px solid var(--ink-2); display: inline-block; }
+.print-track-strip { display: flex; gap: 24px; flex-wrap: wrap; margin: 14px 0; padding: 10px 0; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
+.pts-item { display: flex; align-items: center; gap: 10px; }
+.pts-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
+.pts-blank { display: inline-block; min-width: 120px; border-bottom: 1px solid var(--ink-2); height: 14px; }
+@media print { .print-cards { grid-template-columns: repeat(3, 1fr); } }
+
 .print-notes { margin-top: 14px; }
 .print-notes p { font-family: var(--serif); font-size: 13px; line-height: 1.5; white-space: pre-wrap; color: var(--ink); }
 

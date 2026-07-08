@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.5",
+    date: "2026-07-08",
+    title: "Print setup: cards, trackers, and text export",
+    items: [
+      "Print setup now offers two layouts: the compact roster sheet, or one stat card per unit to cut out and keep at the table.",
+      "Turn on Trackers to print hull-damage boxes for every ship (a ship's silhouette is its hull), plus a command-token and balance strip.",
+      "Copy as text puts the whole fleet on your clipboard as Markdown, ready to paste into Discord or a forum.",
+    ],
+  },
+  {
     version: "0.7.4",
     date: "2026-07-08",
     title: "See a faction before you pick it",

@@ -851,6 +851,11 @@ function printView(state: AppState): string {
   const faction = findFaction(list.fleet.factionId, customs);
   const { total } = listTotals(list, customs);
   const era = MODE_ERA[list.mode];
+  const opts = state.ui.print ?? { format: "roster" as const, trackers: false };
+
+  // A ship's silhouette is its starting HP; the tracker prints that many empty
+  // boxes to tick off as damage lands.
+  const hpBoxes = (hp: number) => `<span class="pr-hp">${Array.from({ length: hp }, () => '<span class="pr-hp-box"></span>').join("")}</span>`;
 
   // One continuous unit-row table, in the manner of Army Forge / Infinity Army
   // roster printouts: every unit is one scannable row with stat columns, and
@@ -912,6 +917,51 @@ function printView(state: AppState): string {
     </table>`
     : "";
 
+  // Per-unit cards: a stat card each, several to a page, cut-and-keep at the
+  // table. Never split across a page. HP boxes appear when trackers are on.
+  const unitCards = list.fleet.units
+    .map((u, i) => {
+      const r = resolveShip(u.shipClassId, faction, customs);
+      if (!r) return "";
+      const ship = r.ship;
+      const title = u.name || `${ship.name} unit`;
+      const carried = list.fleet.hvp
+        .filter((h) => h.assignedUnitId === u.id)
+        .map((h) => {
+          const def = hvpById(h.hvpId, faction);
+          return h.customName ? `${h.customName}, ${def?.name ?? h.hvpId}` : (def?.name ?? h.hvpId);
+        });
+      return `
+      <article class="print-card">
+        <header class="pc-head">
+          <span class="pc-index">${i + 1}</span>
+          <span class="pc-name">${escapeHtml(title)}</span>
+          <span class="pc-cost">${credits(ship.cost * u.count)}</span>
+        </header>
+        <p class="pc-sub">${u.count}× ${escapeHtml(ship.name)} · Mass ${ship.mass}${u.species ? ` · ${escapeHtml(u.species)}` : ""}</p>
+        <table class="pc-stats"><tbody>
+          <tr><th>Thrust</th><td>${ship.thrust}"</td><th>Silhouette</th><td>${ship.silhouette}</td><th>Shields</th><td>${ship.shields}</td></tr>
+        </tbody></table>
+        <p class="pc-weap"><span class="pc-wlabel">Primary</span> ${primarySlotText(ship)}</p>
+        <p class="pc-weap"><span class="pc-wlabel">Auxiliary</span> ${auxSlotText(ship)}</p>
+        ${carried.length ? `<p class="pc-carry">Carrying: ${escapeHtml(carried.join("; "))}</p>` : ""}
+        ${opts.trackers ? `<div class="pc-track">${Array.from({ length: u.count }, () => `<span class="pc-track-row"><span class="pc-track-label">Hull</span>${hpBoxes(ship.silhouette)}</span>`).join("")}</div>` : ""}
+      </article>`;
+    })
+    .join("");
+
+  const cardBlocks = unitCards ? `<div class="print-cards">${unitCards}</div>` : "";
+
+  // A small tracker strip (command tokens, credit balance) for at-table use,
+  // shown only when trackers are enabled.
+  const cmdCount = faction ? Number(faction.cmdTokens) : NaN;
+  const trackerStrip = opts.trackers
+    ? `<section class="print-track-strip">
+        <div class="pts-item"><span class="pts-label">Command tokens</span>${Number.isFinite(cmdCount) && cmdCount > 0 ? hpBoxes(cmdCount) : `<span class="pts-blank"></span>`}</div>
+        <div class="pts-item"><span class="pts-label">${list.mode === "hypergrowth" || list.mode === "management-training" ? "Credit balance" : "Reserve / notes"}</span><span class="pts-blank"></span></div>
+      </section>`
+    : "";
+
   const hvpBlocks = list.fleet.hvp
     .map((sel) => {
       const def = hvpById(sel.hvpId, faction);
@@ -933,6 +983,14 @@ function printView(state: AppState): string {
   <div class="print-page">
     <div class="print-toolbar">
       <a class="bar-btn" href="#/list/${list.id}">Back to the builder</a>
+      <div class="print-opts">
+        <span class="segment" role="group" aria-label="Layout">
+          <button class="${opts.format === "roster" ? "selected" : ""}" data-action="print-format" data-format="roster">Roster</button>
+          <button class="${opts.format === "cards" ? "selected" : ""}" data-action="print-format" data-format="cards">Cards</button>
+        </span>
+        <label class="print-toggle"><input type="checkbox" data-action="print-trackers" ${opts.trackers ? "checked" : ""} /> Trackers</label>
+        <button class="bar-btn" data-action="copy-list-text" data-id="${list.id}">${icon("duplicate", 15)} Copy as text</button>
+      </div>
       <button class="cta-btn" data-action="do-print">${icon("print", 17)} Print this document</button>
     </div>
 
@@ -959,8 +1017,10 @@ function printView(state: AppState): string {
           : ""
       }
 
+      ${trackerStrip}
+
       <h2 class="sheet-section">Units</h2>
-      ${unitBlocks || '<p class="print-note">No units.</p>'}
+      ${(opts.format === "cards" ? cardBlocks : unitBlocks) || '<p class="print-note">No units.</p>'}
 
       <h2 class="sheet-section">High-Value Personnel</h2>
       ${hvpBlocks || '<p class="print-note">None selected.</p>'}
