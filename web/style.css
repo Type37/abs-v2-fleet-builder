@@ -495,6 +495,15 @@ button { font-family: inherit; }
 .lib-icon:hover { border-color: var(--ink); }
 .lib-icon.selected { border-color: var(--blue); box-shadow: inset 0 0 0 2px var(--blue); }
 .lib-icon img { width: 100%; height: 100%; object-fit: contain; }
+/* Tinted vector mark: the SVG painted as a solid colour via CSS mask. */
+.emblem-tint { display: inline-block; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; vertical-align: middle; }
+.emblem-tint-row { display: flex; align-items: center; gap: 8px; padding: 4px 0 10px; flex-wrap: wrap; }
+.tint-swatch { width: 24px; height: 24px; border: 1px solid var(--hair); cursor: pointer; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.tint-swatch.selected { box-shadow: inset 0 0 0 2px var(--paper), 0 0 0 2px var(--ink); }
+.tint-none { background: var(--paper); color: var(--ink-3); }
+.tint-ink { background: var(--ink); }
+.tint-blue { background: var(--blue); }
+.tint-red { background: var(--red); }
 
 .band-readout { display: flex; gap: 0; border: 1px solid var(--hair); }
 .readout { padding: 10px 20px; text-align: right; border-left: 1px solid var(--hair-soft); }

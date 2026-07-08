@@ -30,6 +30,8 @@ export interface SavedList {
   emblemImage?: string;
   /** Optional icon-library id (see emblems.ts). Used when no upload is set. */
   emblemLib?: string;
+  /** Optional tint for a vector (SVG) library mark: ink, blue, or red. */
+  emblemColor?: "ink" | "blue" | "red";
   fleet: Fleet;
   play?: PlayState;
   createdAt: string;

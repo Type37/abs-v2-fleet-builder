@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.6",
+    date: "2026-07-08",
+    title: "Colour your vector marks, fuller faction stats, tidier mobile nav",
+    items: [
+      "Vector (SVG) emblems can now be tinted: pick a mark and choose ink, blue, or red, or keep the original.",
+      "The faction detail panel shows every ship's full stat line (mass, thrust, silhouette, shields), not just weapons and cost.",
+      "On phones the top navigation is a two-column button grid instead of a strip that ran off the edge.",
+    ],
+  },
+  {
     version: "0.7.5",
     date: "2026-07-08",
     title: "Print setup: cards, trackers, and text export",

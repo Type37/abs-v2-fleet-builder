@@ -165,6 +165,22 @@ export function listTotals(list: SavedList, customs: Faction[]): { total: number
 // Shared chrome
 // ---------------------------------------------------------------------------
 
+const EMBLEM_TINT: Record<string, string> = { ink: "var(--ink)", blue: "var(--blue)", red: "var(--red)" };
+
+// Render a list's emblem. A vector (SVG) library mark with a chosen tint is
+// painted as a solid colour via CSS mask; everything else (uploads, raster
+// marks, built-in glyphs) falls back to the shared emblemMark.
+function listEmblem(l: SavedList, size: number, cls = ""): string {
+  if (!l.emblemImage && l.emblemLib && /\.svg$/i.test(l.emblemLib) && l.emblemColor) {
+    const url = libraryUrl(l.emblemLib);
+    if (url) {
+      const color = EMBLEM_TINT[l.emblemColor] ?? "var(--ink)";
+      return `<span class="emblem emblem-tint ${cls}" style="width:${size}px;height:${size}px;background-color:${color};-webkit-mask-image:url('${url}');mask-image:url('${url}');" role="img" aria-hidden="true"></span>`;
+    }
+  }
+  return emblemMark(l.emblem, l.emblemImage ?? libraryUrl(l.emblemLib), size, cls);
+}
+
 function topbar(): string {
   return `
   <header class="topbar">
@@ -286,7 +302,7 @@ function fleetsView(state: AppState): string {
       const { total } = listTotals(l, state.customFactions);
       return `
       <tr>
-        <td class="cell-emblem"><span class="emblem-chip">${emblemMark(l.emblem, l.emblemImage ?? libraryUrl(l.emblemLib), 28)}</span></td>
+        <td class="cell-emblem"><span class="emblem-chip">${listEmblem(l, 28)}</span></td>
         <td class="cell-name"><a href="#/list/${l.id}">${escapeHtml(l.fleet.name || "Unnamed fleet")}</a></td>
         <td>${escapeHtml(faction?.name ?? "Mixed forces")}</td>
         <td>${l.freePlay ? "Free Play" : MODE_LABEL[l.mode]}</td>
@@ -707,13 +723,24 @@ function builderView(state: AppState): string {
   const listImg = list.emblemImage ?? libraryUrl(list.emblemLib);
   const emblemPicker = `
     <details class="emblem-menu">
-      <summary class="emblem-current-btn" title="Choose an emblem">${emblemMark(list.emblem, listImg, 34)}${icon("chevronDown", 14, "emblem-caret")}</summary>
+      <summary class="emblem-current-btn" title="Choose an emblem">${listEmblem(list, 34)}${icon("chevronDown", 14, "emblem-caret")}</summary>
       <div class="emblem-menu-panel">
         <div class="emblem-menu-tools">
           <label class="bar-btn file-btn">${icon("upload", 14)} Upload<input type="file" accept="image/*" data-action="emblem-upload" hidden /></label>
           <button class="bar-btn" data-action="random-emblem">${icon("shuffle", 14)} Random</button>
           ${listImg ? `<button class="bar-btn danger" data-action="clear-emblem-image">${icon("close", 14)} Clear image</button>` : ""}
         </div>
+        ${
+          list.emblemLib && /\.svg$/i.test(list.emblemLib)
+            ? `<div class="emblem-tint-row">
+                <span class="control-label">Vector colour</span>
+                <button class="tint-swatch tint-none ${!list.emblemColor ? "selected" : ""}" data-action="set-emblem-color" data-color="" title="Original">${icon("close", 12)}</button>
+                <button class="tint-swatch tint-ink ${list.emblemColor === "ink" ? "selected" : ""}" data-action="set-emblem-color" data-color="ink" title="Ink" aria-label="Ink"></button>
+                <button class="tint-swatch tint-blue ${list.emblemColor === "blue" ? "selected" : ""}" data-action="set-emblem-color" data-color="blue" title="Blue" aria-label="Blue"></button>
+                <button class="tint-swatch tint-red ${list.emblemColor === "red" ? "selected" : ""}" data-action="set-emblem-color" data-color="red" title="Red" aria-label="Red"></button>
+              </div>`
+            : ""
+        }
         ${iconLibraryGrid("set-emblem-lib", list.emblemLib)}
       </div>
     </details>`;
@@ -794,7 +821,7 @@ function builderView(state: AppState): string {
     <aside class="roster">
       <div class="roster-sheet">
         <header class="roster-head">
-          <span class="roster-emblem">${emblemMark(list.emblem, list.emblemImage ?? libraryUrl(list.emblemLib), 52)}</span>
+          <span class="roster-emblem">${listEmblem(list, 52)}</span>
           <div>
             <h2 class="roster-title">${escapeHtml(list.fleet.name || "Unnamed fleet")}</h2>
             <p class="roster-subtitle">${escapeHtml(faction?.name ?? "Mixed forces")}${era ? `, ${era}` : ""}</p>
@@ -998,7 +1025,7 @@ function printView(state: AppState): string {
 
     <article class="sheet">
       <header class="sheet-head">
-        <div class="sheet-emblem">${emblemMark(list.emblem, list.emblemImage ?? libraryUrl(list.emblemLib), 44)}</div>
+        <div class="sheet-emblem">${listEmblem(list, 44)}</div>
         <div class="sheet-title-block">
           <h1 class="sheet-title">${escapeHtml(list.fleet.name || "Unnamed fleet")}</h1>
           <p class="sheet-subtitle">${subtitle}</p>
