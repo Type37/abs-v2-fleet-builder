@@ -570,6 +570,16 @@ button { font-family: inherit; }
 }
 @media (max-width: 1080px) { .workspace { grid-template-columns: 1fr; } }
 
+/* Experimental "Columns view": roster shrinks to a slim left rail, ship
+   classes get the room to lay out as Mass columns instead of one long list. */
+.workspace.mass-mode { grid-template-columns: 220px 1fr; }
+@media (max-width: 900px) { .workspace.mass-mode { grid-template-columns: 1fr; } }
+.layout-toggle { margin-left: auto; font-size: 10px; padding: 5px 10px; text-transform: none; letter-spacing: normal; }
+.mass-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: start; margin-bottom: 12px; }
+.mass-col { border: 1px solid var(--hair-soft); }
+.mass-col-title { font-family: var(--sans); font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding: 8px 10px; background: var(--paper); border-bottom: 1px solid var(--hair-soft); display: flex; justify-content: space-between; }
+.mass-col-body .ship-row { padding: 7px 8px; }
+
 /* catalog (left) */
 .rule-card { border: 1px solid var(--blue); border-left-width: 5px; padding: 9px 14px; margin-bottom: 14px; background: var(--blue-wash); }
 .rule-card-title { font-family: var(--display); font-weight: 800; font-size: 16px; color: var(--blue-deep); margin-bottom: 3px; }

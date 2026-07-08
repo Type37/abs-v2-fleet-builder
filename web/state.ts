@@ -148,6 +148,9 @@ export interface AppState {
     tour?: { tourId: string; step: number };
     /** Print-setup options for the print view (never persisted). */
     print?: { format: "roster" | "cards"; trackers: boolean };
+    /** Experimental builder layout: ship classes grouped into Mass columns
+     * instead of one flat list, to test cutting down scrolling. */
+    massLayout?: boolean;
   };
 }
 

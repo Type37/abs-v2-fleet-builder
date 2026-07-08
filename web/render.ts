@@ -493,6 +493,23 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
   </article>`;
 }
 
+// Experimental: ship classes grouped into Mass columns instead of one flat
+// list, so a faction's whole roster is visible with less vertical scrolling.
+function catalogColumnsByMass(faction: Faction): string {
+  const groups = [0, 1, 2, 3]
+    .map((mass) => ({ mass, ships: faction.ships.filter((s) => s.mass === mass) }))
+    .filter((g) => g.ships.length > 0);
+  return `<div class="mass-columns">${groups
+    .map(
+      (g) => `
+      <div class="mass-col">
+        <h4 class="mass-col-title">Mass ${g.mass} <span class="muted">${g.ships.length}</span></h4>
+        <div class="mass-col-body">${g.ships.map((s) => catalogShipRow(s, faction, false)).join("")}</div>
+      </div>`,
+    )
+    .join("")}</div>`;
+}
+
 // The unit configuration modal (Dropfleet-style): one enclosed surface that
 // groups everything about a unit, opened on demand from its roster row.
 function unitModal(state: AppState, list: SavedList, faction: Faction | undefined, customs: Faction[]): string {
@@ -587,6 +604,7 @@ function builderView(state: AppState): string {
   const faction = findFaction(list.fleet.factionId, customs);
   const { total, remaining } = listTotals(list, customs);
   const era = MODE_ERA[list.mode];
+  const massLayout = !!state.ui.massLayout;
 
   // Validation: the full engine for rules play, none for Free Play. The
   // Hypergrowth shipyard has no unit-size limits at build time (rules p.122),
@@ -825,7 +843,7 @@ function builderView(state: AppState): string {
   </section>
   ${trainingGuide(list.mode)}
 
-  <main class="workspace">
+  <main class="workspace ${massLayout ? "mass-mode" : ""}">
     <section class="catalog">
       ${
         faction && !list.freePlay
@@ -836,8 +854,16 @@ function builderView(state: AppState): string {
             </article>`
           : ""
       }
-      <h3 class="catalog-title">Ship classes</h3>
-      <div class="catalog-list">${catalogHtml || '<p class="muted">Pick a faction to see its ships.</p>'}</div>
+      <div class="catalog-title">Ship classes ${
+        faction && !list.freePlay
+          ? `<button class="bar-btn layout-toggle" data-action="toggle-mass-layout">${massLayout ? "List view" : "Columns view (test)"}</button>`
+          : ""
+      }</div>
+      ${
+        massLayout && faction && !list.freePlay
+          ? catalogColumnsByMass(faction)
+          : `<div class="catalog-list">${catalogHtml || '<p class="muted">Pick a faction to see its ships.</p>'}</div>`
+      }
       <details class="catalog-fold" ${list.fleet.hvp.length > 0 ? "open" : ""}>
         <summary class="catalog-title">High-Value Personnel <span class="muted">${list.freePlay ? `${list.fleet.hvp.length}` : hvpMin === hvpMax ? `${list.fleet.hvp.length}/${hvpMax}` : `${list.fleet.hvp.length}/${hvpMin}–${hvpMax}`}</span></summary>
         <div class="catalog-list personnel-grid">${personnelCatalog}</div>

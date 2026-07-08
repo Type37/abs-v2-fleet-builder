@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.9",
+    date: "2026-07-08",
+    title: "Experimental: Columns view for ship classes",
+    items: [
+      "New Columns view (test) button by Ship classes: lays every mass class out side by side instead of one long list, with a slim roster rail on the left. Off by default; click to try it, click List view to go back.",
+    ],
+  },
+  {
     version: "0.7.8",
     date: "2026-07-08",
     title: "You can finally see what you're picking, and undo it",

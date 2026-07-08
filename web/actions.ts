@@ -560,6 +560,10 @@ function handleClick(e: MouseEvent): void {
       window.print();
       break;
     }
+    case "toggle-mass-layout": {
+      store.setState((s) => ({ ...s, ui: { ...s.ui, massLayout: !s.ui.massLayout } }));
+      break;
+    }
     case "print-format": {
       const format = target.dataset["format"] === "cards" ? "cards" : "roster";
       store.setState((s) => ({
