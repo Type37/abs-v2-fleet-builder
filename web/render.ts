@@ -473,17 +473,20 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
   const addId = composite ? `${ownerFaction.id}/${ship.id}` : ship.id;
   const wp = primarySlotText(ship).replace(/<br \/>/g, ", ");
   const wa = auxSlotText(ship).replace(/<br \/>/g, ", ");
-  const weapons = [wp === "None" ? "" : wp, wa === "None" ? "" : wa].filter(Boolean).join(" / ") || "No weapons";
-  // Two tight lines: name + cost, then compact stats. Weapon loadout lives in
-  // the tooltip, the add dialog, and the compendium, so the row stays short.
+  const weapons = [wp === "None" ? "" : wp, wa === "None" ? "" : wa].filter(Boolean).join("; ") || "No weapons";
+  // Name and cost on their own line so a long name never gets cut; full
+  // stats and weapons always visible on the line below, no tooltip-only text.
   return `
-  <article class="ship-row ${ship.image ? "has-art" : ""}" title="${escapeHtml(weapons)}">
+  <article class="ship-row ${ship.image ? "has-art" : ""}">
     <div class="ship-row-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" loading="lazy" />` : massGlyph(ship.mass, 22)}</div>
     <div class="ship-row-body">
       <div class="ship-row-head">
         <h4 class="ship-name">${escapeHtml(ship.name)}</h4>
-        ${statChips(ship, true)}
         <span class="ship-cost">${credits(ship.cost)}</span>
+      </div>
+      <div class="ship-row-details">
+        ${statChips(ship, true)}
+        <span class="ship-weapons">${escapeHtml(weapons)}</span>
       </div>
     </div>
     <button class="add-btn" data-action="add-unit" data-ship="${addId}" title="Add a unit of ${escapeHtml(ship.name)}">${icon("plus", 18)}</button>
@@ -634,19 +637,31 @@ function builderView(state: AppState): string {
     catalogHtml = faction.ships.map((s) => catalogShipRow(s, faction, false)).join("");
   }
 
-  // Personnel catalog.
-  const chosenIds = new Set(list.fleet.hvp.map((h) => h.hvpId));
+  // Personnel catalog. Duplicates are allowed, so a chosen card becomes a
+  // stepper (remove one / count / add another) rather than a dead-ended
+  // disabled button - there must always be a way back out.
   const hvpMax = list.freePlay ? 99 : (faction?.hvpMax ?? 3);
   const hvpMin = faction?.hvpMin ?? 3;
   const atHvpCap = list.fleet.hvp.length >= hvpMax;
-  const personnelCard = (h: Hvp, source: string) => `
-    <article class="personnel-row ${chosenIds.has(h.id) ? "chosen" : ""}" title="${escapeHtml(h.rule)}">
+  const personnelCard = (h: Hvp, source: string) => {
+    const count = list.fleet.hvp.filter((sel) => sel.hvpId === h.id).length;
+    return `
+    <article class="personnel-row ${count > 0 ? "chosen" : ""}" title="${escapeHtml(h.rule)}">
       <div class="personnel-body">
         <span class="personnel-name">${escapeHtml(h.name)}</span>
         <span class="personnel-rule">${escapeHtml(h.rule)}</span>
       </div>
-      <button class="add-btn add-btn-mini" data-action="add-hvp" data-hvp="${h.id}" ${chosenIds.has(h.id) || atHvpCap ? "disabled" : ""} title="Select ${escapeHtml(h.name)}">${icon("plus", 16)}</button>
+      ${
+        count > 0
+          ? `<span class="stepper stepper-mini">
+              <button data-action="remove-hvp-one" data-hvp="${h.id}" title="Remove one ${escapeHtml(h.name)}">${icon("minus", 14)}</button>
+              <span class="stepper-count">${count}</span>
+              <button data-action="add-hvp" data-hvp="${h.id}" ${atHvpCap ? "disabled" : ""} title="Add another ${escapeHtml(h.name)}">${icon("plus", 14)}</button>
+            </span>`
+          : `<button class="add-btn add-btn-mini" data-action="add-hvp" data-hvp="${h.id}" ${atHvpCap ? "disabled" : ""} title="Select ${escapeHtml(h.name)}">${icon("plus", 16)}</button>`
+      }
     </article>`;
+  };
   const personnelCatalog = faction
     ? faction.hvp.map((h) => personnelCard(h, escapeHtml(faction.name))).join("") +
       GENERIC_HVP.map((h) => personnelCard(h, "Generic")).join("")

@@ -526,6 +526,36 @@ function handleClick(e: MouseEvent): void {
       store.setState((s) => updateFleet(s, id, (f) => ({ ...f, hvp: f.hvp.filter((_, i) => i !== index) })));
       break;
     }
+    case "remove-hvp-one": {
+      // Removes one instance of this HVP from the catalog card's stepper.
+      // Prefers an unassigned copy so an already-placed captain is not
+      // silently unassigned; falls back to the last copy overall.
+      const id = currentListId();
+      const hvpId = target.dataset["hvp"];
+      if (!id || !hvpId) return;
+      store.setState((s) =>
+        updateFleet(s, id, (f) => {
+          let idx = -1;
+          for (let i = f.hvp.length - 1; i >= 0; i--) {
+            if (f.hvp[i].hvpId === hvpId && !f.hvp[i].assignedUnitId) {
+              idx = i;
+              break;
+            }
+          }
+          if (idx === -1) {
+            for (let i = f.hvp.length - 1; i >= 0; i--) {
+              if (f.hvp[i].hvpId === hvpId) {
+                idx = i;
+                break;
+              }
+            }
+          }
+          if (idx === -1) return f;
+          return { ...f, hvp: f.hvp.filter((_, i) => i !== idx) };
+        }),
+      );
+      break;
+    }
     case "do-print": {
       window.print();
       break;

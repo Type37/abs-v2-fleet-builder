@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.8",
+    date: "2026-07-08",
+    title: "You can finally see what you're picking, and undo it",
+    items: [
+      "The ship classes and personnel catalogues no longer truncate names, stats, or weapons with an ellipsis: everything is fully visible before you add it.",
+      "High-Value Personnel can now be deselected. A chosen card becomes a stepper (remove one, count, add another) instead of a dead-ended disabled button.",
+    ],
+  },
+  {
     version: "0.7.7",
     date: "2026-07-08",
     title: "Full unit stats in the roster, any credits limit allowed",
