@@ -332,13 +332,23 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
   if (!m || m.kind !== "new-fleet") return "";
   const byEra = factionsByEra(customs);
   const eraFactions = byEra.get(m.era) ?? [];
-  const others = allFactions(customs).filter((f) => !eraFactions.includes(f));
+  const customIds = new Set(customs.map((c) => c.id));
+  // The rest, sorted: other-era book factions first (by era, then name), then
+  // any custom factions last, so the expanded grid reads in a stable order.
+  const others = allFactions(customs)
+    .filter((f) => !eraFactions.includes(f))
+    .sort((a, b) => {
+      const ca = customIds.has(a.id) ? 1 : 0;
+      const cb = customIds.has(b.id) ? 1 : 0;
+      return ca - cb || ERA_ORDER.indexOf(a.era) - ERA_ORDER.indexOf(b.era) || a.name.localeCompare(b.name);
+    });
   const eraBtn = (era: Era) =>
     `<button class="nf-opt ${m.era === era ? "on" : ""}" data-action="nf-era" data-era="${era}">${era}</button>`;
   const sizeBtn = (n: number) =>
     `<button class="nf-opt ${m.limit === n ? "on" : ""}" data-action="nf-size" data-limit="${n}">${credits(n)}</button>`;
   const plaque = (f: Faction) =>
     `<button class="faction-plaque ${m.factionId === f.id ? "selected" : ""}" data-action="nf-faction" data-faction="${f.id}">
+      ${factionPlaqueBg(f)}
       <span class="faction-plaque-name">${escapeHtml(f.name)}</span>
       <span class="faction-plaque-rule">${escapeHtml(f.rule.name)}</span>
     </button>`;
@@ -346,7 +356,7 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
   return `
   <div class="modal-root">
     <div class="modal-backdrop" data-action="close-modal"></div>
-    <div class="modal-panel modal-lg" role="dialog" aria-modal="true" aria-label="New fleet">
+    <div class="modal-panel modal-lg ${m.showAll ? "modal-wide" : ""}" role="dialog" aria-modal="true" aria-label="New fleet">
       <header class="modal-header">
         <h2 class="modal-title">New fleet</h2>
         <button class="modal-close" data-action="close-modal" aria-label="Close">${icon("close", 18)}</button>
@@ -358,17 +368,20 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
         </div>
         <div class="modal-field">
           <span class="control-label">2 / Credits limit</span>
-          <div class="nf-opts">${[300, 400, 500].map(sizeBtn).join("")}</div>
+          <div class="nf-opts">
+            ${[300, 400, 500].map(sizeBtn).join("")}
+            <label class="nf-custom ${![300, 400, 500].includes(m.limit) ? "on" : ""}">Custom
+              <input type="number" min="1" step="10" value="${![300, 400, 500].includes(m.limit) ? m.limit : ""}" placeholder="¢bn" data-action="nf-size-custom" /></label>
+          </div>
         </div>
         <div class="modal-field">
           <span class="control-label">3 / Faction</span>
           <div class="faction-plaques">${eraFactions.map(plaque).join("")}</div>
-          <button class="nf-more" data-action="nf-toggle-all">${m.showAll ? "Show fewer" : "Show all factions (any faction, any era)"}</button>
-          ${m.showAll ? `<div class="faction-plaques nf-all">${others.map(plaque).join("")}</div>` : ""}
+          <button class="nf-more" data-action="nf-toggle-all">${m.showAll ? "Show fewer" : `More — all ${allFactions(customs).length} factions, any era`}</button>
+          ${m.showAll ? `<p class="muted picker-note">Any faction may be fielded in any era. Other eras first, then your custom factions.</p><div class="faction-plaques nf-all">${others.map(plaque).join("")}</div>` : ""}
         </div>
         <div class="nf-alt">
-          <span class="control-label">Or</span>
-          <button class="bar-btn" data-action="new-list" data-mode="armageddon" data-faction="__free__" data-freeplay="1">${icon("plus", 14)} Free Play</button>
+          <span class="control-label">Or try a tutorial</span>
           <button class="bar-btn" data-action="new-training" data-mode="combat-simulator">${icon("book", 14)} Combat Simulator</button>
           <button class="bar-btn" data-action="new-training" data-mode="management-training">${icon("book", 14)} Management Training</button>
         </div>
@@ -400,6 +413,21 @@ function speciesSelect(unit: FleetUnit): string {
         <option value="">Choose</option>${opts}
       </select>
     </label>`;
+}
+
+// A large emblem that fades in behind a faction plaque on hover (after the
+// roundels in the Pacific Command builder). Uses the faction's own image when
+// it has one; otherwise a geometric mark picked deterministically from its id,
+// so each faction keeps a stable, distinct backdrop.
+function factionPlaqueBg(f: Faction): string {
+  const img = f.emblemImage ?? libraryUrl(f.emblemLib);
+  let id = "delta";
+  if (!img) {
+    let h = 0;
+    for (let i = 0; i < f.id.length; i++) h = (h * 31 + f.id.charCodeAt(i)) >>> 0;
+    id = EMBLEM_IDS[h % EMBLEM_IDS.length] ?? "delta";
+  }
+  return `<span class="fp-bg" aria-hidden="true">${emblemMark(id, img, 132)}</span>`;
 }
 
 function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boolean): string {
@@ -545,6 +573,7 @@ function builderView(state: AppState): string {
       .map(
         (f) => `
       <button class="faction-plaque ${f.id === list.fleet.factionId && !list.freePlay ? "selected" : ""}" data-action="set-faction" data-faction="${f.id}">
+        ${factionPlaqueBg(f)}
         <span class="faction-plaque-name">${escapeHtml(f.name)}</span>
         <span class="faction-plaque-rule">${escapeHtml(f.rule.name)}</span>
       </button>`,
@@ -652,16 +681,16 @@ function builderView(state: AppState): string {
     ${iconLibraryControls("set-emblem-lib", "random-emblem", list.emblemLib)}
     ${listImg ? `<span class="emblem-choice emblem-current selected" title="Current icon">${emblemMark(list.emblem, listImg, 24)}</span><button class="emblem-choice" data-action="clear-emblem-image" title="Clear the chosen image">${icon("close", 16)}</button>` : ""}`;
 
-  const limitControl = list.freePlay
-    ? `<input class="limit-input" type="number" min="1" value="${list.fleet.creditsLimit}" data-action="set-limit-free" />`
-    : `<div class="segment" role="group" aria-label="Credits limit">
-        ${[300, 400, 500]
-          .map(
-            (n) =>
-              `<button class="${list.fleet.creditsLimit === n ? "selected" : ""}" data-action="set-limit" data-limit="${n}">${credits(n)}</button>`,
-          )
-          .join("")}
-      </div>`;
+  const limitIsPreset = [300, 400, 500].includes(list.fleet.creditsLimit);
+  const limitControl = `<div class="segment segment-limit" role="group" aria-label="Credits limit">
+      ${[300, 400, 500]
+        .map(
+          (n) =>
+            `<button class="${list.fleet.creditsLimit === n ? "selected" : ""}" data-action="set-limit" data-limit="${n}">${credits(n)}</button>`,
+        )
+        .join("")}
+      <input class="limit-input ${limitIsPreset ? "" : "selected"}" type="number" min="1" step="10" value="${limitIsPreset ? "" : list.fleet.creditsLimit}" placeholder="Custom" data-action="set-limit-free" aria-label="Custom credits limit" />
+    </div>`;
 
   const factionControl = list.freePlay
     ? '<span class="freeplay-badge">All ships unlocked</span>'

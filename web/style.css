@@ -351,6 +351,7 @@ button { font-family: inherit; }
 
 .faction-plaques { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 .faction-plaque {
+  position: relative; overflow: hidden;
   text-align: left; cursor: pointer; background: var(--paper);
   border: 1px solid var(--hair-soft); border-left: 3px solid var(--blue);
   padding: 13px 15px; display: flex; flex-direction: column; gap: 3px;
@@ -361,8 +362,17 @@ button { font-family: inherit; }
 .faction-plaque.selected { background: var(--blue); border-color: var(--blue); border-left-color: var(--red); }
 .faction-plaque.selected .faction-plaque-name { color: #fff; }
 .faction-plaque.selected .faction-plaque-rule { color: #bcd0f2; }
-.faction-plaque-name { font-family: var(--display); font-weight: 700; font-size: 16px; letter-spacing: -0.01em; color: var(--ink); }
-.faction-plaque-rule { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
+.faction-plaque-name { position: relative; z-index: 1; font-family: var(--display); font-weight: 700; font-size: 16px; letter-spacing: -0.01em; color: var(--ink); }
+.faction-plaque-rule { position: relative; z-index: 1; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
+/* Emblem backdrop: rests hidden and slightly small/rotated, eases up on hover
+   on Fluent's decelerate curve (like the home-screen motion). */
+.fp-bg { position: absolute; right: -14px; bottom: -22px; z-index: 0; pointer-events: none; color: var(--blue);
+  opacity: 0; transform: scale(0.7) rotate(-10deg); transform-origin: bottom right;
+  transition: opacity 240ms cubic-bezier(0.1, 0.9, 0.2, 1), transform 240ms cubic-bezier(0.1, 0.9, 0.2, 1); }
+.fp-bg .emblem, .fp-bg .emblem-img { width: 132px; height: 132px; }
+.faction-plaque:hover .fp-bg { opacity: 0.16; transform: scale(1) rotate(0deg); }
+.faction-plaque.selected .fp-bg { color: #fff; opacity: 0.2; transform: scale(1) rotate(0deg); }
+@media (prefers-reduced-motion: reduce) { .fp-bg { transition: opacity 120ms ease; } .faction-plaque:hover .fp-bg { transform: none; } }
 
 .freeplay-block { border: 2px solid var(--hair); padding: 22px; }
 .freeplay-block .era-title { border-bottom-color: var(--red); }
@@ -477,6 +487,10 @@ button { font-family: inherit; }
 
 .setup-controls .emblem-picker { margin-top: 0; }
 .segment { display: inline-flex; border: 1px solid var(--hair); }
+/* Custom credits input living inside the preset segment. */
+.segment-limit .limit-input { width: 96px; border: none; border-left: 1px solid var(--hair); margin: 0; }
+.segment-limit .limit-input.selected { background: var(--blue); color: #fff; }
+.segment-limit .limit-input.selected::placeholder { color: #cdddf6; }
 .segment button {
   background: var(--paper); border: none; border-left: 1px solid var(--hair);
   font-family: var(--sans); font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums;
@@ -504,8 +518,8 @@ button { font-family: inherit; }
 
 .workspace {
   max-width: var(--shell); margin: 0 auto;
-  padding: clamp(20px, 3vw, 34px) clamp(16px, 4vw, 40px) 0;
-  display: grid; grid-template-columns: 1fr 480px; gap: clamp(20px, 3vw, 40px); align-items: start;
+  padding: clamp(16px, 2.4vw, 28px) clamp(16px, 4vw, 40px) 0;
+  display: grid; grid-template-columns: minmax(340px, 430px) 1fr; gap: clamp(18px, 2.4vw, 32px); align-items: start;
 }
 @media (max-width: 1080px) { .workspace { grid-template-columns: 1fr; } }
 
@@ -513,9 +527,10 @@ button { font-family: inherit; }
 .rule-card { border: 2px solid var(--blue); border-left-width: 6px; padding: 18px 20px; margin-bottom: 26px; background: var(--blue-wash); }
 .rule-card-title { font-family: var(--display); font-weight: 800; font-size: 19px; color: var(--blue-deep); margin-bottom: 6px; }
 .rule-card-text { font-family: var(--serif); font-size: 15px; line-height: 1.55; color: var(--ink); }
-/* The two numbers a player checks every round, pulled up top and made loud. */
-.rule-card-stats { display: flex; gap: 10px; margin-bottom: 16px; }
-.rc-stat { flex: 1; background: #fff; border: 1px solid var(--blue); border-top: 3px solid var(--blue); padding: 8px 12px 10px; }
+/* The two numbers a player checks every round, pulled up top and made loud.
+   Sized to their content, not stretched across the whole panel. */
+.rule-card-stats { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.rc-stat { flex: 0 1 auto; min-width: 96px; background: #fff; border: 1px solid var(--blue); border-top: 3px solid var(--blue); padding: 6px 14px 8px; }
 .rc-stat-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
 .rc-stat-val { display: block; font-family: var(--display); font-weight: 800; font-size: 26px; line-height: 1.1; color: var(--blue-deep); font-variant-numeric: tabular-nums; }
 /* One die glyph per die in the Initiative pool: 2D6 shows two, 3D6 shows three. */
@@ -568,8 +583,10 @@ button { font-family: inherit; }
 .personnel-rule { font-family: var(--serif); font-size: 13.5px; line-height: 1.5; color: var(--ink-2); margin-top: 4px; }
 
 /* roster (right) */
-.roster { position: sticky; top: 16px; }
-.roster-sheet { border: 2px solid var(--hair); background: var(--paper); }
+/* Roster lives on the left and stays visible: pinned to the top, capped to the
+   viewport, and scrolling inside itself rather than dragging the page with it. */
+.roster { order: -1; position: sticky; top: 12px; max-height: calc(100vh - 24px); display: flex; flex-direction: column; }
+.roster-sheet { border: 2px solid var(--hair); background: var(--paper); overflow-y: auto; }
 .roster-head { display: flex; align-items: center; gap: 14px; padding: 18px 20px; background: var(--blue); color: #fff; }
 .roster-emblem { color: #fff; }
 .roster-title { font-family: var(--display); font-weight: 800; font-size: 21px; letter-spacing: -0.01em; line-height: 1.1; }
@@ -606,6 +623,9 @@ button { font-family: inherit; }
 .inspection.fail { background: var(--red-wash); }
 .inspection.freeplay { background: var(--blue-wash); font-size: 13px; color: var(--ink-2); }
 .inspection .roster-section { border-bottom: none; padding: 0 0 8px; }
+/* The inspection heading resets its left padding, so the section's red marker
+   dot would float orphaned to its left. Suppress it here. */
+.inspection .roster-section::before { display: none; }
 .inspection-pass { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: var(--go); }
 .issue-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
 .issue-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.4; }
@@ -893,7 +913,8 @@ button { font-family: inherit; }
   .comp-filters .control-group { flex: 1 1 45%; }
   .comp-filters select, .comp-search { min-width: 0; width: 100%; }
 
-  .roster { position: static; }
+  .roster { order: 0; position: static; max-height: none; }
+  .roster-sheet { overflow-y: visible; }
   .fleet-dock { position: static; }
 
   .foundry-main, .changelog-main, .compendium, .solo-body { padding-left: 14px; padding-right: 14px; }
@@ -977,6 +998,9 @@ button { font-family: inherit; }
 }
 .nf-opt:hover { border-color: var(--color-line); color: var(--color-ink); }
 .nf-opt.on { background: var(--color-action); border-color: var(--color-action); color: #fff; }
+.nf-custom { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--color-line); padding: 4px 10px; }
+.nf-custom.on { border-color: var(--color-action); color: var(--color-action); }
+.nf-custom input { width: 64px; font-family: var(--sans); font-size: 13px; font-weight: 700; border: none; padding: 3px 0; background: transparent; color: var(--ink); }
 .modal-body .faction-plaques { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 @media (max-width: 480px) { .modal-body .faction-plaques { grid-template-columns: 1fr; } }
 .nf-more {
@@ -986,6 +1010,13 @@ button { font-family: inherit; }
 }
 .nf-more:hover { color: var(--color-action-strong); }
 .nf-all { margin-top: 8px; }
+/* "More" widens the modal and flows the rest of the roster into columns of
+   four, scrolling sideways if there are more than fit. */
+.modal-panel.modal-wide { width: min(1060px, 100%); }
+.modal-body .faction-plaques.nf-all {
+  display: grid; grid-auto-flow: column; grid-template-rows: repeat(4, auto);
+  grid-auto-columns: minmax(190px, 1fr); gap: 8px; overflow-x: auto; padding-bottom: 6px;
+}
 .nf-alt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 16px; border-top: 1px solid var(--hair-soft); }
 .nf-alt .control-label { margin-right: 4px; }
 .cta-btn[disabled] { background: var(--paper); color: var(--ink-3); border-color: var(--hair); cursor: default; }

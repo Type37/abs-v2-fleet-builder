@@ -9,6 +9,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.6.0",
+    date: "2026-07-08",
+    title: "Roster on the left, a cleaner faction picker",
+    items: [
+      "The builder now keeps your roster pinned on the left where it is always visible, with the ship catalogue on the right. The roster scrolls inside itself instead of dragging the page along.",
+      "Faction picker: hovering a faction fades its emblem in behind the card, and the More button widens the window into sorted columns covering every faction in the game, your custom ones last.",
+      "Credits limit now offers 300, 400, 500, or any custom value.",
+      "Free Play has been removed; it was never a game mode.",
+      "Initiative shows a die for each die in the pool, and the faction summary boxes are sized to their numbers instead of stretching across the panel.",
+      "Tidied the emblem library, dropping a batch of stray non-emblem images.",
+    ],
+  },
+  {
     version: "0.5.0",
     date: "2026-07-07",
     title: "Sharper type, a sortable compendium",

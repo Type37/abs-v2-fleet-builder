@@ -945,6 +945,14 @@ function handleChange(e: Event): void {
       store.setState((s) => updateFleet(s, listId, (f) => ({ ...f, creditsLimit: n })));
       break;
     }
+    case "nf-size-custom": {
+      const n = Math.max(1, Math.round(Number(inputValue) || 0));
+      if (!n) return;
+      store.setState((s) =>
+        s.ui.modal?.kind === "new-fleet" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, limit: n } } } : s,
+      );
+      break;
+    }
     case "unit-name": {
       if (!listId) return;
       const unitId = target.dataset["unit"];
