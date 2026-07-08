@@ -701,7 +701,8 @@ button { font-family: inherit; }
 /* Print setup: options bar (screen only), per-unit cards, and trackers. */
 .print-opts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .print-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
-.print-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.pr-scroll { overflow-x: auto; }
+.print-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 12px; }
 .print-card { border: 1px solid var(--ink); padding: 10px 12px; break-inside: avoid; page-break-inside: avoid; }
 .pc-head { display: flex; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--hair); padding-bottom: 5px; margin-bottom: 5px; }
 .pc-index { font-family: var(--display); font-weight: 900; color: var(--blue); }
@@ -723,7 +724,7 @@ button { font-family: inherit; }
 .pts-item { display: flex; align-items: center; gap: 10px; }
 .pts-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
 .pts-blank { display: inline-block; min-width: 120px; border-bottom: 1px solid var(--ink-2); height: 14px; }
-@media print { .print-cards { grid-template-columns: repeat(3, 1fr); } }
+@media print { .print-cards { grid-template-columns: repeat(3, 1fr); } .pr-scroll { overflow: visible; } }
 
 .print-notes { margin-top: 14px; }
 .print-notes p { font-family: var(--serif); font-size: 13px; line-height: 1.5; white-space: pre-wrap; color: var(--ink); }
@@ -734,7 +735,7 @@ button { font-family: inherit; }
 /* ------------------------------------------------------------ print view */
 
 .print-page { max-width: 940px; margin: 0 auto; padding: 20px; }
-.print-toolbar { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.print-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
 
 .sheet { background: #fff; border: 2px solid var(--ink); padding: clamp(24px, 4vw, 44px); }
 .sheet-head { display: flex; align-items: center; gap: 18px; padding-bottom: 16px; border-bottom: 3px solid var(--ink); }

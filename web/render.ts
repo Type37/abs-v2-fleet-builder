@@ -903,6 +903,7 @@ function printView(state: AppState): string {
 
   const unitBlocks = unitRows
     ? `
+    <div class="pr-scroll">
     <table class="print-roster">
       <thead>
         <tr>
@@ -914,7 +915,8 @@ function printView(state: AppState): string {
       <tfoot>
         <tr><td colspan="9" class="pr-total-label">Total</td><td class="pr-num pr-cost">${credits(total)}</td></tr>
       </tfoot>
-    </table>`
+    </table>
+    </div>`
     : "";
 
   // Per-unit cards: a stat card each, several to a page, cut-and-keep at the
