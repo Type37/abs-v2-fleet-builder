@@ -233,9 +233,9 @@ function tutorialCallout(state: AppState): string {
 // ---------------------------------------------------------------------------
 
 function homeView(state: AppState): string {
-  // Rows are links, except when an action is given (How to Play opens the New
-  // Fleet modal, where the tutorials actually launch, rather than a dead link).
-  const row = (n: string, href: string, name: string, desc: string, action?: string) => {
+  // Rows are links, except when an action is given (Learn to Play launches a
+  // guided tutorial battle rather than routing to a dead page).
+  const row = (n: string, href: string, name: string, desc: string, action?: string, extra = "") => {
     const inner = `
       <span class="index-num">${n}</span>
       <span class="index-main">
@@ -244,7 +244,7 @@ function homeView(state: AppState): string {
       </span>
       <span class="index-go">${icon("chevronRight", 20)}</span>`;
     return action
-      ? `<button class="index-row" data-action="${action}">${inner}</button>`
+      ? `<button class="index-row" data-action="${action}" ${extra}>${inner}</button>`
       : `<a class="index-row" href="${href}">${inner}</a>`;
   };
   return `
@@ -264,7 +264,7 @@ function homeView(state: AppState): string {
       ${row("01", "#/fleets", "Fleets", "Build, save, print, and share army lists for any faction and era.")}
       ${row("02", "#/solo", "Solo Play", "Junkspace: build an outfit, roll for the enemy, run the debt campaign.")}
       ${row("03", "#/ships", "Ship Compendium", "Every ship in the game in one filterable, sortable table.")}
-      ${row("04", "#/fleets", "How to Play", "The two Basic Training tutorials, with the Training Fleet pre-loaded.", "open-new-fleet")}
+      ${row("04", "#/fleets", "Learn to Play", "A guided tutorial battle: the Training Fleet loaded, walked through setup, every phase, and scoring.", "new-training", 'data-mode="combat-simulator"')}
       ${row("05", "#/foundry", "Custom Rules", "Design your own factions, ship classes, and personnel.")}
     </nav>
   </main>
@@ -624,16 +624,28 @@ function builderView(state: AppState): string {
       const shipName = r?.ship.name ?? u.shipClassId;
       const cost = r ? r.ship.cost * u.count : 0;
       const carried = list.fleet.hvp.filter((h) => h.assignedUnitId === u.id).length;
+      const maxCount = list.freePlay || list.mode === "hypergrowth" ? 99 : r?.ship.mass === 3 ? 1 : 3;
       return `
-      <button class="roster-unit ${r ? "" : "unresolved"}" data-action="open-unit" data-unit="${u.id}">
-        <span class="roster-unit-glyph">${r ? massGlyph(r.ship.mass, 22) : icon("warning", 20)}</span>
-        <span class="ru-main">
-          <span class="ru-name">${escapeHtml(u.name || `${shipName} unit`)}</span>
-          <span class="ru-sub">${escapeHtml(shipName)} <span class="ru-x">×${u.count}</span>${carried ? ` <span class="ru-carry">${icon("personnel", 12)}${carried}</span>` : ""}${r && list.freePlay ? ` <span class="muted">${escapeHtml(r.owner.name)}</span>` : ""}</span>
-        </span>
+      <div class="roster-unit ${r ? "" : "unresolved"}">
+        <button class="ru-open" data-action="open-unit" data-unit="${u.id}" title="Rename, name ships, assign personnel">
+          <span class="roster-unit-glyph">${r ? massGlyph(r.ship.mass, 22) : icon("warning", 20)}</span>
+          <span class="ru-main">
+            <span class="ru-name">${escapeHtml(u.name || `${shipName} unit`)}</span>
+            <span class="ru-sub">${escapeHtml(shipName)}${carried ? ` <span class="ru-carry">${icon("personnel", 12)}${carried}</span>` : ""}${r && list.freePlay ? ` <span class="muted">${escapeHtml(r.owner.name)}</span>` : ""}</span>
+          </span>
+        </button>
+        ${
+          r
+            ? `<span class="stepper ru-stepper">
+                <button data-action="unit-count" data-unit="${u.id}" data-delta="-1" ${u.count <= 1 ? "disabled" : ""} title="One fewer ship">${icon("minus", 14)}</button>
+                <span class="stepper-count">${u.count}</span>
+                <button data-action="unit-count" data-unit="${u.id}" data-delta="1" ${u.count >= maxCount ? "disabled" : ""} title="One more ship">${icon("plus", 14)}</button>
+              </span>`
+            : ""
+        }
         <span class="roster-unit-cost">${credits(cost)}</span>
-        <span class="ru-go">${icon("chevronRight", 16)}</span>
-      </button>`;
+        <button class="ru-remove" data-action="remove-unit" data-unit="${u.id}" title="Remove this unit">${icon("trash", 14)}</button>
+      </div>`;
     })
     .join("");
 

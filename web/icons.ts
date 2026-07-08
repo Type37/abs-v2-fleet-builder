@@ -43,16 +43,19 @@ const PATHS: Record<string, string> = {
   mass3: '<path fill="currentColor" stroke="none" d="M12 2 15 5 15 9 20 13 20 22 14 22 14 18 10 18 10 22 4 22 4 13 9 9 9 5 Z"/>',
 };
 
-// Fleet emblems: bolder filled marks for identity, also on the 24 grid.
+// Fleet emblems: crisp geometric insignia on the 24 grid. Filled where a bold
+// silhouette reads best; stroked where the mark needs interior structure.
 export const EMBLEMS: Record<string, string> = {
   delta: '<path fill="currentColor" stroke="none" d="M12 3 21 21 H3 Z"/>',
-  orbit: '<circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="10.5" ry="4" fill="none" stroke="currentColor" stroke-width="1.8" transform="rotate(-20 12 12)"/>',
-  ring: '<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="4"/>',
-  quad: '<rect x="4" y="4" width="7" height="7" fill="currentColor" stroke="none"/><rect x="13" y="4" width="7" height="7" fill="currentColor" stroke="none"/><rect x="4" y="13" width="7" height="7" fill="currentColor" stroke="none"/><rect x="13" y="13" width="7" height="7" fill="currentColor" stroke="none"/>',
-  chevrons: '<path fill="currentColor" stroke="none" d="M4 6 12 11 20 6 20 10 12 15 4 10 Z"/><path fill="currentColor" stroke="none" d="M4 12 12 17 20 12 20 16 12 21 4 16 Z"/>',
-  star: '<path fill="currentColor" stroke="none" d="M12 2 14.6 8.8 22 9.2 16.3 13.9 18.2 21 12 17 5.8 21 7.7 13.9 2 9.2 9.4 8.8 Z"/>',
-  eclipse: '<circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="6" fill="#fff" stroke="none"/>',
-  lattice: '<path fill="none" stroke="currentColor" stroke-width="2.4" d="M12 2 21 7 21 17 12 22 3 17 3 7 Z"/><path fill="none" stroke="currentColor" stroke-width="2.4" d="M12 2 V22 M3 7 21 17 M21 7 3 17"/>',
+  spear: '<path fill="currentColor" stroke="none" d="M12 2 16.6 11 12 9 7.4 11 Z"/><path fill="currentColor" stroke="none" d="M11 9 H13 V22 H11 Z"/>',
+  star: '<path fill="currentColor" stroke="none" d="M12 1 14 10 23 12 14 14 12 23 10 14 1 12 10 10 Z"/>',
+  wings: '<path fill="currentColor" stroke="none" d="M12 6 21 3 21 7 12 11 3 7 3 3 Z"/><path fill="currentColor" stroke="none" d="M12 11 18 9 12 15.5 6 9 Z"/>',
+  atom: '<circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><g fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="12" rx="10" ry="3.8"/><ellipse cx="12" cy="12" rx="10" ry="3.8" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="3.8" transform="rotate(120 12 12)"/></g>',
+  planet: '<circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="11" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.9" transform="rotate(-20 12 12)"/>',
+  hexcore: '<path fill="none" stroke="currentColor" stroke-width="2" d="M12 2.5 20.5 7.2 V16.8 L12 21.5 3.5 16.8 V7.2 Z"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/>',
+  sunburst: '<circle cx="12" cy="12" r="3.8" fill="currentColor" stroke="none"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22.5" y2="12"/><line x1="4.6" y1="4.6" x2="7" y2="7"/><line x1="17" y1="17" x2="19.4" y2="19.4"/><line x1="19.4" y1="4.6" x2="17" y2="7"/><line x1="7" y1="17" x2="4.6" y2="19.4"/></g>',
+  bolt: '<path fill="currentColor" stroke="none" d="M13.5 2 4 13.5 H10 L9 22 20 10 H13.5 Z"/>',
+  crosshair: '<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><g stroke="currentColor" stroke-width="2"><line x1="12" y1="1.5" x2="12" y2="5.5"/><line x1="12" y1="18.5" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="5.5" y2="12"/><line x1="18.5" y1="12" x2="22.5" y2="12"/></g>',
 };
 
 export function icon(name: string, size = 18, cls = ""): string {

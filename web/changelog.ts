@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.6.1",
+    date: "2026-07-08",
+    title: "Add ships inline, redrawn emblems",
+    items: [
+      "Change a unit's ship count right on the roster with inline plus and minus, and remove a unit in one click, without opening it first.",
+      "Redrawn the default emblem set into ten cleaner marks: a spearhead, a four-point star, wings, an atom, a ringed planet, a hex core, a sunburst, a bolt, a crosshair, and the delta.",
+      "A tighter builder throughout, so more fits on screen with less scrolling.",
+      "The home screen's fourth entry is now Learn to Play, launching a guided tutorial battle instead of the new-fleet dialog.",
+    ],
+  },
+  {
     version: "0.6.0",
     date: "2026-07-08",
     title: "Roster on the left, a cleaner faction picker",
