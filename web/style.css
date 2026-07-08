@@ -990,11 +990,13 @@ button { font-family: inherit; }
      overflow here is safe and does not disturb desktop sticky positioning. */
   body { overflow-x: hidden; }
 
-  /* Topbar: wordmark on top, nav scrolls horizontally beneath it. */
+  /* Topbar: wordmark on top, nav as a 2-column button grid beneath it (no
+     sideways scroll, full tap targets). */
   .topbar { height: auto; min-height: 54px; flex-wrap: wrap; padding: 9px clamp(12px, 4vw, 16px); gap: 8px 10px; }
   .wordmark-sub { display: none; }
-  .topnav { width: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding-bottom: 2px; }
-  .topnav a { white-space: nowrap; padding: 8px 10px; font-size: 11px; }
+  .topnav { width: 100%; flex-wrap: wrap; gap: 6px; }
+  .topnav a { flex: 1 1 calc(50% - 6px); justify-content: center; white-space: nowrap; padding: 10px 8px; font-size: 11px; border: 1px solid rgba(255, 255, 255, 0.18); min-width: 0; }
+  .nav-pill { display: none; }
 
   .hero-inner { padding-top: 40px; padding-bottom: 32px; }
   .band-readout { width: 100%; }

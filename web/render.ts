@@ -334,7 +334,7 @@ function factionDetailPane(f: Faction): string {
     .map(
       (s) => `
       <tr>
-        <td class="nfd-ship"><span class="nfd-ship-name">${escapeHtml(s.name)}</span><span class="nfd-ship-mass">Mass ${s.mass}</span></td>
+        <td class="nfd-ship"><span class="nfd-ship-name">${escapeHtml(s.name)}</span>${statChips(s, true)}</td>
         <td class="nfd-w">${primarySlotText(s)}${auxSlotText(s) ? `<br />${auxSlotText(s)}` : ""}</td>
         <td class="nfd-cost">${credits(s.cost)}</td>
       </tr>`,
