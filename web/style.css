@@ -8,6 +8,16 @@
    corners, flat, no gradients, no drop shadows, no monospace, no gray mush.
    =========================================================================== */
 
+/* Terminal Grotesque Open (Velvetyne / Studio Triple, OFL): used only for the
+   WarLore signature in the footer credit. */
+@font-face {
+  font-family: "Terminal Grotesque Open";
+  src: url("./fonts/terminal-grotesque-open.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --paper: #ffffff;
   --ground: #f2f4f8;      /* used sparingly, only to seat white cards */
@@ -222,6 +232,9 @@ button { font-family: inherit; }
 .gif-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-3); margin: 0 10px; display: inline-block; }
 .game-info-footer a { color: var(--color-action); font-weight: 600; }
 .game-info-footer a:hover { text-decoration: underline; }
+/* The WarLore signature: Terminal Grotesque Open, gold on a black highlight. */
+.game-info-footer a.wl-sig { font-family: "Terminal Grotesque Open", var(--sans); font-weight: 400; color: #d4ad4a; background: #111; padding: 1px 7px 2px; letter-spacing: 0.02em; }
+.game-info-footer a.wl-sig:hover { color: #e7c56a; text-decoration: none; }
 @media (max-width: 760px) { .gif-sep { margin: 0 7px; } .game-info-footer { margin-top: 40px; } }
 
 /* --------------------------------------------------------------------- toast */

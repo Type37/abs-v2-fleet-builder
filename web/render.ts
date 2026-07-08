@@ -190,7 +190,7 @@ function footer(): string {
       <span class="gif-title">A Billion Suns</span>${sep}
       <span>by <a href="https://planetsmashergames.com/a-billion-suns/" target="_blank" rel="noopener">Mike Hutchinson</a>, Osprey Games</span>${sep}
       <a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">Quick Reference</a>${sep}
-      <span class="gif-builder">Fleet builder by <a href="https://linktr.ee/warlore" target="_blank" rel="noopener">WarLore</a></span>${sep}
+      <span class="gif-builder">Fleet builder by <a class="wl-sig" href="https://linktr.ee/warlore" target="_blank" rel="noopener">WarLore</a></span>${sep}
       <a href="mailto:warlore1@outlook.com">Send Feedback</a>${sep}
       <a href="https://github.com/Type37/a-billion-suns-shipyard" target="_blank" rel="noopener">Source on GitHub</a>${sep}
       <a href="#/changelog">v${escapeHtml(v)}</a>
