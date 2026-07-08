@@ -9,6 +9,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.2",
+    date: "2026-07-08",
+    title: "Duplicate personnel, quicker roster edits, era-first factions",
+    items: [
+      "You may now take the same High-Value Personnel more than once; the uniqueness restriction has been removed.",
+      "The personnel count reads as a simple number, such as 1/3.",
+      "In the roster, when a unit is down to a single ship the minus button removes the whole unit, turning red on hover to warn you first.",
+      "The new-fleet faction list shows only your era's factions; the More button (now labelled other eras and custom) reveals everything else, with your custom factions last.",
+      "Every new Hypergrowth fleet starts with a random emblem from the whole library.",
+    ],
+  },
+  {
     version: "0.7.1",
     date: "2026-07-08",
     title: "Now A Billion Suns 2e Shipyard",

@@ -258,13 +258,13 @@ test("must select exactly 3 HVP", () => {
   assert.ok(hasCode(validateFleet(four), "HVP_COUNT"));
 });
 
-test("duplicate HVP selection is an error", () => {
+test("duplicate HVP selection is allowed", () => {
   const f = fleet({
     factionId: "vyke",
     units: [u("a", "king-crab", 1)],
     hvp: [h("brood-mother", "a"), h("brood-mother", "a"), h("war-singer", "a")],
   });
-  assert.ok(hasCode(validateFleet(f), "HVP_DUPLICATE"));
+  assert.ok(validateFleet(f).valid);
 });
 
 test("HVP from another faction is not available", () => {

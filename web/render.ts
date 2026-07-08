@@ -45,7 +45,7 @@ interface GuideStep {
 const TRAINING_GUIDES: Partial<Record<GameMode, { intro: string; steps: GuideStep[] }>> = {
   "combat-simulator": {
     intro:
-      "Your first game of A Billion Suns. It plays like Armageddon and teaches the basics of activating your fleet: moving and attacking. Your Training Fleet is already loaded on the right; every entry is a single unit.",
+      "Your first game of A Billion Suns. It plays like Armageddon and teaches the basics of activating your fleet: moving and attacking. Your Training Fleet is already loaded.",
     steps: [
       {
         title: "Set up the table",
@@ -331,8 +331,10 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
   const m = state.ui.modal;
   if (!m || m.kind !== "new-fleet") return "";
   const byEra = factionsByEra(customs);
-  const eraFactions = byEra.get(m.era) ?? [];
   const customIds = new Set(customs.map((c) => c.id));
+  // The default list shows only this era's *official* factions. Custom/seed
+  // factions (e.g. the Covenant) and every other era live behind "More".
+  const eraFactions = (byEra.get(m.era) ?? []).filter((f) => !customIds.has(f.id));
   // The rest, sorted: other-era book factions first (by era, then name), then
   // any custom factions last, so the expanded grid reads in a stable order.
   const others = allFactions(customs)
@@ -376,7 +378,7 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
         <div class="modal-field">
           <span class="control-label">3 / Faction</span>
           <div class="faction-plaques">${eraFactions.map(plaque).join("")}</div>
-          <button class="nf-more" data-action="nf-toggle-all">${m.showAll ? "Show fewer" : `More — all ${allFactions(customs).length} factions, any era`}</button>
+          <button class="nf-more" data-action="nf-toggle-all">${m.showAll ? "Show fewer" : `${icon("plus", 13)} More — other eras &amp; custom`}</button>
           ${m.showAll ? `<p class="muted picker-note">Any faction may be fielded in any era. Other eras first, then your custom factions.</p><div class="faction-plaques nf-all">${others.map(plaque).join("")}</div>` : ""}
         </div>
         <div class="nf-alt">
@@ -539,14 +541,11 @@ function builderView(state: AppState): string {
     const result = validateFleet(list.fleet, makeCatalog(customs));
     // Mode-specific relaxations: shipyard modes buy loose ships (no unit-size
     // limit at build time) and Management Training selects no HVP (p.65).
-    // The Combat Simulator's three HVP are all Seasoned Captains (p.63), so
-    // the duplicate check does not apply there.
     const drop = new Set<string>();
     if (list.mode === "hypergrowth" || list.mode === "management-training") {
       drop.add("UNIT_SIZE_EXCEEDED");
     }
     if (list.mode === "management-training") drop.add("HVP_COUNT");
-    if (list.mode === "combat-simulator") drop.add("HVP_DUPLICATE");
     issues = result.issues.filter((i) => !drop.has(i.code));
     valid = !issues.some((i) => i.severity === "error");
   }
@@ -623,7 +622,7 @@ function builderView(state: AppState): string {
         ${
           r
             ? `<span class="stepper ru-stepper">
-                <button data-action="unit-count" data-unit="${u.id}" data-delta="-1" ${u.count <= 1 ? "disabled" : ""} title="One fewer ship">${icon("minus", 14)}</button>
+                <button class="${u.count <= 1 ? "will-remove" : ""}" data-action="unit-count" data-unit="${u.id}" data-delta="-1" title="${u.count <= 1 ? "Remove this unit" : "One fewer ship"}">${icon("minus", 14)}</button>
                 <span class="stepper-count">${u.count}</span>
                 <button data-action="unit-count" data-unit="${u.id}" data-delta="1" ${u.count >= maxCount ? "disabled" : ""} title="One more ship">${icon("plus", 14)}</button>
               </span>`
@@ -753,7 +752,7 @@ function builderView(state: AppState): string {
       <h3 class="catalog-title">Ship classes</h3>
       <div class="catalog-list">${catalogHtml || '<p class="muted">Pick a faction to see its ships.</p>'}</div>
       <details class="catalog-fold" ${list.fleet.hvp.length > 0 ? "open" : ""}>
-        <summary class="catalog-title">High-Value Personnel <span class="muted">${list.freePlay ? "select any number" : hvpMin === hvpMax ? `select ${hvpMax}` : `select ${hvpMin} to ${hvpMax}`}${list.fleet.hvp.length ? `, ${list.fleet.hvp.length} chosen` : ""}</span></summary>
+        <summary class="catalog-title">High-Value Personnel <span class="muted">${list.freePlay ? `${list.fleet.hvp.length}` : hvpMin === hvpMax ? `${list.fleet.hvp.length}/${hvpMax}` : `${list.fleet.hvp.length}/${hvpMin}–${hvpMax}`}</span></summary>
         <div class="catalog-list personnel-grid">${personnelCatalog}</div>
       </details>
     </section>

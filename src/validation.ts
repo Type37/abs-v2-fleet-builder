@@ -22,7 +22,6 @@ export type IssueCode =
   | "UNIT_SPECIES_INVALID"
   | "UNIT_SPECIES_UNEXPECTED"
   | "HVP_COUNT"
-  | "HVP_DUPLICATE"
   | "HVP_NOT_AVAILABLE"
   | "HVP_ASSIGN_UNKNOWN_UNIT"
   | "HVP_ASSIGN_MASS0"
@@ -214,7 +213,6 @@ export function validateFleet(fleet: Fleet, catalog: Catalog = defaultCatalog): 
   }
 
   const fleetHasCarrier = [...unitMass.values()].some((m) => m >= 1);
-  const seenHvpIds = new Set<string>();
 
   fleet.hvp.forEach((sel, hvpIndex) => {
     const def = allowedHvp.get(sel.hvpId);
@@ -228,16 +226,8 @@ export function validateFleet(fleet: Fleet, catalog: Catalog = defaultCatalog): 
       });
     }
 
-    if (seenHvpIds.has(sel.hvpId)) {
-      add({
-        code: "HVP_DUPLICATE",
-        severity: "error",
-        message: `HVP "${sel.hvpId}" selected more than once. Each HVP is unique.`,
-        hvpIndex,
-        hvpId: sel.hvpId,
-      });
-    }
-    seenHvpIds.add(sel.hvpId);
+    // The same HVP may be taken more than once (nothing in the build rules
+    // forbids duplicates), so there is no uniqueness check here.
 
     // Assignment (optional at build time, but validated when present).
     if (sel.assignedUnitId !== undefined) {

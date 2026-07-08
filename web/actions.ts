@@ -468,15 +468,30 @@ function handleClick(e: MouseEvent): void {
       const delta = Number(target.dataset["delta"]);
       if (!id || !unitId || !Number.isFinite(delta)) return;
       store.setState((s) =>
-        updateFleet(s, id, (f) => ({
-          ...f,
-          units: f.units.map((u) => {
-            if (u.id !== unitId) return u;
-            const count = Math.max(1, u.count + delta);
-            const shipNames = u.shipNames ? u.shipNames.slice(0, count) : undefined;
-            return { ...u, count, ...(shipNames ? { shipNames } : {}) };
-          }),
-        })),
+        updateFleet(s, id, (f) => {
+          // Stepping below 1 removes the unit entirely (its (-) button turns
+          // red at count 1 to signal the delete).
+          const current = f.units.find((u) => u.id === unitId);
+          if (current && current.count + delta < 1) {
+            return {
+              ...f,
+              units: f.units.filter((u) => u.id !== unitId),
+              // Unassign any HVP that were riding the deleted unit.
+              hvp: f.hvp.map((h) =>
+                h.assignedUnitId === unitId ? { ...h, assignedUnitId: undefined } : h,
+              ),
+            };
+          }
+          return {
+            ...f,
+            units: f.units.map((u) => {
+              if (u.id !== unitId) return u;
+              const count = Math.max(1, u.count + delta);
+              const shipNames = u.shipNames ? u.shipNames.slice(0, count) : undefined;
+              return { ...u, count, ...(shipNames ? { shipNames } : {}) };
+            }),
+          };
+        }),
       );
       break;
     }
@@ -684,6 +699,16 @@ function handleClick(e: MouseEvent): void {
       const chosen = findFaction(m.factionId, state.customFactions);
       if (chosen?.emblemImage) list.emblemImage = chosen.emblemImage;
       else if (chosen?.emblemLib) list.emblemLib = chosen.emblemLib;
+      // Hypergrowth fleets start with a random mark from across the whole
+      // library rather than the faction's own, so each new shipyard reads
+      // distinctly at a glance.
+      if (mode === "hypergrowth") {
+        const mark = randomIconId();
+        if (mark) {
+          list.emblemLib = mark;
+          list.emblemImage = undefined;
+        }
+      }
       store.setState((s) => {
         const lists = [...s.lists, list];
         persistLists(lists);
