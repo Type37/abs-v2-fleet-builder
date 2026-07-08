@@ -35,7 +35,7 @@ export const COVENANT_SEED: Faction = {
     // Mass 1 - corvettes.
     { id: "dav-corvette", name: "DAV-class Corvette", mass: 1, thrust: 10, silhouette: 4, shields: 2,
       primary: [w("Pulse Laser Turrets", 3, "D6", 0, 6)], auxiliary: [w("Plasma Cannon", 1, "D10", 2, 12)], utilityBays: false, cost: 10 },
-    { id: "sdv-heavy-corvette", name: "SDV-class Heavy Corvette", mass: 1, thrust: 9, silhouette: 4, shields: 2,
+    { id: "sdv-heavy-corvette", name: "Ceudar-pattern Heavy Corvette", mass: 1, thrust: 9, silhouette: 4, shields: 2,
       primary: [w("Plasma Torpedo", 1, "D10", 6, 18)], auxiliary: [w("Pulse Lasers", 2, "D6", 0, 6)], utilityBays: false, cost: 12 },
     // Mass 2 - cruisers.
     { id: "rpv-destroyer", name: "RPV-class Light Destroyer", mass: 2, thrust: 8, silhouette: 6, shields: 3,

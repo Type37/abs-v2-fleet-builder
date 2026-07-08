@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.4",
+    date: "2026-07-08",
+    title: "See a faction before you pick it",
+    items: [
+      "The new-fleet dialog now shows a detail panel on the right: choose a faction and its rule, every ship with weapons and cost, and its personnel appear at a glance.",
+      "Covenant: the SDV-class heavy corvette is now the Ceudar-pattern Heavy Corvette.",
+    ],
+  },
+  {
     version: "0.7.3",
     date: "2026-07-08",
     title: "Simpler emblem picker, Covenant revisions, punchier buttons",

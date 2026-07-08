@@ -1072,6 +1072,33 @@ button { font-family: inherit; }
 /* "More" widens the modal and flows the rest of the roster into columns of
    four, scrolling sideways if there are more than fit. */
 .modal-panel.modal-wide { width: min(1060px, 100%); }
+
+/* New-fleet dialog: controls on the left, a live faction detail pane on the
+   right (its ships, rule, and personnel). */
+.nf-modal .nf-body { display: grid; grid-template-columns: 1.05fr 1fr; gap: 22px; align-items: start; }
+.nf-controls { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.nf-detail-col { min-width: 0; border-left: 1px solid var(--hair-soft); padding-left: 22px; }
+.nf-detail-empty { display: flex; align-items: center; justify-content: center; min-height: 220px; text-align: center; }
+.nfd-title { font-family: var(--display); font-weight: 800; font-size: 20px; margin-bottom: 8px; text-transform: none; letter-spacing: -0.01em; color: var(--ink); }
+.nfd-rule { font-size: 13px; line-height: 1.5; color: var(--ink-2); margin-bottom: 8px; font-weight: 400; letter-spacing: normal; text-transform: none; }
+.nfd-rule-name { font-weight: 700; color: var(--ink); }
+.nfd-playstyle { font-size: 12.5px; font-style: italic; color: var(--ink-3); margin-bottom: 6px; font-weight: 400; letter-spacing: normal; text-transform: none; }
+.nfd-h { font-family: var(--sans); font-size: 10px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--hair-soft); }
+.nfd-ships { width: 100%; border-collapse: collapse; }
+.nfd-ships td { border-bottom: 1px solid var(--hair-soft); padding: 6px 4px; font-size: 12px; vertical-align: top; text-transform: none; letter-spacing: normal; font-weight: 400; color: var(--ink-2); }
+.nfd-ship { width: 40%; }
+.nfd-ship-name { font-weight: 700; display: block; color: var(--ink); }
+.nfd-ship-mass { font-size: 10px; color: var(--ink-3); }
+.nfd-w { line-height: 1.4; }
+.nfd-cost { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); }
+.nfd-hvp { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.nfd-hvp-name { font-weight: 700; font-size: 12.5px; display: block; color: var(--ink); text-transform: none; letter-spacing: normal; }
+.nfd-hvp-rule { font-size: 12px; color: var(--ink-2); line-height: 1.4; font-weight: 400; text-transform: none; letter-spacing: normal; }
+@media (max-width: 720px) {
+  .nf-modal .nf-body { grid-template-columns: 1fr; }
+  .nf-detail-col { border-left: none; padding-left: 0; border-top: 1px solid var(--hair-soft); padding-top: 16px; }
+}
+
 .modal-body .faction-plaques.nf-all {
   display: grid; grid-auto-flow: column; grid-template-rows: repeat(4, auto);
   grid-auto-columns: minmax(190px, 1fr); gap: 8px; overflow-x: auto; padding-bottom: 6px;

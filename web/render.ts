@@ -327,6 +327,36 @@ function fleetsView(state: AppState): string {
 // limit, then a faction. The four factions of the chosen era show first; "show
 // all" reveals the rest, since any faction may be played in any era (p.141).
 // This is steps 1 and 2 of the rulebook build sequence.
+// The detail pane shown on the right of the new-fleet dialog once a faction is
+// picked: its rule, every ship with weapons and cost, and its personnel.
+function factionDetailPane(f: Faction): string {
+  const ships = f.ships
+    .map(
+      (s) => `
+      <tr>
+        <td class="nfd-ship"><span class="nfd-ship-name">${escapeHtml(s.name)}</span><span class="nfd-ship-mass">Mass ${s.mass}</span></td>
+        <td class="nfd-w">${primarySlotText(s)}${auxSlotText(s) ? `<br />${auxSlotText(s)}` : ""}</td>
+        <td class="nfd-cost">${credits(s.cost)}</td>
+      </tr>`,
+    )
+    .join("");
+  const hvp = f.hvp
+    .map(
+      (h) => `<li><span class="nfd-hvp-name">${escapeHtml(h.name)}</span><span class="nfd-hvp-rule">${escapeHtml(h.rule)}</span></li>`,
+    )
+    .join("");
+  return `
+    <div class="nf-detail">
+      <h3 class="nfd-title">${escapeHtml(f.name)}</h3>
+      <p class="nfd-rule"><span class="nfd-rule-name">${escapeHtml(f.rule.name)}.</span> ${escapeHtml(f.rule.text)}</p>
+      ${f.playstyle ? `<p class="nfd-playstyle">${escapeHtml(f.playstyle)}</p>` : ""}
+      <h4 class="nfd-h">Ships <span class="muted">${f.ships.length}</span></h4>
+      <table class="nfd-ships"><tbody>${ships}</tbody></table>
+      <h4 class="nfd-h">High-Value Personnel <span class="muted">${f.hvp.length}</span></h4>
+      <ul class="nfd-hvp">${hvp}</ul>
+    </div>`;
+}
+
 function newFleetModal(state: AppState, customs: Faction[]): string {
   const m = state.ui.modal;
   if (!m || m.kind !== "new-fleet") return "";
@@ -354,37 +384,44 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
       <span class="faction-plaque-rule">${escapeHtml(f.rule.name)}</span>
     </button>`;
 
+  const selected = m.factionId ? findFaction(m.factionId, customs) : undefined;
+
   return `
   <div class="modal-root">
     <div class="modal-backdrop" data-action="close-modal"></div>
-    <div class="modal-panel modal-lg ${m.showAll ? "modal-wide" : ""}" role="dialog" aria-modal="true" aria-label="New fleet">
+    <div class="modal-panel modal-wide nf-modal" role="dialog" aria-modal="true" aria-label="New fleet">
       <header class="modal-header">
         <h2 class="modal-title">New fleet</h2>
         <button class="modal-close" data-action="close-modal" aria-label="Close">${icon("close", 18)}</button>
       </header>
-      <div class="modal-body">
-        <div class="modal-field">
-          <span class="control-label">1 / Era</span>
-          <div class="nf-opts">${ERA_ORDER.map(eraBtn).join("")}</div>
-        </div>
-        <div class="modal-field">
-          <span class="control-label">2 / Credits limit</span>
-          <div class="nf-opts">
-            ${[300, 400, 500].map(sizeBtn).join("")}
-            <label class="nf-custom ${![300, 400, 500].includes(m.limit) ? "on" : ""}">Custom
-              <input type="number" min="1" step="10" value="${![300, 400, 500].includes(m.limit) ? m.limit : ""}" placeholder="¢bn" data-action="nf-size-custom" /></label>
+      <div class="modal-body nf-body">
+        <div class="nf-controls">
+          <div class="modal-field">
+            <span class="control-label">1 / Era</span>
+            <div class="nf-opts">${ERA_ORDER.map(eraBtn).join("")}</div>
+          </div>
+          <div class="modal-field">
+            <span class="control-label">2 / Credits limit</span>
+            <div class="nf-opts">
+              ${[300, 400, 500].map(sizeBtn).join("")}
+              <label class="nf-custom ${![300, 400, 500].includes(m.limit) ? "on" : ""}">Custom
+                <input type="number" min="1" step="10" value="${![300, 400, 500].includes(m.limit) ? m.limit : ""}" placeholder="¢bn" data-action="nf-size-custom" /></label>
+            </div>
+          </div>
+          <div class="modal-field">
+            <span class="control-label">3 / Faction</span>
+            <div class="faction-plaques">${eraFactions.map(plaque).join("")}</div>
+            <button class="nf-more" data-action="nf-toggle-all">${m.showAll ? "Show fewer" : `${icon("plus", 13)} More — other eras &amp; custom`}</button>
+            ${m.showAll ? `<p class="muted picker-note">Any faction may be fielded in any era. Other eras first, then your custom factions.</p><div class="faction-plaques nf-all">${others.map(plaque).join("")}</div>` : ""}
+          </div>
+          <div class="nf-alt">
+            <span class="control-label">Or try a tutorial</span>
+            <button class="bar-btn" data-action="new-training" data-mode="combat-simulator">${icon("book", 14)} Combat Simulator</button>
+            <button class="bar-btn" data-action="new-training" data-mode="management-training">${icon("book", 14)} Management Training</button>
           </div>
         </div>
-        <div class="modal-field">
-          <span class="control-label">3 / Faction</span>
-          <div class="faction-plaques">${eraFactions.map(plaque).join("")}</div>
-          <button class="nf-more" data-action="nf-toggle-all">${m.showAll ? "Show fewer" : `${icon("plus", 13)} More — other eras &amp; custom`}</button>
-          ${m.showAll ? `<p class="muted picker-note">Any faction may be fielded in any era. Other eras first, then your custom factions.</p><div class="faction-plaques nf-all">${others.map(plaque).join("")}</div>` : ""}
-        </div>
-        <div class="nf-alt">
-          <span class="control-label">Or try a tutorial</span>
-          <button class="bar-btn" data-action="new-training" data-mode="combat-simulator">${icon("book", 14)} Combat Simulator</button>
-          <button class="bar-btn" data-action="new-training" data-mode="management-training">${icon("book", 14)} Management Training</button>
+        <div class="nf-detail-col">
+          ${selected ? factionDetailPane(selected) : '<div class="nf-detail nf-detail-empty"><p class="muted">Pick a faction to see its ships, rule, and personnel.</p></div>'}
         </div>
       </div>
       <footer class="modal-footer">
