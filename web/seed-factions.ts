@@ -22,15 +22,15 @@ export const COVENANT_SEED: Faction = {
   playstyle: "Durable energy shields and long-range plasma; fragile once the shields fall.",
   rule: {
     name: "Energy Shielding",
-    text: "The first point of damage each Covenant unit would suffer each Round is ignored.",
+    text: "Units that have not yet activated this round ignore the first point of damage they would take each round.",
   },
   ships: [
-    // Mass 0 - strike craft. Even these carry a shield, which is unusual.
+    // Mass 0 - wings (strike craft). Even these carry a shield, which is unusual.
     { id: "seraph", name: "Seraph", mass: 0, thrust: 12, silhouette: 2, shields: 1,
       primary: [w("Plasma Cannons", 2, "D6", 0, 6)], auxiliary: [], utilityBays: false, cost: 4 },
     { id: "banshee", name: "Banshee", mass: 0, thrust: 10, silhouette: 2, shields: 0,
       primary: [w("Fuel Rod Cannon", 1, "D8", 0, 6)], auxiliary: [], utilityBays: false, cost: 3 },
-    { id: "spirit", name: "Spirit", mass: 0, thrust: 8, silhouette: 3, shields: 1,
+    { id: "phantom", name: "Phantom", mass: 0, thrust: 8, silhouette: 3, shields: 1,
       primary: [], auxiliary: [w("Plasma Bolt Turret", 1, "D6", 0, 3)], utilityBays: true, primaryUtility: true, cost: 5 },
     // Mass 1 - corvettes.
     { id: "dav-corvette", name: "DAV-class Corvette", mass: 1, thrust: 10, silhouette: 4, shields: 2,
@@ -49,20 +49,20 @@ export const COVENANT_SEED: Faction = {
       primary: [w("Plasma Torpedo Array", 3, "D10", 6, 18)], auxiliary: [w("Pulse Laser Batteries", 8, "D6", 0, 6)], utilityBays: false, cost: 55 },
   ],
   hvp: [
-    { id: "cov-hierarch", name: "Prophet of Regret (Hierarch)",
+    { id: "cov-precentor", name: "San'Shyuum Precentor",
       rule: "This unit gains the command Rally the Faithful (1 CMD): friendly units within 12\" may each immediately make a free move of up to 6\". Once per Round." },
-    { id: "cov-fleet-master", name: "Fleet Master (Sangheili Ship Master)",
+    { id: "cov-fleet-master", name: "Sangheili Shipmaster",
       rule: "Ships in this unit's battlegroup increase the damage values of their D10 and D12 weapon systems by 1." },
     { id: "cov-spec-ops", name: "Special Operations Commander",
       rule: "When ships in this unit's battlegroup use the Power to Weapons command, they subtract 2 from the result of each attack dice, instead of 1." },
     { id: "cov-huragok", name: "Huragok Engineer",
       rule: "This unit gains the command Reweave (1 CMD): discard 1 damage token from every friendly unit within 12\". Once per Round." },
-    { id: "cov-ranger", name: "Kig-Yar Ranger",
+    { id: "cov-ranger", name: "Kig-Yar Shipmaster",
       rule: "Ships in this unit's battlegroup increase the maximum range of all their weapon systems by 3\"." },
     { id: "cov-deacon", name: "Unggoy Deacon",
       rule: "Friendly ships within 12\" of this unit count their Shields value as 1 higher. Nobody, least of all the Deacon, is sure why this works." },
     { id: "cov-chieftain", name: "Jiralhanae Chieftain",
-      rule: "The first time this unit's ship would be destroyed each game, it is instead reduced to 1 HP and survives, bellowing." },
+      rule: "While this is the last surviving ship of a unit that began the game as a group of three, it ignores the first point of damage it takes each round and adds 1 to each of its attack dice." },
   ],
 };
 

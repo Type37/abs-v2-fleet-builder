@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.3",
+    date: "2026-07-08",
+    title: "Simpler emblem picker, Covenant revisions, punchier buttons",
+    items: [
+      "The emblem picker is now a single grid of every mark on a grey field, sorted by name. The old basic marks are gone, and the insignia set keeps its colour.",
+      "The fleets page button reads Assemble new fleet, and the new-fleet dialog finishes with a GET BUILDING launch button.",
+      "The print button is now labelled Print setup.",
+      "Covenant test faction: reworked Energy Shielding, renamed personnel (San'Shyuum Precentor, Sangheili Shipmaster, Kig-Yar Shipmaster), a new last-stand rule for the Jiralhanae Chieftain, and the Spirit is now a Phantom.",
+    ],
+  },
+  {
     version: "0.7.2",
     date: "2026-07-08",
     title: "Duplicate personnel, quicker roster edits, era-first factions",

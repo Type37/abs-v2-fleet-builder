@@ -146,6 +146,8 @@ export interface AppState {
       | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean };
     /** In-progress first-visit coachmark tour, once the user has advanced past step 0. */
     tour?: { tourId: string; step: number };
+    /** Print-setup options for the print view (never persisted). */
+    print?: { format: "roster" | "cards"; trackers: boolean };
   };
 }
 

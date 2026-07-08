@@ -5,7 +5,7 @@ import { GENERIC_HVP } from "../src/data/index.ts";
 import { JUNKSPACE_SHIPS } from "../src/data/junkspace.ts";
 import { allFactions, factionsByEra, findFaction, makeCatalog, ERA_ORDER } from "./catalog.ts";
 import { auxSlotText, credits, escapeHtml, formatDate, primarySlotText } from "./format.ts";
-import { emblem, emblemMark, EMBLEM_IDS, icon, initiativeDice, massGlyph, statChips } from "./icons.ts";
+import { emblemMark, icon, initiativeDice, massGlyph, statChips } from "./icons.ts";
 import { iconLibraryControls, iconLibraryGrid, libraryUrl } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
 import type { AppState } from "./state.ts";
@@ -306,12 +306,12 @@ function fleetsView(state: AppState): string {
   <main class="fleets-main">
     <div class="fleets-head">
       <h1 class="page-title">Fleets</h1>
-      <button class="cta-btn create-cta" data-action="open-new-fleet">${icon("plus", 18)} Create army</button>
+      <button class="cta-btn create-cta" data-action="open-new-fleet">${icon("plus", 18)} Assemble new fleet</button>
     </div>
 
     ${
       lists.length === 0
-        ? '<p class="muted" style="margin-top:20px">No lists yet. Use Create army to begin; lists are stored in this browser.</p>'
+        ? '<p class="muted" style="margin-top:20px">No lists yet. Use Assemble new fleet to begin; lists are stored in this browser.</p>'
         : `<div class="table-scroll" style="margin-top:22px"><table class="dock-table">
             <thead><tr><th></th><th>Fleet</th><th>Faction</th><th>Mode</th><th>Cost</th><th>Updated</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
@@ -389,7 +389,7 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
       </div>
       <footer class="modal-footer">
         <button class="bar-btn" data-action="close-modal">Cancel</button>
-        <button class="cta-btn" data-action="nf-create" ${m.factionId ? "" : "disabled"}>Create fleet</button>
+        <button class="cta-btn cta-go" data-action="nf-create" ${m.factionId ? "" : "disabled"}>${icon("flag", 16)} GET BUILDING</button>
       </footer>
     </div>
   </div>`;
@@ -677,9 +677,6 @@ function builderView(state: AppState): string {
           <button class="bar-btn" data-action="random-emblem">${icon("shuffle", 14)} Random</button>
           ${listImg ? `<button class="bar-btn danger" data-action="clear-emblem-image">${icon("close", 14)} Clear image</button>` : ""}
         </div>
-        <div class="lib-cat"><h5 class="lib-cat-title">Basic marks</h5><div class="lib-grid">
-          ${EMBLEM_IDS.map((id) => `<button class="lib-icon ${list.emblem === id && !listImg ? "selected" : ""}" data-action="set-emblem" data-emblem="${id}" title="${escapeHtml(id)}">${emblem(id, 22)}</button>`).join("")}
-        </div></div>
         ${iconLibraryGrid("set-emblem-lib", list.emblemLib)}
       </div>
     </details>`;
@@ -792,7 +789,7 @@ function builderView(state: AppState): string {
         </details>
 
         <div class="roster-actions">
-          <a class="cta-btn" href="#/print/${list.id}">${icon("print", 17)} Print roster</a>
+          <a class="cta-btn" href="#/print/${list.id}">${icon("print", 17)} Print setup</a>
           <a class="bar-btn" href="#/play/${list.id}">${icon("flag", 16)} Play mode</a>
           <button class="bar-btn" data-action="share-list" data-id="${list.id}">${icon("link", 16)} Copy share link</button>
           <button class="bar-btn" data-action="duplicate-list" data-id="${list.id}">${icon("duplicate", 16)} Duplicate</button>

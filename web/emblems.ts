@@ -45,19 +45,6 @@ export const ICON_CATEGORIES: string[] = [...new Set(ICON_LIBRARY.map((i) => i.c
   a === "abs" ? -1 : b === "abs" ? 1 : a === "General" ? -1 : b === "General" ? 1 : a.localeCompare(b),
 );
 
-// Folder names are terse; show a readable label in the picker. Unmapped folders
-// are title-cased.
-const CATEGORY_LABELS: Record<string, string> = {
-  abs: "Fleet Marks",
-  vg: "Insignia",
-  human: "Human Sphere",
-  corpo: "Corporate",
-  authoritarian: "Authoritarian",
-};
-function categoryLabel(cat: string): string {
-  return CATEGORY_LABELS[cat] ?? cat.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 /** A random library icon id (Math.random is fine in app code). */
 export function randomIconId(): string | undefined {
   if (ICON_LIBRARY.length === 0) return undefined;
@@ -69,20 +56,18 @@ export function randomIconId(): string | undefined {
  * categorised picker. Action names are passed so fleets, outfits, and custom
  * factions can reuse it.
  */
-/** Just the categorised icon grids (no wrapper/controls), for embedding. */
+/** One flat, sorted grid of every icon (no category headers), for embedding.
+ * Each tile carries its origin folder as data-cat so styling can treat sets
+ * differently (e.g. keep the colour on the "vg" insignia). */
 export function iconLibraryGrid(actLib: string, currentLib?: string): string {
-  return (
-    ICON_CATEGORIES.map((cat) => {
-      const inCat = ICON_LIBRARY.filter((i) => i.category === cat);
-      const items = inCat
-        .map(
-          (i) =>
-            `<button class="lib-icon ${currentLib === i.id ? "selected" : ""}" data-action="${actLib}" data-lib="${escapeHtml(i.id)}" title="${escapeHtml(i.label)}"><img loading="lazy" src="${i.url}" alt="${escapeHtml(i.label)}" /></button>`,
-        )
-        .join("");
-      return `<div class="lib-cat"><h5 class="lib-cat-title">${escapeHtml(categoryLabel(cat))} <span class="muted">${inCat.length}</span></h5><div class="lib-grid">${items}</div></div>`;
-    }).join("") || '<p class="muted">No icons in the library yet.</p>'
-  );
+  const items = [...ICON_LIBRARY]
+    .sort((a, b) => a.label.localeCompare(b.label))
+    .map(
+      (i) =>
+        `<button class="lib-icon ${currentLib === i.id ? "selected" : ""}" data-cat="${escapeHtml(i.category)}" data-action="${actLib}" data-lib="${escapeHtml(i.id)}" title="${escapeHtml(i.label)}"><img loading="lazy" src="${i.url}" alt="${escapeHtml(i.label)}" /></button>`,
+    )
+    .join("");
+  return items ? `<div class="lib-grid lib-grid-blob">${items}</div>` : '<p class="muted">No icons in the library yet.</p>';
 }
 
 export function iconLibraryControls(actLib: string, actRandom: string, currentLib?: string): string {

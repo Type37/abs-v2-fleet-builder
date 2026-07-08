@@ -126,6 +126,14 @@ button { font-family: inherit; }
 }
 .cta-btn:hover { background: var(--blue-deep); border-color: var(--blue-deep); color: #fff; text-decoration: none; }
 
+/* "GET BUILDING": the launch button. Bolder, with a red keyline and a shine
+ * that sweeps across on hover. */
+.cta-go { position: relative; overflow: hidden; font-size: 13px; font-weight: 800; letter-spacing: 0.12em; padding: 14px 26px; box-shadow: inset 0 0 0 2px var(--red), 0 2px 0 var(--blue-deep); }
+.cta-go::after { content: ""; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent); transform: skewX(-18deg); transition: left 0.5s ease; }
+.cta-go:hover:not([disabled]) { transform: translateY(-1px); }
+.cta-go:hover:not([disabled])::after { left: 130%; }
+.cta-go[disabled] { box-shadow: none; }
+
 .bar-btn {
   background: var(--paper);
   color: var(--ink);
@@ -443,6 +451,8 @@ button { font-family: inherit; }
 /* Emblem art renders black and white, so the whole set reads as one monochrome
    family regardless of the source logo's colours. (Ship art is unaffected.) */
 .emblem-img, .lib-icon img { filter: grayscale(1) contrast(1.05); }
+/* The "vg" insignia set keeps its original colour in the picker. */
+.lib-icon[data-cat="vg"] img { filter: none; }
 .emblem-chip .emblem-img { width: 34px; height: 34px; }
 .roster-emblem .emblem-img, .sheet-emblem .emblem-img { border: 1px solid rgba(255, 255, 255, 0.5); }
 .cf-emblem-row { display: flex; align-items: center; gap: 10px; margin-top: 5px; flex-wrap: wrap; }
@@ -468,7 +478,7 @@ button { font-family: inherit; }
 .lib-cat { margin-bottom: 14px; }
 .lib-cat-title { font-family: var(--sans); font-size: 10px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--hair-soft); }
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; }
-.lib-icon { padding: 4px; border: 1px solid var(--hair-soft); background: var(--paper); cursor: pointer; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+.lib-icon { padding: 4px; border: 1px solid var(--hair-soft); background: #9aa1ab; cursor: pointer; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
 .lib-icon:hover { border-color: var(--ink); }
 .lib-icon.selected { border-color: var(--blue); box-shadow: inset 0 0 0 2px var(--blue); }
 .lib-icon img { width: 100%; height: 100%; object-fit: contain; }
