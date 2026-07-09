@@ -20,9 +20,20 @@ function paint(): void {
   const activeId = active instanceof HTMLElement && active.id ? active.id : null;
   const caret = active instanceof HTMLInputElement ? active.selectionStart : null;
 
+  // Preserve independent column scroll positions across the full-DOM re-render.
+  const COL_SELECTORS = [".builder-roster", ".builder-catalog", ".builder-hvp"];
+  const colScrolls = COL_SELECTORS.map(
+    (sel) => document.querySelector<HTMLElement>(sel)?.scrollTop ?? 0,
+  );
+
   root.innerHTML = render(store.getState());
   enhanceNav();
   positionTour();
+
+  COL_SELECTORS.forEach((sel, i) => {
+    const el = document.querySelector<HTMLElement>(sel);
+    if (el) el.scrollTop = colScrolls[i];
+  });
 
   if (activeId) {
     const restored = document.getElementById(activeId);

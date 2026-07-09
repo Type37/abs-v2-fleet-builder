@@ -516,7 +516,12 @@ function handleClick(e: MouseEvent): void {
       const id = currentListId();
       const hvpId = target.dataset["hvp"];
       if (!id || !hvpId) return;
-      store.setState((s) => updateFleet(s, id, (f) => ({ ...f, hvp: [...f.hvp, { hvpId }] })));
+      store.setState((s) =>
+        updateFleet(s, id, (f) => {
+          if (f.hvp.some((h) => h.hvpId === hvpId)) return f;
+          return { ...f, hvp: [...f.hvp, { hvpId }] };
+        }),
+      );
       break;
     }
     case "remove-hvp": {

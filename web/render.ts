@@ -474,22 +474,14 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
   const wp = primarySlotText(ship).replace(/<br \/>/g, ", ");
   const wa = auxSlotText(ship).replace(/<br \/>/g, ", ");
   const weapons = [wp === "None" ? "" : wp, wa === "None" ? "" : wa].filter(Boolean).join("; ") || "No weapons";
-  // Name and cost on their own line so a long name never gets cut; full
-  // stats and weapons always visible on the line below, no tooltip-only text.
   return `
   <article class="ship-row ${ship.image ? "has-art" : ""}">
-    <div class="ship-row-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" loading="lazy" />` : massGlyph(ship.mass, 22)}</div>
-    <div class="ship-row-body">
-      <div class="ship-row-head">
-        <h4 class="ship-name">${escapeHtml(ship.name)}</h4>
-        <span class="ship-cost">${credits(ship.cost)}</span>
-      </div>
-      <div class="ship-row-details">
-        ${statChips(ship, true)}
-        <span class="ship-weapons">${escapeHtml(weapons)}</span>
-      </div>
-    </div>
-    <button class="add-btn" data-action="add-unit" data-ship="${addId}" title="Add a unit of ${escapeHtml(ship.name)}">${icon("plus", 18)}</button>
+    <div class="ship-row-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" loading="lazy" />` : massGlyph(ship.mass, 16)}</div>
+    <h4 class="ship-name">${escapeHtml(ship.name)}</h4>
+    ${statChips(ship, true)}
+    <span class="ship-cost">${credits(ship.cost)}</span>
+    <button class="add-btn add-btn-mini" data-action="add-unit" data-ship="${addId}" title="Add a unit of ${escapeHtml(ship.name)}">${icon("plus", 14)}</button>
+    <span class="ship-weapons">${weapons}</span>
   </article>`;
 }
 
@@ -655,35 +647,38 @@ function builderView(state: AppState): string {
     catalogHtml = faction.ships.map((s) => catalogShipRow(s, faction, false)).join("");
   }
 
-  // Personnel catalog. Duplicates are allowed, so a chosen card becomes a
-  // stepper (remove one / count / add another) rather than a dead-ended
-  // disabled button - there must always be a way back out.
   const hvpMax = list.freePlay ? 99 : (faction?.hvpMax ?? 3);
   const hvpMin = faction?.hvpMin ?? 3;
   const atHvpCap = list.fleet.hvp.length >= hvpMax;
   const personnelCard = (h: Hvp, source: string) => {
-    const count = list.fleet.hvp.filter((sel) => sel.hvpId === h.id).length;
+    const selIndex = list.fleet.hvp.findIndex((sel) => sel.hvpId === h.id);
+    const isChosen = selIndex !== -1;
+    const assignedUnitId = isChosen ? list.fleet.hvp[selIndex]?.assignedUnitId : undefined;
+    const carrierOpts = list.fleet.units
+      .map((u) => {
+        const r = resolveShip(u.shipClassId, faction, customs);
+        const label = u.name || r?.ship.name || u.shipClassId;
+        return `<option value="${u.id}" ${assignedUnitId === u.id ? "selected" : ""}>${escapeHtml(label)}</option>`;
+      })
+      .join("");
     return `
-    <article class="personnel-row ${count > 0 ? "chosen" : ""}" title="${escapeHtml(h.rule)}">
+    <article class="personnel-row ${isChosen ? "chosen" : ""}">
       <div class="personnel-body">
         <span class="personnel-name">${escapeHtml(h.name)}</span>
         <span class="personnel-rule">${escapeHtml(h.rule)}</span>
+        ${isChosen ? `<label class="inline-field personnel-carrier">Carried by<select data-action="hvp-assign" data-index="${selIndex}"><option value="">Not assigned yet</option>${carrierOpts}</select></label>` : ""}
       </div>
       ${
-        count > 0
-          ? `<span class="stepper stepper-mini">
-              <button data-action="remove-hvp-one" data-hvp="${h.id}" title="Remove one ${escapeHtml(h.name)}">${icon("minus", 14)}</button>
-              <span class="stepper-count">${count}</span>
-              <button data-action="add-hvp" data-hvp="${h.id}" ${atHvpCap ? "disabled" : ""} title="Add another ${escapeHtml(h.name)}">${icon("plus", 14)}</button>
-            </span>`
+        isChosen
+          ? `<button class="add-btn add-btn-mini" data-action="remove-hvp-one" data-hvp="${h.id}" title="Deselect ${escapeHtml(h.name)}">${icon("minus", 14)}</button>`
           : `<button class="add-btn add-btn-mini" data-action="add-hvp" data-hvp="${h.id}" ${atHvpCap ? "disabled" : ""} title="Select ${escapeHtml(h.name)}">${icon("plus", 16)}</button>`
       }
     </article>`;
   };
-  const personnelCatalog = faction
-    ? faction.hvp.map((h) => personnelCard(h, escapeHtml(faction.name))).join("") +
-      GENERIC_HVP.map((h) => personnelCard(h, "Generic")).join("")
-    : GENERIC_HVP.map((h) => personnelCard(h, "Generic")).join("");
+  const factionPersonnel = faction
+    ? faction.hvp.map((h) => personnelCard(h, escapeHtml(faction.name))).join("")
+    : "";
+  const genericPersonnel = GENERIC_HVP.map((h) => personnelCard(h, "Generic")).join("");
 
   // Roster units.
   // Compact, clickable unit rows. Deep editing happens in the unit modal, so
@@ -812,80 +807,35 @@ function builderView(state: AppState): string {
 
   return `
   ${topbar()}
-  <section class="setup-band ${remaining < 0 ? "over" : ""}">
-    <div class="setup-head">
-      <div class="setup-identity">
-        <input class="fleet-name-input" type="text" value="${escapeHtml(list.fleet.name ?? "")}" placeholder="Name this fleet" data-action="fleet-name" />
-      </div>
-      <div class="budget ${remaining < 0 ? "over" : ""}">
-        <div class="budget-head">
-          <span class="budget-now">${credits(total)}</span>
-          <span class="budget-cap">/ ${credits(list.fleet.creditsLimit)}</span>
-          <span class="budget-free">${remaining < 0 ? `OVER ${credits(-remaining)}` : `${credits(remaining)} FREE`}</span>
-        </div>
-        <div class="budget-track"><span class="budget-fill" style="width:${list.fleet.creditsLimit > 0 ? Math.min(100, (total / list.fleet.creditsLimit) * 100) : 0}%"></span></div>
-      </div>
-    </div>
-    <div class="setup-controls">
-      <div class="control-group">
-        <span class="control-label">Credits limit</span>
-        ${limitControl}
-      </div>
-      <div class="control-group">
-        <span class="control-label">Faction</span>
-        ${factionControl}
-      </div>
-      <div class="control-group control-group-emblem">
-        <span class="control-label">Emblem</span>
-        <div class="emblem-picker">${emblemPicker}</div>
-      </div>
-    </div>
-  </section>
   ${trainingGuide(list.mode)}
 
-  <main class="workspace ${massLayout ? "mass-mode" : ""}">
-    <section class="catalog">
-      ${
-        faction && !list.freePlay
-          ? `<article class="rule-card">
-              <p class="rule-card-meta"><span class="rcm-k">Initiative</span> <span class="rcm-v">${escapeHtml(faction.initiative)}</span>${initiativeDice(faction.initiative, 14)}<span class="rcm-gap"></span><span class="rcm-k">CMD / round</span> <span class="rcm-v">${escapeHtml(faction.cmdTokens)}</span></p>
-              <h3 class="rule-card-title">${escapeHtml(faction.rule.name)}</h3>
-              <p class="rule-card-text">${escapeHtml(faction.rule.text)}</p>
-            </article>`
-          : ""
-      }
-      <div class="catalog-title">Ship classes ${
-        faction && !list.freePlay
-          ? `<button class="bar-btn layout-toggle" data-action="toggle-mass-layout">${massLayout ? "List view" : "Columns view (test)"}</button>`
-          : ""
-      }</div>
-      ${
-        massLayout && faction && !list.freePlay
-          ? catalogColumnsByMass(faction)
-          : `<div class="catalog-list">${catalogHtml || '<p class="muted">Pick a faction to see its ships.</p>'}</div>`
-      }
-      <details class="catalog-fold" ${list.fleet.hvp.length > 0 ? "open" : ""}>
-        <summary class="catalog-title">High-Value Personnel <span class="muted">${list.freePlay ? `${list.fleet.hvp.length}` : hvpMin === hvpMax ? `${list.fleet.hvp.length}/${hvpMax}` : `${list.fleet.hvp.length}/${hvpMin}–${hvpMax}`}</span></summary>
-        <div class="catalog-list personnel-grid">${personnelCatalog}</div>
-      </details>
-    </section>
-
-    <aside class="roster">
-      <div class="roster-sheet">
-        <header class="roster-head">
-          <span class="roster-emblem">${listEmblem(list, 52)}</span>
-          <div>
-            <h2 class="roster-title">${escapeHtml(list.fleet.name || "Unnamed fleet")}</h2>
-            <p class="roster-subtitle">${escapeHtml(faction?.name ?? "Mixed forces")}${era ? `, ${era}` : ""}</p>
+  <main class="workspace workspace-tri">
+    <div class="builder-strip">
+      <div class="bs-id">
+        ${emblemPicker}
+        <input class="roster-name-input" type="text" value="${escapeHtml(list.fleet.name ?? "")}" placeholder="Name this fleet" data-action="fleet-name" />
+      </div>
+      <div class="bs-faction">${factionControl}</div>
+      ${faction && !list.freePlay ? `<div class="bs-rule">
+        <span class="bsr-stats">${escapeHtml(faction.initiative)} initiative${initiativeDice(faction.initiative, 12)} · CMD ${escapeHtml(faction.cmdTokens)}/round</span>
+        <strong class="bsr-title">${escapeHtml(faction.rule.name)}</strong>
+        <span class="bsr-text">${escapeHtml(faction.rule.text)}</span>
+      </div>` : ""}
+      <div class="bs-budget">
+        <div class="budget ${remaining < 0 ? "over" : ""}">
+          <div class="budget-head">
+            <span class="budget-now">${credits(total)}</span>
+            <span class="budget-cap">/ ${credits(list.fleet.creditsLimit)}</span>
+            <span class="budget-free">${remaining < 0 ? `OVER ${credits(-remaining)}` : `${credits(remaining)} FREE`}</span>
           </div>
-        </header>
+        </div>
+      </div>
+    </div>
 
-        <h3 class="roster-section">Units <span class="muted">${list.fleet.units.length}</span></h3>
-        ${unitRows || '<p class="muted roster-hint">Add ships from the catalogue on the left. Each addition starts a new unit.</p>'}
-
-        <h3 class="roster-section">High-Value Personnel <span class="muted">${list.fleet.hvp.length}${list.freePlay ? "" : ` of ${hvpMax}`}</span></h3>
-        ${hvpRows || '<p class="muted roster-hint">Select personnel from the catalogue. They ride units of Mass 1 or higher.</p>'}
-
+    <div class="builder-body">
+      <section class="builder-roster">
+        <div class="catalog-title">Units <span class="muted">${list.fleet.units.length}</span></div>
+        ${unitRows || '<p class="muted roster-hint">Add ships from the catalogue. Each addition starts a new unit.</p>'}
         ${
           list.freePlay
             ? '<div class="inspection freeplay"><p>Free Play: the rules inspector is off. Build whatever you like.</p></div>'
@@ -898,12 +848,10 @@ function builderView(state: AppState): string {
                 }
               </div>`
         }
-
         <details class="roster-notes" ${list.fleet.notes ? "open" : ""}>
           <summary class="roster-section">Notes${list.fleet.notes ? ` <span class="muted">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
           <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
         </details>
-
         <div class="roster-actions">
           <a class="cta-btn" href="#/print/${list.id}">${icon("print", 17)} Print setup</a>
           <a class="bar-btn" href="#/play/${list.id}">${icon("flag", 16)} Play mode</a>
@@ -911,8 +859,32 @@ function builderView(state: AppState): string {
           <button class="bar-btn" data-action="duplicate-list" data-id="${list.id}">${icon("duplicate", 16)} Duplicate</button>
           <button class="bar-btn danger" data-action="delete-list" data-id="${list.id}">${icon("trash", 16)} Delete</button>
         </div>
-      </div>
-    </aside>
+        <details class="roster-settings">
+          <summary class="roster-section">Points limit</summary>
+          <div class="roster-settings-body">${limitControl}</div>
+        </details>
+      </section>
+
+      <section class="builder-catalog">
+        <div class="catalog-title">Ship classes ${
+          faction && !list.freePlay
+            ? `<button class="bar-btn layout-toggle" data-action="toggle-mass-layout">${massLayout ? "List view" : "Columns view"}</button>`
+            : ""
+        }</div>
+        ${
+          massLayout && faction && !list.freePlay
+            ? catalogColumnsByMass(faction)
+            : `<div class="catalog-list">${catalogHtml || '<p class="muted roster-hint">Pick a faction to see its ships.</p>'}</div>`
+        }
+      </section>
+
+      <section class="builder-hvp">
+        <div class="catalog-title">High-Value Personnel <span class="muted">${list.freePlay ? list.fleet.hvp.length : hvpMin === hvpMax ? `${list.fleet.hvp.length}/${hvpMax}` : `${list.fleet.hvp.length}/${hvpMin}–${hvpMax}`}</span></div>
+        ${factionPersonnel ? `<div class="catalog-title">Faction Personnel</div><div class="catalog-list personnel-grid">${factionPersonnel}</div>` : ""}
+        <div class="catalog-title">Generic Personnel</div>
+        <div class="catalog-list personnel-grid">${genericPersonnel}</div>
+      </section>
+    </div>
   </main>
   ${unitModal(state, list, faction, customs)}
   ${toast(state)}

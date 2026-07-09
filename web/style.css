@@ -566,19 +566,12 @@ button { font-family: inherit; }
 /* ------------------------------------------------------------ workspace */
 
 .workspace {
-  max-width: var(--shell-wide); margin: 0 auto;
-  padding: clamp(12px, 1.6vw, 20px) clamp(14px, 2vw, 24px) 0;
+  padding: 8px clamp(14px, 2vw, 24px) 0;
   /* Roster (order:-1, left) is the primary pane and gets substantially more
      room; the ship picker is a narrower support column on the right. */
-  display: grid; grid-template-columns: minmax(640px, 1.6fr) minmax(320px, 460px); gap: clamp(14px, 1.6vw, 24px); align-items: start;
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 1.6vw, 24px); align-items: start;
 }
-@media (max-width: 1200px) { .workspace { grid-template-columns: minmax(0, 1fr) minmax(300px, 400px); } }
 @media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
-
-/* Experimental "Columns view": full width, no shell cap. Roster takes the
-   left third, ship classes (as Mass columns) take the remaining two-thirds. */
-.workspace.mass-mode { max-width: none; margin: 0; padding-left: 14px; padding-right: 14px; grid-template-columns: 1fr 2fr; }
-@media (max-width: 900px) { .workspace.mass-mode { grid-template-columns: 1fr; } }
 .layout-toggle { margin-left: auto; font-size: 10px; padding: 5px 10px; text-transform: none; letter-spacing: normal; }
 .mass-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: start; margin-bottom: 12px; }
 .mass-col { border: 1px solid var(--hair-soft); }
@@ -605,12 +598,12 @@ button { font-family: inherit; }
 .init-dice { display: inline-flex; gap: 2px; vertical-align: middle; margin-left: 8px; }
 .init-die { color: var(--red); }
 
-.catalog-title { position: relative; font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink); padding: 0 0 7px 18px; margin: 20px 0 12px; border-bottom: 2px solid var(--color-line); display: flex; justify-content: space-between; align-items: baseline; text-transform: uppercase; }
+.catalog-title { position: relative; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink); padding: 0 0 4px 16px; margin: 8px 0 5px; border-bottom: 2px solid var(--color-line); display: flex; justify-content: space-between; align-items: baseline; text-transform: uppercase; }
 .catalog-title::before { content: ""; position: absolute; left: 0; top: 3px; width: 10px; height: 10px; background: var(--color-accent); }
 .catalog-title:first-child, .catalog-title:first-of-type { margin-top: 0; }
 .catalog-title .muted { text-transform: none; letter-spacing: 0; font-size: 11px; }
 /* Collapsible catalog section (personnel). Summary reuses the catalog title. */
-.catalog-fold { margin-top: 20px; }
+.catalog-fold { margin-top: 5px; }
 .catalog-fold > summary { cursor: pointer; margin: 0 0 12px; list-style: none; }
 .catalog-fold > summary::-webkit-details-marker { display: none; }
 .catalog-fold > summary::after { content: "+"; position: absolute; right: 2px; top: -2px; font-size: 16px; font-weight: 700; color: var(--ink-3); }
@@ -625,41 +618,38 @@ button { font-family: inherit; }
 .catalog-group[open] > summary .muted { color: #9fb2d6; }
 .catalog-group .ship-row { border-top: 1px solid var(--hair-soft); }
 
-/* Compact catalog rows: name + inline stats + cost on one line, a single muted
-   weapons line under it. Deliberately dense so a faction's ships fit with
-   little or no scrolling. */
 .ship-row {
-  display: grid; grid-template-columns: 26px 1fr auto; gap: 9px; align-items: center; padding: 7px 12px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 5px; padding: 4px 8px; min-height: 27px;
   border-bottom: 1px solid var(--hair-soft); border-left: 3px solid transparent; background: var(--paper);
   transition: border-color 0.12s ease, background 0.12s ease;
 }
 .catalog-list > .ship-row:last-child { border-bottom: none; }
-.ship-row:hover { border-color: var(--color-line); border-left-color: var(--color-action); background: var(--blue-wash); }
-.ship-row-glyph { color: var(--blue); }
+.ship-row:hover { border-left-color: var(--color-action); background: var(--blue-wash); }
+.ship-row-glyph { color: var(--blue); flex-shrink: 0; width: 18px; display: flex; align-items: center; }
 .ship-thumb { display: block; object-fit: cover; border: 1px solid var(--hair-soft); }
-.ship-row.has-art .ship-thumb { width: 44px; height: 28px; }
+.ship-row.has-art .ship-thumb { width: 36px; height: 22px; }
 .modal-spec.has-art .ship-thumb { width: 72px; height: 44px; }
-.ship-row-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.ship-name { flex: 1 1 auto; min-width: 0; font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: -0.01em; white-space: normal; }
-.ship-cost { margin-left: auto; padding-left: 4px; font-family: var(--display); font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--blue); white-space: nowrap; }
-.ship-row-details { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 4px; }
-.stat-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-.stat-chips-mini { gap: 4px; flex-wrap: wrap; }
+.ship-name { flex: 1; min-width: 0; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: -0.01em; }
+.ship-cost { font-family: var(--display); font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--blue); white-space: nowrap; flex-shrink: 0; }
+.stat-chips { display: inline-flex; flex-wrap: nowrap; gap: 5px; flex-shrink: 0; }
+.stat-chips-mini { gap: 3px; }
 .stat-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--hair-soft); padding: 3px 8px 3px 6px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .stat-chip-mini { gap: 3px; padding: 1px 5px 1px 4px; font-size: 11px; }
 .stat-ico { color: var(--blue); }
 .stat-lbl { font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
 .stat-val { color: var(--ink); }
-.ship-row .ship-weapons { font-size: 11.5px; line-height: 1.35; color: var(--ink-3); white-space: normal; }
+.ship-row .ship-weapons { flex: 0 0 100%; font-size: 11.5px; line-height: 1.35; color: var(--ink-2); padding: 0 0 3px 23px; }
 
 /* Personnel: two compact columns, each row name + one-line rule + a small
    add button. Full rule is on the row's tooltip and in the unit modal. */
-.personnel-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
-.personnel-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 6px 8px 6px 10px; border: 1px solid var(--hair-soft); background: var(--paper); }
+.personnel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.personnel-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; padding: 2px 6px 2px 8px; border: 1px solid var(--hair-soft); background: var(--paper); min-height: 24px; }
 .personnel-row.chosen { border-color: var(--blue); border-left: 3px solid var(--blue); background: var(--blue-wash); }
 .personnel-body { min-width: 0; }
-.personnel-name { display: block; font-family: var(--display); font-weight: 700; font-size: 13px; white-space: normal; }
-.personnel-rule { display: block; font-size: 11px; line-height: 1.35; color: var(--ink-3); white-space: normal; }
+.personnel-name { display: block; font-family: var(--display); font-weight: 700; font-size: 12px; }
+.personnel-rule { display: block; font-size: 11px; color: var(--ink-2); line-height: 1.35; margin-top: 1px; }
+.personnel-carrier { display: block; margin-top: 6px; font-size: 11px; color: var(--ink-2); }
+.personnel-carrier select { font-size: 11px; padding: 2px 4px; margin-left: 4px; }
 .add-btn-mini { padding: 5px; }
 .add-btn-mini span { display: none; }
 .stepper-mini { height: 26px; }
@@ -673,8 +663,21 @@ button { font-family: inherit; }
 .roster-sheet { border: 2px solid var(--hair); background: var(--paper); overflow-y: auto; }
 .roster-head { display: flex; align-items: center; gap: 14px; padding: 18px 20px; background: var(--blue); color: #fff; }
 .roster-emblem { color: #fff; }
-.roster-title { font-family: var(--display); font-weight: 800; font-size: 21px; letter-spacing: -0.01em; line-height: 1.1; }
+.roster-head-text { flex: 1; min-width: 0; }
+.roster-name-input {
+  background: transparent; border: none; border-bottom: 2px solid transparent;
+  color: #fff; font-family: var(--display); font-weight: 800; font-size: 21px;
+  letter-spacing: -0.01em; line-height: 1.1; width: 100%; padding: 0;
+}
+.roster-name-input::placeholder { color: rgba(255, 255, 255, 0.45); }
+.roster-name-input:focus { outline: none; border-bottom-color: rgba(255, 255, 255, 0.45); }
 .roster-subtitle { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #bcd0f2; margin-top: 3px; }
+.roster-budget { padding: 14px 20px; border-bottom: 1px solid var(--hair); }
+.roster-budget.over { border-bottom-color: var(--red); }
+.roster-budget .budget { flex: none; max-width: none; min-width: 0; width: 100%; }
+.roster-budget .budget-now { font-size: 22px; }
+.roster-setup { padding: 12px 20px; border-bottom: 1px solid var(--hair); display: flex; flex-direction: column; gap: 10px; }
+.roster .rule-card { margin: 14px 20px 0; }
 .roster-section { position: relative; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink); margin: 0; padding: 12px 20px 8px 34px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--hair-soft); text-transform: uppercase; }
 .roster-section::before { content: ""; position: absolute; left: 20px; top: 15px; width: 8px; height: 8px; background: var(--color-accent); }
 .roster-section .muted { font-variant-numeric: tabular-nums; }
@@ -757,6 +760,78 @@ button { font-family: inherit; }
 
 .roster-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--hair-soft); }
 .roster-actions .cta-btn { flex: 1 1 100%; justify-content: center; }
+
+/* ========================================================= tri-layout builder */
+
+.workspace.workspace-tri { display: flex; flex-direction: column; gap: 0; padding: 0; }
+
+/* Top identity + budget strip */
+.builder-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px;
+  background: var(--blue);
+  color: #fff;
+  border-bottom: 2px solid var(--hair);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-wrap: wrap;
+}
+.bs-id { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px; }
+.bs-id .roster-name-input { flex: 1; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); color: #fff; }
+.bs-id .roster-name-input::placeholder { color: rgba(255,255,255,0.5); }
+.bs-id .roster-name-input:focus { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.7); outline: none; }
+.bs-faction { position: relative; flex-shrink: 0; }
+.bs-budget { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.bs-rule { flex: 1; min-width: 220px; max-width: 420px; display: flex; flex-direction: column; gap: 1px; padding-left: 14px; border-left: 1px solid rgba(255,255,255,0.2); }
+.bsr-stats { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.06em; }
+.bsr-title { font-family: var(--display); font-size: 13px; font-weight: 800; color: #fff; }
+.bsr-text { font-size: 11.5px; color: rgba(255,255,255,0.85); line-height: 1.4; }
+
+/* Budget inside the blue strip: white text */
+.builder-strip .budget { flex: none; min-width: 160px; max-width: none; }
+.builder-strip .budget-now { color: #fff; font-size: 20px; }
+.builder-strip .budget-cap { color: rgba(255,255,255,0.6); }
+.builder-strip .budget-free { color: rgba(255,255,255,0.8); }
+.builder-strip .budget.over .budget-now,
+.builder-strip .budget.over .budget-free { color: var(--red); }
+/* Faction switch inside the blue strip */
+.builder-strip .faction-switch > summary { color: #fff; border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); }
+.builder-strip .faction-switch > summary:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.7); }
+.builder-strip .faction-switch[open] > summary { background: #fff; color: var(--ink); border-color: #fff; }
+.builder-strip .freeplay-badge { background: rgba(255,255,255,0.15); color: #fff; border-left-color: rgba(255,255,255,0.4); }
+
+/* Emblem trigger inside the blue strip */
+.builder-strip .emblem-current-btn { color: #fff; }
+
+/* Three-column body */
+.builder-body { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: start; min-height: calc(100vh - 120px); }
+.builder-roster { border-right: 2px solid var(--hair); }
+.builder-catalog { border-right: 2px solid var(--hair); }
+.builder-catalog .rule-card { margin: 14px 16px 0; }
+
+/* Points limit: collapsed details at bottom of roster column */
+.roster-settings > summary { cursor: pointer; list-style: none; }
+.roster-settings > summary::-webkit-details-marker { display: none; }
+.roster-settings-body { padding: 12px 20px 16px; border-top: 1px solid var(--hair-soft); }
+
+/* Each column scrolls independently */
+.builder-roster,
+.builder-catalog,
+.builder-hvp { overflow-y: auto; max-height: calc(100vh - 100px); }
+
+.builder-hvp .roster-hint { padding: 10px 16px; }
+
+@media (max-width: 960px) {
+  .builder-body { grid-template-columns: 1fr; }
+  .builder-roster,
+  .builder-catalog { border-right: none; border-bottom: 2px solid var(--hair); }
+  .builder-roster,
+  .builder-catalog,
+  .builder-hvp { max-height: none; overflow-y: visible; }
+}
 
 /* ------------------------------------------------------------ print view */
 
