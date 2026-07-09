@@ -575,9 +575,9 @@ button { font-family: inherit; }
 @media (max-width: 1200px) { .workspace { grid-template-columns: minmax(0, 1fr) minmax(300px, 400px); } }
 @media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
 
-/* Experimental "Columns view": roster shrinks to a slim left rail, ship
-   classes get the room to lay out as Mass columns instead of one long list. */
-.workspace.mass-mode { grid-template-columns: 220px 1fr; }
+/* Experimental "Columns view": full width, no shell cap. Roster takes the
+   left third, ship classes (as Mass columns) take the remaining two-thirds. */
+.workspace.mass-mode { max-width: none; margin: 0; padding-left: 14px; padding-right: 14px; grid-template-columns: 1fr 2fr; }
 @media (max-width: 900px) { .workspace.mass-mode { grid-template-columns: 1fr; } }
 .layout-toggle { margin-left: auto; font-size: 10px; padding: 5px 10px; text-transform: none; letter-spacing: normal; }
 .mass-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: start; margin-bottom: 12px; }

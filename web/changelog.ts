@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.7.11",
+    date: "2026-07-08",
+    title: "Columns view goes full width",
+    items: [
+      "Columns view (test) now spans the full window with no side margins: the roster is a fixed left third, Mass columns fill the remaining two-thirds.",
+    ],
+  },
+  {
     version: "0.7.10",
     date: "2026-07-08",
     title: "Builder uses far more of the page",
