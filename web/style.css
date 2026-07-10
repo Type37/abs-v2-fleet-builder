@@ -645,13 +645,40 @@ button { font-family: inherit; }
 .ship-row:hover { border-color: var(--color-line); border-left-color: var(--color-action); background: var(--blue-wash); }
 /* The glyph column is now sized for ship art (44px), so a mass-glyph icon
    (which is much smaller) needs centering rather than sitting flush-left. */
-.ship-row-glyph { color: var(--blue); display: flex; align-items: center; justify-content: center; }
+.ship-row-glyph { position: relative; color: var(--blue); display: flex; align-items: center; justify-content: center; }
+/* Owned count: a badge on the glyph, absolutely positioned so it appears the
+   instant you add a unit WITHOUT reflowing (and shoving) the catalog. */
+.owned-badge {
+  position: absolute; top: -6px; right: -6px; z-index: 1;
+  min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--go); color: #fff; border: 1px solid var(--paper);
+  font-family: var(--display); font-weight: 800; font-size: 11px; font-variant-numeric: tabular-nums; line-height: 1;
+}
 .ship-thumb { display: block; object-fit: cover; border: 1px solid var(--ink-3); background: var(--ground); }
 .ship-row.has-art .ship-thumb { width: 44px; height: 32px; }
 .ship-row-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .ship-name { flex: 1 1 auto; min-width: 0; font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: -0.01em; white-space: normal; }
 .ship-cost { margin-left: auto; padding-left: 4px; font-family: var(--display); font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--blue); white-space: nowrap; }
 .ship-row-details { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 4px; }
+
+/* Weapons table: one row per weapon system, aligned columns for arc, dice,
+   range and damage. Used in the catalog and the roster so weapons read the
+   same everywhere and never as a run-on comma string. */
+.weap-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.weap-table th {
+  font-family: var(--sans); font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--ink-3); text-align: left; padding: 0 6px 3px 0; border-bottom: 1px solid var(--hair-soft);
+}
+.weap-table th:last-child, .weap-table td.wt-num { text-align: right; }
+.weap-table td { padding: 3px 6px 3px 0; font-size: 12px; color: var(--ink); border-bottom: 1px solid var(--hair-soft); vertical-align: top; }
+.weap-table tr:last-child td { border-bottom: none; }
+.wt-arc { width: 16px; color: var(--blue); padding-right: 4px; }
+.wt-arc .slot-arc { vertical-align: middle; }
+.wt-name { font-weight: 600; }
+.wt-num { white-space: nowrap; font-weight: 700; }
+.wt-note { font-size: 11.5px; font-style: normal; color: var(--ink-2); }
+.weap-none { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
 .stat-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .stat-chips-mini { gap: 4px; flex-wrap: wrap; }
 .stat-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--hair-soft); padding: 3px 8px 3px 6px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -1222,12 +1249,12 @@ button { font-family: inherit; }
 .mf-menu-panel .danger { color: var(--red-deep); }
 .mf-menu-panel .danger:hover { background: var(--red-wash); }
 
-/* Play Mode: the primary next step once a fleet is built, so it is a real
-   filled call-to-action at the foot of the manifest, not a text link. */
+/* Play Mode: the primary next step once a fleet is built - a full-width filled
+   call-to-action at the very bottom of the whole builder, below both columns. */
 .mf-play-cta {
-  display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px;
-  padding: 14px 18px; background: var(--blue); color: #fff; text-decoration: none;
-  font-family: var(--display); font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.03em;
+  display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 28px;
+  padding: 18px; background: var(--blue); color: #fff; text-decoration: none;
+  font-family: var(--display); font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: 0.04em;
   border: 2px solid var(--blue); transition: background 0.12s ease, border-color 0.12s ease;
 }
 .mf-play-cta:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
@@ -1320,18 +1347,20 @@ button { font-family: inherit; }
 .mf-empty { padding: 16px 2px; font-size: 14px; font-weight: 600; color: var(--ink); }
 
 /* every list is the same ledger: flush, hairline-separated, no borders.
-   Three zones: identity (glyph + name), details (stats + weapons), and the
-   controls cluster (stepper + cost + remove). Wrapping the controls into one
-   cell is what lets the whole row collapse cleanly on a phone. */
+   Two rows: the top row is identity (name) on the left and the controls
+   cluster (stepper + cost + remove) on the right; the stats + weapons table
+   span the full width beneath, where the table has room to breathe. */
 .mf-list > .roster-unit { padding: 10px 2px; border-bottom: 1px solid var(--hair-soft); }
 .mf-manifest .mf-list .roster-unit {
-  display: grid; grid-template-columns: minmax(130px, auto) minmax(0, 1fr) auto; align-items: center; gap: 8px 16px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 16px;
+  grid-template-areas: "id controls" "details details";
   border-left: 3px solid transparent; background: none; transition: border-color .12s ease;
 }
-/* the stat + weapon line moves inline into the row's open middle, not a wasted
-   full-width strip below */
+.mf-manifest .mf-list .roster-unit .ru-id { grid-area: id; }
+.mf-manifest .mf-list .roster-unit .ru-controls { grid-area: controls; }
 .mf-manifest .mf-list .roster-unit .ru-details {
-  grid-column: auto; margin-top: 0; padding-top: 0; border-top: none; align-self: center;
+  grid-area: details; margin-top: 2px; padding-top: 0; border-top: none; align-self: start;
+  flex-direction: column; align-items: stretch;
 }
 .ru-controls { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
 .mf-manifest .mf-list .roster-unit:hover { border-left-color: var(--blue); }
@@ -1381,7 +1410,7 @@ button { font-family: inherit; }
 .mf-rule-meta { display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.01em; color: var(--ink); }
 .mf-rule-meta b { color: var(--blue); }
 .mf-rule-name { font-family: var(--display); font-weight: 800; font-size: 18px; color: var(--blue); margin-top: 5px; }
-.mf-rule-text { font-family: var(--serif); font-size: 14.5px; line-height: 1.45; font-weight: 500; color: var(--ink); margin-top: 4px; }
+.mf-rule-text { font-family: var(--serif); font-size: 14.5px; line-height: 1.45; font-weight: 500; font-style: normal; color: var(--ink); margin-top: 4px; }
 
 /* inspection: a heavy ruled statement, not a colored panel */
 .mf-inspect { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 14px 2px; border-top: 2px solid var(--hair); font-size: 15px; font-weight: 700; color: var(--ink); }
@@ -1405,6 +1434,11 @@ button { font-family: inherit; }
      else, so it must not pin itself over content further down the page. */
   .mf-manifest { position: static; max-height: none; overflow-y: visible; border-right: none; padding-right: 0; }
   .mf-yard { padding-left: 0; border-top: 2px solid var(--hair); margin-top: 8px; }
+  /* Put the ship yard ABOVE the roster on a phone. Tapping "Add" grows the
+     roster (the goal), but since the roster now sits below the catalog, the
+     catalog you are tapping does not get shoved down - nothing jumps. */
+  .mf-yard { order: 1; border-top: none; margin-top: 0; }
+  .mf-manifest { order: 2; border-top: 2px solid var(--hair); margin-top: 8px; padding-top: 4px; }
 }
 
 /* Phones: the three-zone roster row was crushing five kinds of data into one
@@ -1415,6 +1449,7 @@ button { font-family: inherit; }
 @media (max-width: 600px) {
   .mf-manifest .mf-list .roster-unit {
     grid-template-columns: 1fr;
+    grid-template-areas: "id" "details" "controls";
     align-items: stretch; gap: 8px;
     padding: 12px 2px;
   }
@@ -1501,7 +1536,7 @@ button { font-family: inherit; }
 .nf-detail-empty { display: flex; align-items: center; justify-content: center; min-height: 220px; text-align: center; }
 .nfd-title { font-family: var(--display); font-weight: 800; font-size: 22px; margin-bottom: 2px; text-transform: none; letter-spacing: -0.01em; color: var(--ink); }
 .nfd-era-tag { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); margin-bottom: 12px; }
-.nfd-playstyle { font-size: 14px; line-height: 1.5; color: var(--ink); margin-bottom: 4px; font-weight: 500; letter-spacing: normal; text-transform: none; }
+.nfd-playstyle { font-size: 14px; line-height: 1.5; color: var(--ink); margin-bottom: 4px; font-weight: 500; font-style: normal; letter-spacing: normal; text-transform: none; }
 .nfd-h { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--hair-soft); }
 .nfd-rule { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); font-weight: 400; letter-spacing: normal; text-transform: none; }
 .nfd-rule-name { font-weight: 700; color: var(--ink); }

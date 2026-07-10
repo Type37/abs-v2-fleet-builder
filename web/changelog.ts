@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.4",
+    date: "2026-07-10",
+    title: "Adding a unit no longer makes the screen jump",
+    items: [
+      "Tapping Add on a ship used to shove the whole catalog around. Now it doesn't move anything: the owned count is a small badge on the ship's icon (no reflow), and on phones the ship list sits above your roster, so adding to the roster grows it below your finger instead of pushing the list up.",
+      "Weapons are now a proper table everywhere - one row per weapon system with its firing arc, attack dice, range and damage in aligned columns - instead of a run-on comma string.",
+      "Enter Play Mode is now a full-width button at the very bottom of the whole builder, below both columns.",
+      "Faction summaries are explicitly non-italic.",
+    ],
+  },
+  {
     version: "0.8.3",
     date: "2026-07-10",
     title: "Small wording fix",

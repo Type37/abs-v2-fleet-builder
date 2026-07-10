@@ -1,5 +1,5 @@
-import type { Era, Faction, FleetUnit, GameMode, Hvp, ShipClass } from "../src/types.ts";
-import { ALLIANCE_SPECIES } from "../src/types.ts";
+import type { Era, Faction, FleetUnit, GameMode, Hvp, ShipClass, Weapon } from "../src/types.ts";
+import { ALLIANCE_SPECIES, DAMAGE_BY_DIE } from "../src/types.ts";
 import { validateFleet, type ValidationIssue } from "../src/validation.ts";
 import { GENERIC_HVP } from "../src/data/index.ts";
 import { JUNKSPACE_SHIPS } from "../src/data/junkspace.ts";
@@ -552,27 +552,55 @@ function switcher(
   </div>`;
 }
 
+// A ship's weapons as a compact table: one row per weapon system, with its
+// firing arc, attack dice, range and damage in aligned columns instead of a
+// run-on comma string. Utility Bays and non-weapon fittings fold into a note
+// row so nothing is lost.
+function weaponsTable(ship: ShipClass): string {
+  const row = (w: Weapon, arc: "primary" | "aux") =>
+    `<tr>
+      <td class="wt-arc" title="${arc === "primary" ? "Primary — 45 degree arc" : "Auxiliary — 180 degree arc"}">${icon(arc === "primary" ? "arc-primary" : "arc-aux", 12, "slot-arc")}</td>
+      <td class="wt-name">${escapeHtml(w.name)}</td>
+      <td class="wt-num">${w.count}${w.die}</td>
+      <td class="wt-num">${w.rangeMin}-${w.rangeMax}"</td>
+      <td class="wt-num">${DAMAGE_BY_DIE[w.die]}</td>
+    </tr>`;
+  const rows = [...ship.primary.map((w) => row(w, "primary")), ...ship.auxiliary.map((w) => row(w, "aux"))];
+  // Utility Bays / non-weapon fittings that are not in the weapon arrays.
+  const notes: string[] = [];
+  const pText = primarySlotText(ship);
+  const aText = auxSlotText(ship);
+  if (ship.primary.length === 0 && pText !== "None") notes.push(pText);
+  if (ship.auxiliary.length === 0 && aText !== "None") notes.push(aText);
+  if (rows.length === 0 && notes.length === 0) return '<p class="weap-none">No weapons</p>';
+  const noteRow = notes.length
+    ? `<tr class="wt-note-row"><td class="wt-arc"></td><td class="wt-note" colspan="4">${notes.map(escapeHtml).join(", ")}</td></tr>`
+    : "";
+  return `<table class="weap-table">
+    <thead><tr><th></th><th>Weapon</th><th>Attack</th><th>Range</th><th>Dmg</th></tr></thead>
+    <tbody>${rows.join("")}${noteRow}</tbody>
+  </table>`;
+}
+
 function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boolean, owned = 0): string {
   const addId = composite ? `${ownerFaction.id}/${ship.id}` : ship.id;
-  const wp = primarySlotText(ship).replace(/<br \/>/g, ", ");
-  const wa = auxSlotText(ship).replace(/<br \/>/g, ", ");
-  const weapons = [wp === "None" ? "" : wp, wa === "None" ? "" : wa].filter(Boolean).join("; ") || "No weapons";
   // The whole row is the click target (add a unit), with a standing ADD cue on
   // the right so the affordance is never hover-only. Name and cost on their own
   // line so a long name never gets cut; full stats and weapons always visible.
+  // The "owned" count is an absolutely-positioned badge on the glyph, so it
+  // appears when you add a unit without reflowing (and shifting) the catalog.
   return `
   <article class="ship-row is-option ${ship.image ? "has-art" : ""}" data-action="add-unit" data-ship="${addId}" role="button" title="Add a unit of ${escapeHtml(ship.name)}">
-    <div class="ship-row-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" loading="lazy" />` : massGlyph(ship.mass, 22)}</div>
+    <div class="ship-row-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" loading="lazy" />` : massGlyph(ship.mass, 22)}${owned > 0 ? `<span class="owned-badge" title="${owned} in fleet">${owned}</span>` : ""}</div>
     <div class="ship-row-body">
       <div class="ship-row-head">
         <h4 class="ship-name">${escapeHtml(ship.name)}</h4>
         <span class="ship-cost">${credits(ship.cost)}</span>
-        ${owned > 0 ? `<span class="owned-tag">${owned} in fleet</span>` : ""}
       </div>
       <div class="ship-row-details">
         ${statChips(ship, true)}
-        <span class="ship-weapons">${escapeHtml(weapons)}</span>
       </div>
+      ${weaponsTable(ship)}
     </div>
     <span class="add-cue">${icon("plus", 15)}<span>Add</span></span>
   </article>`;
@@ -779,9 +807,6 @@ function builderView(state: AppState): string {
           return { name: def?.name ?? h.hvpId, rule: def?.rule ?? "" };
         });
       const maxCount = list.freePlay || list.mode === "hypergrowth" ? 99 : r?.ship.mass === 3 ? 1 : 3;
-      const wp = r ? primarySlotText(r.ship).replace(/<br \/>/g, ", ") : "";
-      const wa = r ? auxSlotText(r.ship).replace(/<br \/>/g, ", ") : "";
-      const weapons = r ? [wp === "None" ? "" : wp, wa === "None" ? "" : wa].filter(Boolean).join("; ") : "";
       const showSpecies = faction?.requiresSpecies && !list.freePlay;
       // Each carried person is a tap target: the title shows, a popover reveals
       // the rule. Popover is position:absolute, so opening it shifts nothing.
@@ -807,7 +832,7 @@ function builderView(state: AppState): string {
           r
             ? `<div class="ru-details">
                 ${statChips(r.ship, true)}
-                ${weapons ? `<span class="ru-weap">${weapons}</span>` : `<span class="ru-weap muted">No weapons</span>`}
+                ${weaponsTable(r.ship)}
               </div>`
             : ""
         }
@@ -945,8 +970,6 @@ function builderView(state: AppState): string {
           <summary>Notes${list.fleet.notes ? ` <span class="mf-h-count">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
           <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
         </details>
-
-        <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
       </section>
 
       <section class="mf-yard">
@@ -985,6 +1008,8 @@ function builderView(state: AppState): string {
         <div class="mf-list personnel-grid">${personnelCatalog}</div>
       </section>
     </div>
+
+    <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
   </main>
   ${toast(state)}
   ${footer()}`;
