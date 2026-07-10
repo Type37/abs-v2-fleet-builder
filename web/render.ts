@@ -770,7 +770,9 @@ function builderView(state: AppState): string {
       const r = resolveShip(u.shipClassId, faction, customs);
       const unitName = autoUnitName(u.id);
       const cost = r ? r.ship.cost * u.count : 0;
-      const carried = list.fleet.hvp.filter((h) => h.assignedUnitId === u.id).length;
+      const carriedNames = list.fleet.hvp
+        .filter((h) => h.assignedUnitId === u.id)
+        .map((h) => hvpById(h.hvpId, faction)?.name ?? h.hvpId);
       const maxCount = list.freePlay || list.mode === "hypergrowth" ? 99 : r?.ship.mass === 3 ? 1 : 3;
       const wp = r ? primarySlotText(r.ship).replace(/<br \/>/g, ", ") : "";
       const wa = r ? auxSlotText(r.ship).replace(/<br \/>/g, ", ") : "";
@@ -782,7 +784,7 @@ function builderView(state: AppState): string {
           <span class="roster-unit-glyph">${r ? massGlyph(r.ship.mass, 22) : icon("warning", 20)}</span>
           <span class="ru-main">
             <input class="unit-name-input" type="text" value="${escapeHtml(u.name ?? "")}" placeholder="${escapeHtml(unitName)}" data-action="unit-name" data-unit="${u.id}" />
-            ${carried || (r && list.freePlay) ? `<span class="ru-sub">${r && list.freePlay ? `<span class="muted">${escapeHtml(r.owner.name)}</span>` : ""}${carried ? ` <span class="ru-carry">${icon("personnel", 12)}${carried}</span>` : ""}</span>` : ""}
+            ${carriedNames.length || (r && list.freePlay) ? `<span class="ru-sub">${r && list.freePlay ? `<span class="muted">${escapeHtml(r.owner.name)}</span>` : ""}${carriedNames.length ? ` <span class="ru-carry">${icon("personnel", 12)}${escapeHtml(carriedNames.join(", "))}</span>` : ""}</span>` : ""}
             ${showSpecies ? speciesSelect(u) : ""}
           </span>
         </span>
