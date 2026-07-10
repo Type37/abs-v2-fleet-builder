@@ -504,6 +504,10 @@ var e=Object.defineProperty,t=(t,n)=>{let r={};for(var i in t)e(r,i,{get:t[i],en
             <span class="ru-sub">${N(a)}${i&&t.freePlay?` <span class="muted">${N(i.owner.name)}</span>`:``}${s?` <span class="ru-carry">${F(`personnel`,12)}${s}</span>`:``}</span>
           </span>
         </button>
+        ${i?`<div class="ru-details">
+                ${L(i.ship,!0)}
+                ${d?`<span class="ru-weap">${d}</span>`:`<span class="ru-weap muted">No weapons</span>`}
+              </div>`:``}
         ${i?`<span class="stepper ru-stepper">
                 <button class="${e.count<=1?`will-remove`:``}" data-action="unit-count" data-unit="${e.id}" data-delta="-1" title="${e.count<=1?`Remove this unit`:`One fewer ship`}">${F(`minus`,14)}</button>
                 <span class="stepper-count">${e.count}</span>
@@ -511,10 +515,6 @@ var e=Object.defineProperty,t=(t,n)=>{let r={};for(var i in t)e(r,i,{get:t[i],en
               </span>`:``}
         <span class="roster-unit-cost">${M(o)}</span>
         <button class="ru-remove" data-action="remove-unit" data-unit="${e.id}" title="Remove this unit">${F(`trash`,14)}</button>
-        ${i?`<div class="ru-details">
-                ${L(i.ship,!0)}
-                ${d?`<span class="ru-weap">${d}</span>`:`<span class="ru-weap muted">No weapons</span>`}
-              </div>`:``}
       </div>`}).join(``),ne=e=>t.fleet.units.map(t=>{let i=H(t.shipClassId,r,n),a=t.name||i?.ship.name||t.shipClassId;return`<option value="${t.id}" ${e===t.id?`selected`:``}>${N(a)}</option>`}).join(``),y=t.fleet.hvp.map((e,t)=>{let n=U(e.hvpId,r);return`
       <article class="roster-personnel">
         <div class="roster-unit-head">
