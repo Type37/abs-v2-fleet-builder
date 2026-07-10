@@ -552,19 +552,17 @@ function switcher(
   </div>`;
 }
 
-// A ship's weapons as a compact table: one row per weapon system, with its
-// firing arc, attack dice, range and damage in aligned columns instead of a
-// run-on comma string. Utility Bays and non-weapon fittings fold into a note
-// row so nothing is lost.
+// A ship's weapons as an aligned column layout: firing arc, name, attack
+// dice, range and damage. Built with CSS grid (not a <table>) so column
+// widths are fixed by the grid template instead of an HTML table's auto
+// layout, which stretches short columns apart with huge, uneven gaps.
 function weaponsTable(ship: ShipClass): string {
   const row = (w: Weapon, arc: "primary" | "aux") =>
-    `<tr>
-      <td class="wt-arc" title="${arc === "primary" ? "Primary — 45 degree arc" : "Auxiliary — 180 degree arc"}">${icon(arc === "primary" ? "arc-primary" : "arc-aux", 12, "slot-arc")}</td>
-      <td class="wt-name">${escapeHtml(w.name)}</td>
-      <td class="wt-num">${w.count}${w.die}</td>
-      <td class="wt-num">${w.rangeMin}-${w.rangeMax}"</td>
-      <td class="wt-num">${DAMAGE_BY_DIE[w.die]}</td>
-    </tr>`;
+    `<span class="wt-arc" role="cell" title="${arc === "primary" ? "Primary — 45 degree arc" : "Auxiliary — 180 degree arc"}">${icon(arc === "primary" ? "arc-primary" : "arc-aux", 11, "slot-arc")}</span>
+    <span class="wt-name" role="cell">${escapeHtml(w.name)}</span>
+    <span class="wt-num" role="cell">${w.count}${w.die}</span>
+    <span class="wt-num" role="cell">${w.rangeMin}-${w.rangeMax}"</span>
+    <span class="wt-num" role="cell">${DAMAGE_BY_DIE[w.die]}</span>`;
   const rows = [...ship.primary.map((w) => row(w, "primary")), ...ship.auxiliary.map((w) => row(w, "aux"))];
   // Utility Bays / non-weapon fittings that are not in the weapon arrays.
   const notes: string[] = [];
@@ -573,13 +571,11 @@ function weaponsTable(ship: ShipClass): string {
   if (ship.primary.length === 0 && pText !== "None") notes.push(pText);
   if (ship.auxiliary.length === 0 && aText !== "None") notes.push(aText);
   if (rows.length === 0 && notes.length === 0) return '<p class="weap-none">No weapons</p>';
-  const noteRow = notes.length
-    ? `<tr class="wt-note-row"><td class="wt-arc"></td><td class="wt-note" colspan="4">${notes.map(escapeHtml).join(", ")}</td></tr>`
-    : "";
-  return `<table class="weap-table">
-    <thead><tr><th></th><th>Weapon</th><th>Attack</th><th>Range</th><th>Dmg</th></tr></thead>
-    <tbody>${rows.join("")}${noteRow}</tbody>
-  </table>`;
+  const noteRow = notes.length ? `<span class="wt-arc" role="cell"></span><span class="wt-note" role="cell">${notes.map(escapeHtml).join(", ")}</span>` : "";
+  return `<div class="weap-table" role="table" aria-label="Weapons">
+    <span class="wt-arc wt-h" role="columnheader"></span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">Dmg</span>
+    ${rows.join("")}${noteRow}
+  </div>`;
 }
 
 function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boolean, owned = 0): string {
@@ -604,23 +600,6 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
     </div>
     <span class="add-cue">${icon("plus", 15)}<span>Add</span></span>
   </article>`;
-}
-
-// Experimental: ship classes grouped into Mass columns instead of one flat
-// list, so a faction's whole roster is visible with less vertical scrolling.
-function catalogColumnsByMass(faction: Faction, owned: (addId: string) => number): string {
-  const groups = [0, 1, 2, 3]
-    .map((mass) => ({ mass, ships: faction.ships.filter((s) => s.mass === mass) }))
-    .filter((g) => g.ships.length > 0);
-  return `<div class="mass-columns">${groups
-    .map(
-      (g) => `
-      <div class="mass-col">
-        <h4 class="mass-col-title">Mass ${g.mass} <span class="muted">${g.ships.length}</span></h4>
-        <div class="mass-col-body">${g.ships.map((s) => catalogShipRow(s, faction, false, owned(s.id))).join("")}</div>
-      </div>`,
-    )
-    .join("")}</div>`;
 }
 
 // Stat comparison chart: every ship class in the faction as a horizontal bar,
@@ -958,14 +937,6 @@ function builderView(state: AppState): string {
           ${unitRows || '<p class="mf-empty">Nothing requisitioned yet. Add classes from the yard on the right.</p>'}
         </div>
 
-        ${
-          list.freePlay
-            ? '<p class="mf-inspect freeplay">Free Play. The rules inspector is off.</p>'
-            : issues.length === 0
-              ? `<p class="mf-inspect pass">${icon("check", 15)} Legal and ready for the table.</p>`
-              : `<div class="mf-inspect fail"><span class="mf-inspect-h">${issues.length} to resolve</span><ul class="issue-list">${issues.map(issueLine).join("")}</ul></div>`
-        }
-
         <details class="mf-notes" ${list.fleet.notes ? "open" : ""}>
           <summary>Notes${list.fleet.notes ? ` <span class="mf-h-count">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
           <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
@@ -973,6 +944,20 @@ function builderView(state: AppState): string {
       </section>
 
       <section class="mf-yard">
+        ${
+          // Legality status: a single small line right by the buying section
+          // instead of its own block under the roster. Clean fleets get a
+          // quiet one-line check; problems collapse into a tiny popover count
+          // so the issue text is available without permanently taking space.
+          list.freePlay
+            ? '<p class="yard-status is-muted">Free Play, no rules check</p>'
+            : issues.length === 0
+              ? `<p class="yard-status is-ok">${icon("check", 12)} Legal</p>`
+              : `<details class="yard-status-pop">
+                  <summary class="yard-status is-fail">${icon("warning", 12)} ${issues.length} to resolve</summary>
+                  <ul class="yard-status-panel issue-list">${issues.map(issueLine).join("")}</ul>
+                </details>`
+        }
         ${
           faction && !list.freePlay
             ? `<div class="mf-rule">
@@ -990,7 +975,6 @@ function builderView(state: AppState): string {
                 "view",
                 [
                   ["list", "List"],
-                  ["mass", "By mass"],
                   ["chart", "Compare"],
                 ],
                 catalogView ?? "list",
@@ -998,11 +982,9 @@ function builderView(state: AppState): string {
             : ""
         }</h3>
         ${
-          catalogView === "mass" && faction && !list.freePlay
-            ? catalogColumnsByMass(faction, ownedCount)
-            : catalogView === "chart" && faction && !list.freePlay
-              ? `${catalogChartPicker(chartStat)}${catalogChart(faction, chartStat)}`
-              : `<div class="mf-list">${catalogHtml || '<p class="mf-empty">Pick a faction to see its ships.</p>'}</div>`
+          catalogView === "chart" && faction && !list.freePlay
+            ? `${catalogChartPicker(chartStat)}${catalogChart(faction, chartStat)}`
+            : `<div class="mf-list">${catalogHtml || '<p class="mf-empty">Pick a faction to see its ships.</p>'}</div>`
         }
         <h3 class="mf-h">Personnel pool <span class="mf-h-count">${hvpCount}</span></h3>
         <div class="mf-list personnel-grid">${personnelCatalog}</div>

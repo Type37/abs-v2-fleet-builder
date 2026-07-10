@@ -588,11 +588,6 @@ button { font-family: inherit; }
 @media (max-width: 1200px) { .workspace { grid-template-columns: minmax(0, 1fr) minmax(300px, 400px); } }
 @media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
 
-.mass-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: start; margin-bottom: 12px; }
-.mass-col { border: 1px solid var(--hair-soft); }
-.mass-col-title { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding: 8px 10px; background: var(--paper); border-bottom: 1px solid var(--hair-soft); display: flex; justify-content: space-between; }
-.mass-col-body .ship-row { padding: 7px 8px; }
-
 /* catalog (left) */
 .rule-card { border: 1px solid var(--blue); border-left-width: 5px; padding: 9px 14px; margin-bottom: 14px; background: var(--blue-wash); }
 .rule-card-title { font-family: var(--display); font-weight: 800; font-size: 16px; color: var(--blue-deep); margin-bottom: 3px; }
@@ -637,10 +632,16 @@ button { font-family: inherit; }
    weapons line under it. Deliberately dense so a faction's ships fit with
    little or no scrolling. */
 .ship-row {
-  display: grid; grid-template-columns: 44px 1fr auto; gap: 9px; align-items: center; padding: 7px 12px;
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 9px; align-items: center; padding: 7px 12px;
   border-bottom: 1px solid var(--hair-soft); border-left: 3px solid transparent; background: var(--paper);
   transition: border-color 0.12s ease, background 0.12s ease;
 }
+/* min-width: 0 lets the body track actually shrink to the column's real
+   width instead of forcing the row wider than its container - without this
+   a grid item's default min-width is its content's intrinsic size, and a
+   wide child (like the weapons table) pushes the row wider than its box,
+   overlapping the ADD control instead of wrapping inside its own space. */
+.ship-row-body { min-width: 0; }
 .catalog-list > .ship-row:last-child { border-bottom: none; }
 .ship-row:hover { border-color: var(--color-line); border-left-color: var(--color-action); background: var(--blue-wash); }
 /* The glyph column is now sized for ship art (44px), so a mass-glyph icon
@@ -665,19 +666,24 @@ button { font-family: inherit; }
 /* Weapons table: one row per weapon system, aligned columns for arc, dice,
    range and damage. Used in the catalog and the roster so weapons read the
    same everywhere and never as a run-on comma string. */
-.weap-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; }
-.weap-table th {
-  font-family: var(--sans); font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--ink-3); text-align: left; padding: 0 6px 3px 0; border-bottom: 1px solid var(--hair-soft);
+/* CSS grid, not a <table>: an HTML table's auto layout stretches short
+   columns apart with huge, uneven gaps to fill 100% width. Grid gives every
+   column a real fixed track, so "Attack"/"Range"/"Dmg" sit tight and aligned
+   under their own header no matter how wide the row is. Max-width caps it at
+   a legible line length instead of stretching across a wide desktop column. */
+.weap-table {
+  display: grid; grid-template-columns: 14px minmax(0, 1fr) 46px 56px 28px; column-gap: 10px; row-gap: 3px;
+  align-items: baseline; max-width: 420px; margin-top: 6px; font-variant-numeric: tabular-nums;
 }
-.weap-table th:last-child, .weap-table td.wt-num { text-align: right; }
-.weap-table td { padding: 3px 6px 3px 0; font-size: 12px; color: var(--ink); border-bottom: 1px solid var(--hair-soft); vertical-align: top; }
-.weap-table tr:last-child td { border-bottom: none; }
-.wt-arc { width: 16px; color: var(--blue); padding-right: 4px; }
-.wt-arc .slot-arc { vertical-align: middle; }
-.wt-name { font-weight: 600; }
-.wt-num { white-space: nowrap; font-weight: 700; }
-.wt-note { font-size: 11.5px; font-style: normal; color: var(--ink-2); }
+.weap-table .wt-h {
+  font-family: var(--sans); font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--ink-3); padding-bottom: 3px; border-bottom: 1px solid var(--hair-soft); align-self: end;
+}
+.wt-arc { color: var(--blue); display: flex; align-items: center; }
+.wt-name { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.wt-num { font-size: 12px; font-weight: 700; color: var(--ink); text-align: right; white-space: nowrap; }
+.wt-h.wt-num { font-weight: 700; }
+.wt-note { grid-column: 2 / -1; font-size: 11.5px; font-style: normal; color: var(--ink-2); }
 .weap-none { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
 .stat-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .stat-chips-mini { gap: 4px; flex-wrap: wrap; }
@@ -1199,7 +1205,9 @@ button { font-family: inherit; }
    beneath it, ruled off, no fill. Splitting the tally onto its own row keeps
    the big budget figure from fighting the fleet name for width - and stops it
    overflowing on a phone. */
-.mf-head { padding: 20px 0 12px; border-bottom: 2px solid var(--hair); }
+/* The one deliberate heavy rule on this page: it separates "what you're
+   building" (masthead) from "how you build it" (the two columns below). */
+.mf-head { padding: 20px 0 12px; border-bottom: 1px solid var(--ink); }
 .mf-headline { display: flex; align-items: center; gap: 14px; }
 .mf-emblem { flex-shrink: 0; }
 .mf-emblem .emblem-current-btn { border: none; padding: 0; background: none; }
@@ -1289,22 +1297,26 @@ button { font-family: inherit; }
 }
 .limit-switch-panel .segment { border: 1px solid var(--hair); }
 
-/* body: two flush regions, one vertical rule between; no cards */
+/* body: two flush regions, one quiet vertical rule between; no cards. The
+   masthead's border is the one heavy divider on this page - everything below
+   it (column rule, section labels) stays light so it does not compete. */
 .mf-body { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; }
 /* The manifest is what you're building; it follows you down the page while
    the yard (ships, personnel) scrolls past on the right. */
 .mf-manifest {
-  min-width: 0; padding-right: 28px; border-right: 2px solid var(--hair);
+  min-width: 0; padding-right: 28px; border-right: 1px solid var(--hair-soft);
   position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
 }
 .mf-yard { min-width: 0; padding-left: 28px; }
 
+/* Section labels are quiet eyebrows, not headings - the fleet name and
+   budget in the masthead are the only things that should read as "big." */
 .mf-h {
   display: flex; align-items: baseline; gap: 12px;
-  font-family: var(--display); font-weight: 800; font-size: 19px; text-transform: uppercase; letter-spacing: 0.01em;
-  color: var(--ink); padding: 26px 0 8px; border-bottom: 2px solid var(--hair);
+  font-family: var(--sans); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-2); padding: 22px 0 8px; border-bottom: none;
 }
-.mf-h-count { font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
+.mf-h-count { font-family: var(--sans); font-weight: 600; font-size: 11px; letter-spacing: 0.03em; text-transform: none; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 /* A segmented switcher for any number of mutually exclusive options: one
    bordered track, a sliding highlight bar that glides to the selected option
    on click, instead of N separate boxed buttons or plain underlined links
@@ -1406,39 +1418,50 @@ button { font-family: inherit; }
 .builder .add-btn:disabled { border-color: var(--hair-soft); color: var(--ink-3); background: none; }
 
 /* faction rule: ruled prose, not a card */
-.mf-rule { padding: 12px 0 14px; border-bottom: 2px solid var(--hair); }
+.mf-rule { padding: 4px 0 14px; }
 .mf-rule-meta { display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.01em; color: var(--ink); }
 .mf-rule-meta b { color: var(--blue); }
 .mf-rule-name { font-family: var(--display); font-weight: 800; font-size: 18px; color: var(--blue); margin-top: 5px; }
 .mf-rule-text { font-family: var(--serif); font-size: 14.5px; line-height: 1.45; font-weight: 500; font-style: normal; color: var(--ink); margin-top: 4px; }
 
-/* inspection: a heavy ruled statement, not a colored panel */
-.mf-inspect { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 14px 2px; border-top: 2px solid var(--hair); font-size: 15px; font-weight: 700; color: var(--ink); }
-.mf-inspect.pass { color: var(--go); }
-.mf-inspect.freeplay { color: var(--ink); font-weight: 600; }
-.mf-inspect.fail { flex-direction: column; align-items: stretch; color: var(--red-deep); }
-.mf-inspect-h { font-family: var(--display); font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em; margin-bottom: 8px; }
-.builder .issue-list li { font-size: 14px; font-weight: 600; }
+/* Legality status: one small line by the ship-buying section, not its own
+   block. Clean fleets get a quiet checkmark; problems collapse into a tiny
+   count that expands as a position:absolute popover (no layout shift). */
+.yard-status { display: flex; align-items: center; gap: 5px; margin: 0 0 8px; font-family: var(--sans); font-size: 12px; font-weight: 700; }
+.yard-status.is-ok { color: var(--go); }
+.yard-status.is-muted { color: var(--ink-3); font-weight: 600; }
+.yard-status-pop { position: relative; margin-bottom: 8px; }
+.yard-status-pop > .yard-status { list-style: none; cursor: pointer; margin: 0; }
+.yard-status-pop > .yard-status::-webkit-details-marker { display: none; }
+.yard-status.is-fail { color: var(--red-deep); }
+.yard-status-pop[open] > .yard-status.is-fail { color: var(--red); }
+.yard-status-panel {
+  position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; width: min(300px, 80vw);
+  background: var(--paper); border: 1px solid var(--ink); padding: 10px 12px;
+  box-shadow: 0 10px 28px rgba(11, 22, 51, 0.18);
+}
+.yard-status-panel.issue-list { gap: 8px; }
+.builder .issue-list li { font-size: 12.5px; font-weight: 600; }
 .builder .issue-error { color: var(--red-deep); }
 .builder .issue-warning { color: var(--amber); }
 
 /* notes: sits at the very foot of the manifest, below Play Mode */
-.mf-notes { margin-top: 18px; border-top: 2px solid var(--hair); }
-.mf-notes > summary { list-style: none; cursor: pointer; padding: 12px 2px; font-family: var(--display); font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.01em; color: var(--ink); }
+.mf-notes { margin-top: 18px; border-top: 1px solid var(--hair-soft); }
+.mf-notes > summary { list-style: none; cursor: pointer; padding: 12px 2px; font-family: var(--sans); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); }
 .mf-notes > summary::-webkit-details-marker { display: none; }
-.mf-notes .notes-input { border: 1px solid var(--hair); padding: 10px; font-weight: 500; color: var(--ink); width: 100%; }
+.mf-notes .notes-input { border: 1px solid var(--hair-soft); padding: 10px; font-weight: 500; color: var(--ink); width: 100%; }
 
 @media (max-width: 900px) {
   .mf-body { grid-template-columns: 1fr; }
   /* Stacked single-column: the manifest reads top-to-bottom with everything
      else, so it must not pin itself over content further down the page. */
   .mf-manifest { position: static; max-height: none; overflow-y: visible; border-right: none; padding-right: 0; }
-  .mf-yard { padding-left: 0; border-top: 2px solid var(--hair); margin-top: 8px; }
+  .mf-yard { padding-left: 0; }
   /* Put the ship yard ABOVE the roster on a phone. Tapping "Add" grows the
      roster (the goal), but since the roster now sits below the catalog, the
      catalog you are tapping does not get shoved down - nothing jumps. */
-  .mf-yard { order: 1; border-top: none; margin-top: 0; }
-  .mf-manifest { order: 2; border-top: 2px solid var(--hair); margin-top: 8px; padding-top: 4px; }
+  .mf-yard { order: 1; }
+  .mf-manifest { order: 2; border-top: 1px solid var(--hair-soft); margin-top: 8px; padding-top: 4px; }
 }
 
 /* Phones: the three-zone roster row was crushing five kinds of data into one

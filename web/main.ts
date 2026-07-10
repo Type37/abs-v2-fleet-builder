@@ -20,9 +20,19 @@ function paint(): void {
   const activeId = active instanceof HTMLElement && active.id ? active.id : null;
   const caret = active instanceof HTMLInputElement ? active.selectionStart : null;
 
+  // The builder's roster panel scrolls independently (position: sticky,
+  // overflow-y: auto) and is fully destroyed and recreated by innerHTML
+  // replacement below, which resets scrollTop to 0. Nothing may move on a
+  // click that isn't the point of the click, so its scroll position is
+  // carried across the re-render like focus and caret are.
+  const manifestScroll = document.querySelector(".mf-manifest")?.scrollTop ?? 0;
+
   root.innerHTML = render(store.getState());
   enhanceNav();
   positionTour();
+
+  const manifest = document.querySelector(".mf-manifest");
+  if (manifest) manifest.scrollTop = manifestScroll;
 
   if (activeId) {
     const restored = document.getElementById(activeId);

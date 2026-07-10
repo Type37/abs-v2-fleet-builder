@@ -1,5 +1,6 @@
 import type { Faction, GameMode, Mass, PilotClass, Weapon } from "../src/types.ts";
 import { findFaction, isCustom } from "./catalog.ts";
+import { resolveShip } from "./render.ts";
 import { newId, persistCustomFactions, persistLists, persistOnboarding, persistOutfits } from "./storage.ts";
 import type { SavedOutfit } from "./storage.ts";
 import {
@@ -425,12 +426,15 @@ function handleClick(e: MouseEvent): void {
       const id = currentListId();
       const shipId = target.dataset["ship"];
       if (!id || !shipId) return;
+      let addedName = "Unit";
       store.setState((s) =>
-        updateFleet(s, id, (f) => ({
-          ...f,
-          units: [...f.units, { id: nextUnitIdFor(f), shipClassId: shipId, count: 1 }],
-        })),
+        updateFleet(s, id, (f) => {
+          const faction = findFaction(f.factionId, s.customFactions);
+          addedName = resolveShip(shipId, faction, s.customFactions)?.ship.name ?? "Unit";
+          return { ...f, units: [...f.units, { id: nextUnitIdFor(f), shipClassId: shipId, count: 1 }] };
+        }),
       );
+      showToast(`Added ${addedName}.`);
       break;
     }
     case "close-modal": {

@@ -144,9 +144,9 @@ export interface AppState {
     tour?: { tourId: string; step: number };
     /** Print-setup options for the print view (never persisted). */
     print?: { format: "roster" | "cards"; trackers: boolean };
-    /** Ship-classes catalog view: undefined is the flat list, "mass" groups
-     * into Mass columns, "chart" is a bar-chart stat comparison. */
-    catalogView?: "mass" | "chart";
+    /** Ship-classes catalog view: undefined is the flat list, "chart" is a
+     * bar-chart stat comparison. */
+    catalogView?: "chart";
     /** Which stat the chart view is currently comparing. */
     catalogChartStat?: "cost" | "mass" | "thrust" | "silhouette" | "shields";
   };

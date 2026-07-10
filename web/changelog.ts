@@ -9,6 +9,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.5",
+    date: "2026-07-10",
+    title: "Quieter hierarchy, real weapon columns, a status that fits",
+    items: [
+      "The weapons list was rebuilt as CSS grid instead of an HTML table, which was stretching short columns apart into huge, uneven gaps. Attack, range and damage are now tight and aligned under their own header, in both the catalog and the roster.",
+      "Cut most of the black rules that made the builder feel busy: section labels (Roster, Ship classes, Personnel pool) are now quiet small-caps eyebrows instead of bold underlined headings, and the many 2px black dividers are gone except the one under the masthead.",
+      "The legality status moved out of the roster and into a single small line next to the ship-buying section: a quiet checkmark when the fleet is legal, or a tiny count that opens a popover with the actual issues when it isn't.",
+      "The experimental \"By mass\" ship-classes view is gone - it broke badly in narrower layouts (the Add control overlapped the weapon list). List and Compare remain.",
+      "Adding a unit now shows a toast confirming what was added.",
+      "The roster panel's own scroll position now survives every re-render instead of snapping back to the top - a subtler version of the same jump bug as the catalog fix.",
+    ],
+  },
+  {
     version: "0.8.4",
     date: "2026-07-10",
     title: "Adding a unit no longer makes the screen jump",
