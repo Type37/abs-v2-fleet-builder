@@ -941,12 +941,12 @@ function builderView(state: AppState): string {
               : `<div class="mf-inspect fail"><span class="mf-inspect-h">${issues.length} to resolve</span><ul class="issue-list">${issues.map(issueLine).join("")}</ul></div>`
         }
 
-        <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
-
         <details class="mf-notes" ${list.fleet.notes ? "open" : ""}>
           <summary>Notes${list.fleet.notes ? ` <span class="mf-h-count">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
           <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
         </details>
+
+        <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
       </section>
 
       <section class="mf-yard">
