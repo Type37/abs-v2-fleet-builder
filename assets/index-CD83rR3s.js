@@ -313,9 +313,7 @@ var e=Object.defineProperty,t=(t,n)=>{let r={};for(var i in t)e(r,i,{get:t[i],en
     </div>
     <aside class="index-book">
       <a class="index-book-link" href="https://planetsmashergames.com/a-billion-suns/" target="_blank" rel="noopener">
-        <span class="index-book-eyebrow">Osprey Games</span>
-        <span class="index-book-title">A Billion Suns<br>Second Edition</span>
-        <span class="index-book-cta">${F(`book`,16)} Get the rulebook</span>
+        <span class="index-book-cta">${F(`book`,20)} Get the rulebook</span>
       </a>
     </aside>
   </main>
