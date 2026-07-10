@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.1",
+    date: "2026-07-10",
+    title: "Unit and personnel modals are gone",
+    items: [
+      "Units are auto-numbered instead of labelled \"Ship Name unit\": the first Warcry Fighter Wing you add is \"Warcry Fighter Wing\", the second is \"Warcry Fighter Wing 2\", and so on. Click straight into the name to override it - no modal, no duplicated name line.",
+      "The unit configuration modal is gone. Ship count, species (Alliance only), carried-personnel count, and remove are all inline on the roster row now.",
+      "The personnel config popover is gone too: assigning who carries a chosen HVP is a plain dropdown right on its row. Renaming an HVP is off the table for now.",
+      "The faction picker in the manifest header now matches the dotted-underline style of the fleet name and credits cap, instead of a bold underlined button.",
+    ],
+  },
+  {
     version: "0.8.0",
     date: "2026-07-10",
     title: "The builder becomes a manifest, Play Mode becomes a real tutorial",

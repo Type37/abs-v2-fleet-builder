@@ -126,8 +126,6 @@ export interface AppState {
   nextUnitSeq: number;
   /** Transient UI state, never persisted. */
   ui: {
-    /** Unit id whose per-ship naming panel is open. */
-    openShipNames?: string;
     /** Toast message shown briefly after copy actions. */
     toast?: string;
     /** Faction picker: show every era, not just the list's era. */
@@ -141,9 +139,7 @@ export interface AppState {
     /** The Create-army panel is open on the Fleets page. */
     showCreate?: boolean;
     /** An open modal dialog. */
-    modal?:
-      | { kind: "unit"; unitId: string }
-      | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean };
+    modal?: { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean };
     /** In-progress first-visit coachmark tour, once the user has advanced past step 0. */
     tour?: { tourId: string; step: number };
     /** Print-setup options for the print view (never persisted). */

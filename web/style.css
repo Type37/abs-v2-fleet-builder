@@ -635,7 +635,6 @@ button { font-family: inherit; }
 .ship-row-glyph { color: var(--blue); display: flex; align-items: center; justify-content: center; }
 .ship-thumb { display: block; object-fit: cover; border: 1px solid var(--ink-3); background: var(--ground); }
 .ship-row.has-art .ship-thumb { width: 44px; height: 32px; }
-.modal-spec.has-art .ship-thumb { width: 72px; height: 44px; }
 .ship-row-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .ship-name { flex: 1 1 auto; min-width: 0; font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: -0.01em; white-space: normal; }
 .ship-cost { margin-left: auto; padding-left: 4px; font-family: var(--display); font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--blue); white-space: nowrap; }
@@ -654,26 +653,11 @@ button { font-family: inherit; }
 .personnel-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
 .personnel-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 6px 8px 6px 10px; border: 1px solid var(--hair-soft); background: var(--paper); }
 /* Chosen is the same shape and height as the option row it just was -
-   clicking Add never shifts anything below it. Rename and carrier
-   assignment live in a popover (position: absolute), not inline growth. */
+   clicking Add never shifts anything below it. */
 .personnel-row.chosen { border-color: var(--blue); border-left: 3px solid var(--blue); background: var(--blue-wash); }
 .personnel-body { min-width: 0; }
-.personnel-actions { display: flex; align-items: center; gap: 4px; }
-.personnel-config { position: relative; }
-.personnel-config > summary { list-style: none; }
-.personnel-config > summary::-webkit-details-marker { display: none; }
-.personnel-config > summary.is-set { border-color: var(--blue); color: var(--blue); }
-.personnel-config[open] > summary { background: var(--ink); border-color: var(--ink); color: #fff; }
-.personnel-config-panel {
-  position: absolute; z-index: 20; top: calc(100% + 6px); right: 0; width: 240px;
-  background: var(--paper); border: 2px solid var(--hair); padding: 12px;
-  display: flex; flex-direction: column; gap: 10px;
-}
-.personnel-config-panel .inline-field { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.03em; }
-.personnel-rename { font-family: var(--sans); font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: normal; border: 1px solid var(--hair-soft); padding: 6px 8px; background: var(--paper); color: var(--ink); }
-.personnel-rename::placeholder { color: var(--ink-3); font-style: italic; font-weight: 400; }
-.personnel-rename:focus { outline: none; border-color: var(--blue); }
-.personnel-config-panel select { font-family: var(--sans); font-size: 13px; font-weight: 600; padding: 6px 8px; border: 1px solid var(--hair-soft); background: var(--paper); color: var(--ink); }
+.personnel-actions { display: flex; align-items: center; gap: 6px; }
+.personnel-assign { font-family: var(--sans); font-size: 12px; font-weight: 600; padding: 6px 8px; border: 1px solid var(--hair-soft); background: var(--paper); color: var(--ink); max-width: 150px; }
 .personnel-name { display: block; font-family: var(--display); font-weight: 700; font-size: 13px; white-space: normal; }
 /* Generic personnel (any faction can take them) read quieter than a faction's
    own named HVPs, so the two pools are distinguishable at a glance. */
@@ -714,8 +698,7 @@ button { font-family: inherit; }
 .stepper button.will-remove:hover { background: var(--red); color: #fff; }
 .stepper-count { padding: 0 12px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; border-left: 1px solid var(--hair); border-right: 1px solid var(--hair); line-height: 28px; }
 .roster-unit-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
-.ship-names-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
-.ship-name-input, .inline-field select { font-family: var(--sans); font-size: 13px; padding: 7px 9px; border: 1px solid var(--hair-soft); background: var(--paper); color: var(--ink); }
+.inline-field select { font-family: var(--sans); font-size: 13px; padding: 7px 9px; border: 1px solid var(--hair-soft); background: var(--paper); color: var(--ink); }
 
 /* inspection report */
 .inspection { padding: 14px 20px 18px; border-top: 2px solid var(--hair); }
@@ -1132,9 +1115,10 @@ button { font-family: inherit; }
 }
 .roster-sheet .roster-unit:hover { background: var(--blue-wash); border-left-color: var(--color-action); }
 .roster-sheet .roster-unit.unresolved { background: var(--red-wash); }
-.ru-open { min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer; background: transparent; border: none; padding: 4px 0; font-family: inherit; color: inherit; }
-.ru-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ru-id { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.ru-main { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 1px; }
 .ru-name { font-family: var(--display); font-weight: 700; font-size: 15px; line-height: 1.1; }
+.ru-main .unit-name-input { width: 100%; }
 .ru-sub { font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ru-carry { display: inline-flex; align-items: center; gap: 2px; font-family: var(--sans); font-weight: 600; color: var(--color-action); }
 /* Full-width detail line: stat chips + weapons, so the whole unit is legible
@@ -1185,15 +1169,17 @@ button { font-family: inherit; }
 .mf-subline { display: flex; align-items: center; gap: 12px; margin-top: 12px; min-height: 28px; }
 .mf-sep { color: var(--ink); font-weight: 900; }
 .mf-era { font-family: var(--display); font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 0; color: var(--ink); }
-/* faction reads as an inline mark, not a filled button */
+/* faction reads as an inline editable field, the same dotted-underline
+   convention as the fleet name and credits cap - not a filled button. */
 .mf-fac .faction-switch > summary,
 .mf-fac .freeplay-badge {
   border: none; background: none; padding: 0; list-style: none;
-  font-family: var(--display); font-weight: 900; font-size: 15px; text-transform: uppercase; letter-spacing: 0;
-  color: var(--blue); cursor: pointer; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 3px;
+  font-family: var(--display); font-weight: 700; font-size: 15px; text-transform: none; letter-spacing: 0;
+  color: var(--ink); cursor: pointer; border-bottom: 2px dotted var(--ink-3);
 }
 .mf-fac .faction-switch > summary::-webkit-details-marker { display: none; }
-.mf-fac .faction-switch[open] > summary { color: var(--red); }
+.mf-fac .faction-switch:hover > summary,
+.mf-fac .faction-switch[open] > summary { color: var(--blue); border-bottom-color: var(--blue); border-bottom-style: solid; }
 
 /* Credits cap: the "/500" itself is the control. Click it for a popover with
    the presets and a custom field, instead of a standing row of buttons. */
@@ -1308,7 +1294,8 @@ button { font-family: inherit; }
 /* data text stays black and readable, never gray-and-thin */
 .builder .ship-weapons, .builder .ru-weap { color: var(--ink); font-size: 13px; font-weight: 500; line-height: 1.4; }
 .builder .ru-sub { color: var(--ink); font-weight: 600; }
-.builder .ru-name, .builder .ship-name, .builder .personnel-name { font-size: 16px; }
+.builder .ru-name, .builder .ru-main .unit-name-input, .builder .ship-name, .builder .personnel-name { font-size: 16px; }
+.builder .ru-main .inline-field { margin-top: 4px; }
 .builder .personnel-rule { color: var(--ink); font-size: 13px; font-weight: 500; line-height: 1.4; }
 
 /* add marks: a ghost square [+], never a filled blue button */
@@ -1369,26 +1356,6 @@ button { font-family: inherit; }
 .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
 .modal-footer { display: flex; justify-content: space-between; gap: 12px; padding: 14px 20px; border-top: 2px solid var(--color-line); }
 .modal-field { display: flex; flex-direction: column; gap: 8px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
-.modal-name { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: -0.01em; color: var(--color-ink); border: 1px solid var(--hair); padding: 10px 12px; text-transform: none; }
-.modal-name:focus { outline: none; border-color: var(--color-accent); }
-.modal-spec { display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 14px; border: 1px solid var(--hair); border-left: 3px solid var(--color-action); background: #f8f9fc; }
-.spec-glyph { color: var(--color-action); }
-.spec-name { font-family: var(--display); font-weight: 800; font-size: 17px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; text-transform: none; letter-spacing: 0; }
-.spec-cost { font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--color-action); }
-.spec-body .ship-weapons { text-transform: none; letter-spacing: 0; font-weight: 400; }
-.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-@media (max-width: 520px) { .modal-grid { grid-template-columns: 1fr; } }
-.modal-sub { font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink-3); }
-.stepper.big button { padding: 9px 12px; }
-.stepper.big .stepper-count { font-size: 15px; line-height: 32px; padding: 0 16px; }
-.carry-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.carry-toggle {
-  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-  font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none;
-  padding: 8px 12px; border: 1px solid var(--hair); background: var(--paper); color: var(--ink-2);
-}
-.carry-toggle:hover { border-color: var(--color-line); }
-.carry-toggle.on { background: var(--color-action); border-color: var(--color-action); color: #fff; }
 
 /* New Fleet modal pickers */
 .modal-panel.modal-lg { width: min(680px, 100%); }

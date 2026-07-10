@@ -173,6 +173,23 @@ function hvpById(id: string, faction: Faction | undefined): Hvp | undefined {
   return faction?.hvp.find((h) => h.id === id) ?? GENERIC_HVP.find((h) => h.id === id);
 }
 
+// Auto-numbered unit names: the first unit of a ship class gets the ship's
+// own name, the second gets "Ship Name 2", and so on. Computed once in fleet
+// order so the roster, HVP carrier dropdown, and print/play views all agree
+// on the same numbering. A player-set custom name always overrides this.
+function unitDisplayNames(units: FleetUnit[], faction: Faction | undefined, customs: Faction[]): Map<string, string> {
+  const names = new Map<string, string>();
+  const seen = new Map<string, number>();
+  for (const u of units) {
+    const r = resolveShip(u.shipClassId, faction, customs);
+    const shipName = r?.ship.name ?? u.shipClassId;
+    const count = (seen.get(u.shipClassId) ?? 0) + 1;
+    seen.set(u.shipClassId, count);
+    names.set(u.id, count === 1 ? shipName : `${shipName} ${count}`);
+  }
+  return names;
+}
+
 export function listTotals(list: SavedList, customs: Faction[]): { total: number; remaining: number } {
   const faction = findFaction(list.fleet.factionId, customs);
   let total = 0;
@@ -626,90 +643,6 @@ function catalogChart(faction: Faction, stat: ChartStatKey): string {
     .join("")}</div>`;
 }
 
-// The unit configuration modal (Dropfleet-style): one enclosed surface that
-// groups everything about a unit, opened on demand from its roster row.
-function unitModal(state: AppState, list: SavedList, faction: Faction | undefined, customs: Faction[]): string {
-  const m = state.ui.modal;
-  if (!m || m.kind !== "unit") return "";
-  const u = list.fleet.units.find((x) => x.id === m.unitId);
-  if (!u) return "";
-  const r = resolveShip(u.shipClassId, faction, customs);
-  const ship = r?.ship;
-  const shipName = ship?.name ?? u.shipClassId;
-  const maxCount = list.freePlay || list.mode === "hypergrowth" ? 99 : ship?.mass === 3 ? 1 : 3;
-  const cost = ship ? ship.cost * u.count : 0;
-  const shipNameInputs = Array.from({ length: u.count })
-    .map(
-      (_, i) =>
-        `<input class="ship-name-input" type="text" value="${escapeHtml(u.shipNames?.[i] ?? "")}" placeholder="Ship ${i + 1}" data-action="ship-name" data-unit="${u.id}" data-index="${i}" />`,
-    )
-    .join("");
-  const carryToggles = list.fleet.hvp
-    .map((sel, i) => {
-      const def = hvpById(sel.hvpId, faction);
-      const on = sel.assignedUnitId === u.id;
-      return `<button class="carry-toggle ${on ? "on" : ""}" data-action="toggle-carry" data-unit="${u.id}" data-index="${i}">${icon(on ? "check" : "plus", 14)} ${escapeHtml(def?.name ?? sel.hvpId)}</button>`;
-    })
-    .join("");
-
-  return `
-  <div class="modal-root">
-    <div class="modal-backdrop" data-action="close-modal"></div>
-    <div class="modal-panel" role="dialog" aria-modal="true" aria-label="Unit configuration">
-      <header class="modal-header">
-        <h2 class="modal-title">Unit</h2>
-        <button class="modal-close" data-action="close-modal" aria-label="Close">${icon("close", 18)}</button>
-      </header>
-      <div class="modal-body">
-        <label class="modal-field">Unit name
-          <input class="modal-name" type="text" value="${escapeHtml(u.name ?? "")}" placeholder="${escapeHtml(shipName)} unit" data-action="unit-name" data-unit="${u.id}" />
-        </label>
-        ${
-          ship
-            ? `<div class="modal-spec ${ship.image ? "has-art" : ""}">
-                <div class="spec-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" />` : massGlyph(ship.mass, 30)}</div>
-                <div class="spec-body">
-                  <p class="spec-name">${escapeHtml(ship.name)}<span class="spec-cost">${credits(ship.cost)} / ship</span></p>
-                  <p class="ship-stats">${statChips(ship)}</p>
-                  <p class="ship-weapons"><span class="slot-label">${icon("arc-primary", 13, "slot-arc")} Primary</span> ${primarySlotText(ship)}</p>
-                  <p class="ship-weapons"><span class="slot-label">${icon("arc-aux", 13, "slot-arc")} Auxiliary</span> ${auxSlotText(ship)}</p>
-                </div>
-              </div>`
-            : '<p class="issue-error">This ship class is not in the faction roster.</p>'
-        }
-        <div class="modal-grid">
-          <div class="modal-field">
-            <span class="control-label">Ships in unit</span>
-            <span class="stepper big">
-              <button data-action="unit-count" data-unit="${u.id}" data-delta="-1" title="Fewer">${icon("minus", 16)}</button>
-              <span class="stepper-count">${u.count}</span>
-              <button data-action="unit-count" data-unit="${u.id}" data-delta="1" ${u.count >= maxCount ? "disabled" : ""} title="More">${icon("plus", 16)}</button>
-            </span>
-            <span class="modal-sub">Unit cost ${credits(cost)}</span>
-          </div>
-          ${faction?.requiresSpecies && !list.freePlay ? `<div class="modal-field">${speciesSelect(u)}</div>` : ""}
-        </div>
-        <div class="modal-field">
-          <span class="control-label">Ship names</span>
-          <div class="ship-names-panel">${shipNameInputs}</div>
-        </div>
-        ${
-          list.fleet.hvp.length
-            ? `<div class="modal-field">
-                <span class="control-label">Carried personnel</span>
-                <div class="carry-list">${carryToggles}</div>
-                <span class="modal-sub">Personnel ride a unit of Mass 1 or higher.</span>
-              </div>`
-            : ""
-        }
-      </div>
-      <footer class="modal-footer">
-        <button class="bar-btn danger" data-action="remove-unit" data-unit="${u.id}">${icon("trash", 16)} Remove unit</button>
-        <button class="cta-btn" data-action="close-modal">Done</button>
-      </footer>
-    </div>
-  </div>`;
-}
 
 function builderView(state: AppState): string {
   const list = activeList(state);
@@ -760,6 +693,9 @@ function builderView(state: AppState): string {
   // add with. Shown on each option so the picker reads like a live tally.
   const ownedCount = (addId: string) => list.fleet.units.filter((u) => u.shipClassId === addId).length;
 
+  const unitNames = unitDisplayNames(list.fleet.units, faction, customs);
+  const autoUnitName = (unitId: string) => unitNames.get(unitId) ?? "";
+
   // Catalog: one faction in rules play; every faction grouped in Free Play.
   let catalogHtml = "";
   if (list.freePlay) {
@@ -786,8 +722,7 @@ function builderView(state: AppState): string {
   const carrierOptions = (assignedId?: string) =>
     list.fleet.units
       .map((u) => {
-        const r = resolveShip(u.shipClassId, faction, customs);
-        const label = u.name || r?.ship.name || u.shipClassId;
+        const label = u.name || autoUnitName(u.id);
         return `<option value="${u.id}" ${assignedId === u.id ? "selected" : ""}>${escapeHtml(label)}</option>`;
       })
       .join("");
@@ -801,30 +736,15 @@ function builderView(state: AppState): string {
       </div>`;
     if (isChosen) {
       const sel = list.fleet.hvp[selIndex]!;
-      // The chosen row must stay exactly the height of the option row it just
-      // was - clicking Add can never itself shift anything below it. Rename
-      // and carrier assignment live in a popover (position: absolute), the
-      // same pattern as every other picker in this app, instead of growing
-      // the row inline.
+      // The chosen row has a simple dropdown to assign a carrier.
       return `
       <article class="personnel-row chosen">
         ${body}
         <span class="personnel-actions">
-          <details class="personnel-config" data-hvp="${h.id}">
-            <summary class="ghost-btn ${sel.assignedUnitId || sel.customName ? "is-set" : ""}" title="Rename or assign a carrier">${icon("pencil", 15)}</summary>
-            <div class="personnel-config-panel">
-              <label class="inline-field">Name
-                <input class="personnel-rename" type="text" value="${escapeHtml(sel.customName ?? "")}"
-                  placeholder="Name this person" data-action="hvp-name" data-index="${selIndex}" />
-              </label>
-              <label class="inline-field">Carried by
-                <select data-action="hvp-assign" data-index="${selIndex}">
-                  <option value="">Not assigned yet</option>
-                  ${carrierOptions(sel.assignedUnitId)}
-                </select>
-              </label>
-            </div>
-          </details>
+          <select class="personnel-assign" data-action="hvp-assign" data-index="${selIndex}" title="Assign a carrier">
+            <option value="">Not assigned</option>
+            ${carrierOptions(sel.assignedUnitId)}
+          </select>
           <button class="ghost-btn danger" data-action="remove-hvp" data-index="${selIndex}" title="Remove ${escapeHtml(h.name)}">${icon("close", 16)}</button>
         </span>
       </article>`;
@@ -844,28 +764,28 @@ function builderView(state: AppState): string {
     : GENERIC_HVP.map((h) => personnelCard(h, "Generic")).join("");
 
   // Roster units.
-  // Compact, clickable unit rows. Deep editing happens in the unit modal, so
-  // the roster stays a legible manifest (uniform connectedness: one row, one
-  // unit) and adding stays a one-click act (paradox of the active user).
+  // Compact rows with inline controls (ship count stepper, HVP carrier assignment).
   const unitRows = list.fleet.units
     .map((u) => {
       const r = resolveShip(u.shipClassId, faction, customs);
-      const shipName = r?.ship.name ?? u.shipClassId;
+      const unitName = autoUnitName(u.id);
       const cost = r ? r.ship.cost * u.count : 0;
       const carried = list.fleet.hvp.filter((h) => h.assignedUnitId === u.id).length;
       const maxCount = list.freePlay || list.mode === "hypergrowth" ? 99 : r?.ship.mass === 3 ? 1 : 3;
       const wp = r ? primarySlotText(r.ship).replace(/<br \/>/g, ", ") : "";
       const wa = r ? auxSlotText(r.ship).replace(/<br \/>/g, ", ") : "";
       const weapons = r ? [wp === "None" ? "" : wp, wa === "None" ? "" : wa].filter(Boolean).join("; ") : "";
+      const showSpecies = faction?.requiresSpecies && !list.freePlay;
       return `
       <div class="roster-unit ${r ? "" : "unresolved"}">
-        <button class="ru-open" data-action="open-unit" data-unit="${u.id}" title="Rename, name ships, assign personnel">
+        <span class="ru-id">
           <span class="roster-unit-glyph">${r ? massGlyph(r.ship.mass, 22) : icon("warning", 20)}</span>
           <span class="ru-main">
-            <span class="ru-name">${escapeHtml(u.name || `${shipName} unit`)}</span>
-            <span class="ru-sub">${escapeHtml(shipName)}${r && list.freePlay ? ` <span class="muted">${escapeHtml(r.owner.name)}</span>` : ""}${carried ? ` <span class="ru-carry">${icon("personnel", 12)}${carried}</span>` : ""}</span>
+            <input class="unit-name-input" type="text" value="${escapeHtml(u.name ?? "")}" placeholder="${escapeHtml(unitName)}" data-action="unit-name" data-unit="${u.id}" />
+            ${carried || (r && list.freePlay) ? `<span class="ru-sub">${r && list.freePlay ? `<span class="muted">${escapeHtml(r.owner.name)}</span>` : ""}${carried ? ` <span class="ru-carry">${icon("personnel", 12)}${carried}</span>` : ""}</span>` : ""}
+            ${showSpecies ? speciesSelect(u) : ""}
           </span>
-        </button>
+        </span>
         ${
           r
             ? `<div class="ru-details">
@@ -1038,7 +958,6 @@ function builderView(state: AppState): string {
       </section>
     </div>
   </main>
-  ${unitModal(state, list, faction, customs)}
   ${toast(state)}
   ${footer()}`;
 }
@@ -1060,17 +979,18 @@ function printView(state: AppState): string {
   // boxes to tick off as damage lands.
   const hpBoxes = (hp: number) => `<span class="pr-hp">${Array.from({ length: hp }, () => '<span class="pr-hp-box"></span>').join("")}</span>`;
 
+  const unitNames = unitDisplayNames(list.fleet.units, faction, customs);
+
   // One continuous unit-row table, in the manner of Army Forge / Infinity Army
   // roster printouts: every unit is one scannable row with stat columns, and
-  // per-unit annotations (species, ship names, carried personnel) fold into a
-  // quiet second line under the unit name rather than their own boxes.
+  // per-unit annotations (species, carried personnel) fold into a quiet
+  // second line under the unit name rather than their own boxes.
   const unitRows = list.fleet.units
     .map((u, i) => {
       const r = resolveShip(u.shipClassId, faction, customs);
       if (!r) return "";
       const ship = r.ship;
-      const title = u.name || `${ship.name} unit`;
-      const shipNames = (u.shipNames ?? []).filter(Boolean);
+      const title = u.name || unitNames.get(u.id) || ship.name;
       const carried = list.fleet.hvp
         .filter((h) => h.assignedUnitId === u.id)
         .map((h) => {
@@ -1079,7 +999,6 @@ function printView(state: AppState): string {
         });
       const notes = [
         u.species ? `Species: ${u.species}` : "",
-        shipNames.length ? `Ships: ${shipNames.join(", ")}` : "",
         carried.length ? `Carrying: ${carried.join("; ")}` : "",
       ]
         .filter(Boolean)
@@ -1129,7 +1048,7 @@ function printView(state: AppState): string {
       const r = resolveShip(u.shipClassId, faction, customs);
       if (!r) return "";
       const ship = r.ship;
-      const title = u.name || `${ship.name} unit`;
+      const title = u.name || unitNames.get(u.id) || ship.name;
       const carried = list.fleet.hvp
         .filter((h) => h.assignedUnitId === u.id)
         .map((h) => {

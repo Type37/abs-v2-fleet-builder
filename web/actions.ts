@@ -433,12 +433,6 @@ function handleClick(e: MouseEvent): void {
       );
       break;
     }
-    case "open-unit": {
-      const unitId = target.dataset["unit"];
-      if (!unitId) return;
-      store.setState((s) => ({ ...s, ui: { ...s.ui, modal: { kind: "unit", unitId } } }));
-      break;
-    }
     case "close-modal": {
       store.setState((s) => ({ ...s, ui: { ...s.ui, modal: undefined } }));
       break;
@@ -521,14 +515,6 @@ function handleClick(e: MouseEvent): void {
           };
         }),
       );
-      break;
-    }
-    case "toggle-ship-names": {
-      const unitId = target.dataset["unit"];
-      store.setState((s) => ({
-        ...s,
-        ui: { ...s.ui, openShipNames: s.ui.openShipNames === unitId ? undefined : unitId },
-      }));
       break;
     }
     case "add-hvp": {
@@ -1123,24 +1109,6 @@ function handleChange(e: Event): void {
       );
       break;
     }
-    case "ship-name": {
-      if (!listId) return;
-      const unitId = target.dataset["unit"];
-      const index = Number(target.dataset["index"]);
-      store.setState((s) =>
-        updateFleet(s, listId, (f) => ({
-          ...f,
-          units: f.units.map((u) => {
-            if (u.id !== unitId) return u;
-            const shipNames = [...(u.shipNames ?? [])];
-            while (shipNames.length < u.count) shipNames.push("");
-            shipNames[index] = inputValue;
-            return { ...u, shipNames };
-          }),
-        })),
-      );
-      break;
-    }
     case "unit-species": {
       if (!listId) return;
       const unitId = target.dataset["unit"];
@@ -1151,17 +1119,6 @@ function handleChange(e: Event): void {
           units: f.units.map((u) =>
             u.id === unitId ? { ...u, species: species === "" ? undefined : species } : u,
           ),
-        })),
-      );
-      break;
-    }
-    case "hvp-name": {
-      if (!listId) return;
-      const index = Number(target.dataset["index"]);
-      store.setState((s) =>
-        updateFleet(s, listId, (f) => ({
-          ...f,
-          hvp: f.hvp.map((h, i) => (i === index ? { ...h, customName: inputValue || undefined } : h)),
         })),
       );
       break;
