@@ -612,12 +612,12 @@ var e=Object.defineProperty,t=(t,n)=>{let r={};for(var i in t)e(r,i,{get:t[i],en
 
         ${t.freePlay?`<p class="mf-inspect freeplay">Free Play. The rules inspector is off.</p>`:l.length===0?`<p class="mf-inspect pass">${I(`check`,15)} Legal and ready for the table.</p>`:`<div class="mf-inspect fail"><span class="mf-inspect-h">${l.length} to resolve</span><ul class="issue-list">${l.map(br).join(``)}</ul></div>`}
 
-        <a class="mf-play-cta" href="#/play/${t.id}">${I(`flag`,18)} Enter Play Mode</a>
-
         <details class="mf-notes" ${t.fleet.notes?`open`:``}>
           <summary>Notes${t.fleet.notes?` <span class="mf-h-count">${t.fleet.notes.trim().length} chars</span>`:``}</summary>
           <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${P(t.fleet.notes??``)}</textarea>
         </details>
+
+        <a class="mf-play-cta" href="#/play/${t.id}">${I(`flag`,18)} Enter Play Mode</a>
       </section>
 
       <section class="mf-yard">
