@@ -1,5 +1,5 @@
 import type { Era, Faction, FleetUnit, GameMode, Hvp, ShipClass, Weapon } from "../src/types.ts";
-import { ALLIANCE_SPECIES, DAMAGE_BY_DIE } from "../src/types.ts";
+import { ALLIANCE_SPECIES, DAMAGE_BY_DIE, MODE_BUILDER_SHAPE } from "../src/types.ts";
 import { validateFleet, type ValidationIssue } from "../src/validation.ts";
 import { GENERIC_HVP } from "../src/data/index.ts";
 import { JUNKSPACE_SHIPS } from "../src/data/junkspace.ts";
@@ -51,7 +51,7 @@ const TRAINING_GUIDES: Partial<Record<GameMode, { intro: string; steps: GuideSte
     steps: [
       {
         title: "Set up the table",
-        text: 'Clear a play area roughly 4 feet by 3 feet. Pick or roll a D6 for a Central Objective and place it in the middle of the board: 1-2 a ComSat, 3-4 a Facility, 5-6 a Planetoid. Each player deploys 3 Jump Points: the flank points 24" apart and 15" in from each short edge, the central point 5" from your own edge.',
+        text: 'Clear a play area roughly 4 feet by 3 feet. Pick or roll a D6 for a Central Objective and place it in the middle of the board: 1-2 a ComSat, 3-4 a Facility, 5-6 a Planetoid. Each player deploys 3 Jump Points: the flank points 5" in from your own edge, out at the table\'s side edges; the central point 15" in from your own edge, on the centreline.',
         diagram: "deployment",
       },
       {
@@ -149,6 +149,32 @@ function trainingGuide(mode: GameMode): string {
   </section>`;
 }
 
+// A dense, fully-expanded print rendering of the same guide content used by
+// trainingGuide() above - full sentences in a numbered list, not collapsible
+// chips, so it reads as an at-table reference sheet rather than a UI widget.
+function trainingPrintBlocks(mode: GameMode): string {
+  const g = TRAINING_GUIDES[mode];
+  if (!g) return "";
+  const stepItems = g.steps
+    .map((s) => `<li><b>${escapeHtml(s.title)}:</b> ${escapeHtml(s.text)}</li>`)
+    .join("");
+  const noteItems = g.notes
+    .map((s) => `<li><b>${escapeHtml(s.title)}:</b> ${escapeHtml(s.text)}</li>`)
+    .join("");
+  return `
+    <p class="print-guide-intro">${escapeHtml(g.intro)}</p>
+    <div class="ref-block">
+      <ol class="ref-list ref-list-numbered">${stepItems}</ol>
+    </div>
+    ${
+      noteItems
+        ? `<h3 class="sheet-section">Good to know</h3>
+           <p class="print-note" style="padding:0 0 8px">Rules that apply throughout the game, not a step you take once.</p>
+           <div class="ref-block"><ul class="ref-list">${noteItems}</ul></div>`
+        : ""
+    }`;
+}
+
 // ---------------------------------------------------------------------------
 // Composite ship class ids: Free Play units may borrow from any faction, so
 // their shipClassId is stored as "factionId/shipId".
@@ -244,7 +270,7 @@ function footer(): string {
     <div class="gif-inner">
       <span class="gif-title">A Billion Suns</span>${sep}
       <span>by <a href="https://planetsmashergames.com/a-billion-suns/" target="_blank" rel="noopener">Mike Hutchinson</a>, Osprey Games</span>${sep}
-      <a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">Quick Reference</a>${sep}
+      <a href="#/reference">Quick Reference</a>${sep}
       <span class="gif-builder">Fleet builder by <a class="wl-sig" href="https://linktr.ee/warlore" target="_blank" rel="noopener">WarLore</a></span>${sep}
       <a href="mailto:warlore1@outlook.com">Send Feedback</a>${sep}
       <a href="https://github.com/Type37/a-billion-suns-shipyard" target="_blank" rel="noopener">Source on GitHub</a>${sep}
@@ -586,7 +612,7 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
   // The "owned" count is an absolutely-positioned badge on the glyph, so it
   // appears when you add a unit without reflowing (and shifting) the catalog.
   return `
-  <article class="ship-row is-option ${ship.image ? "has-art" : ""}" data-action="add-unit" data-ship="${addId}" role="button" title="Add a unit of ${escapeHtml(ship.name)}">
+  <article class="ship-row is-option ${ship.image ? "has-art" : ""}" data-action="add-unit" data-ship="${addId}" role="button" tabindex="0" title="Add a unit of ${escapeHtml(ship.name)}">
     <div class="ship-row-glyph">${ship.image ? `<img class="ship-thumb" src="${ship.image}" alt="" loading="lazy" />` : massGlyph(ship.mass, 22)}${owned > 0 ? `<span class="owned-badge" title="${owned} in fleet">${owned}</span>` : ""}</div>
     <div class="ship-row-body">
       <div class="ship-row-head">
@@ -762,7 +788,7 @@ function builderView(state: AppState): string {
       return `<article class="personnel-row is-full">${body}<span class="add-cue is-off">Full</span></article>`;
     }
     return `
-    <article class="personnel-row is-option" data-action="add-hvp" data-hvp="${h.id}" role="button" title="Add ${escapeHtml(h.name)}">
+    <article class="personnel-row is-option" data-action="add-hvp" data-hvp="${h.id}" role="button" tabindex="0" title="Add ${escapeHtml(h.name)}">
       ${body}
       <span class="add-cue">${icon("plus", 15)}<span>Add</span></span>
     </article>`;
@@ -1009,6 +1035,11 @@ function printView(state: AppState): string {
   const { total } = listTotals(list, customs);
   const era = MODE_ERA[list.mode];
   const opts = state.ui.print ?? { format: "roster" as const, trackers: false };
+  // Shipyard-shape modes (Hypergrowth, Management Training) don't bring a
+  // fixed pre-built roster to the table (p.122): the printed sheet is a
+  // shopping catalogue of what's in the Shipyard, requisitioned piecemeal
+  // over the game, not a list of units already committed to the fight.
+  const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
 
   // A ship's silhouette is its starting HP; the tracker prints that many empty
   // boxes to tick off as damage lands.
@@ -1021,7 +1052,7 @@ function printView(state: AppState): string {
   // per-unit annotations (species, carried personnel) fold into a quiet
   // second line under the unit name rather than their own boxes.
   const unitRows = list.fleet.units
-    .map((u, i) => {
+    .map((u) => {
       const r = resolveShip(u.shipClassId, faction, customs);
       if (!r) return "";
       const ship = r.ship;
@@ -1038,9 +1069,18 @@ function printView(state: AppState): string {
       ]
         .filter(Boolean)
         .join(". ");
+      // One hull-tracker box group per ship in the stack, so a 4-ship unit gets
+      // four separately-trackable damage tallies, not one shared box.
+      const trackCell = opts.trackers
+        ? `<td class="pr-track">${Array.from({ length: u.count }, () => `<span class="pr-track-ship">${hpBoxes(ship.silhouette)}</span>`).join("")}</td>`
+        : "";
+      // Shipyard modes: one checkbox per ship, ticked off as each is
+      // requisitioned into play over the course of the game (p.122).
+      const reqCell = isShipyard
+        ? `<td class="pr-req">${Array.from({ length: u.count }, () => `<span class="pr-req-box"></span>`).join("")}</td>`
+        : "";
       return `
       <tr>
-        <td class="pr-n">${i + 1}</td>
         <td class="pr-unit">
           <span class="pr-unit-name">${escapeHtml(title)}</span>
           <span class="pr-unit-class">${escapeHtml(ship.name)}${list.freePlay ? `, ${escapeHtml(r.owner.name)}` : ""}</span>
@@ -1053,24 +1093,28 @@ function printView(state: AppState): string {
         <td class="pr-num">${ship.shields}</td>
         <td class="pr-weap">${primarySlotText(ship)}</td>
         <td class="pr-weap">${auxSlotText(ship)}</td>
+        <td class="pr-num pr-cost">${credits(ship.cost)}</td>
         <td class="pr-num pr-cost">${credits(ship.cost * u.count)}</td>
+        ${reqCell}
+        ${trackCell}
       </tr>`;
     })
     .join("");
 
+  const rosterColCount = 9 + (isShipyard ? 1 : 0) + (opts.trackers ? 1 : 0);
   const unitBlocks = unitRows
     ? `
     <div class="pr-scroll">
     <table class="print-roster">
       <thead>
         <tr>
-          <th></th><th>Unit</th><th>Ships</th><th>Mass</th><th>Thrust</th><th>Sil.</th><th>Shields</th>
-          <th>Primary weapons</th><th>Auxiliary weapons</th><th>Cost</th>
+          <th>${isShipyard ? "Ship class" : "Unit"}</th><th>${isShipyard ? "In Shipyard" : "Ships"}</th><th>Mass</th><th>Thrust</th><th>Sil.</th><th>Shields</th>
+          <th>Primary weapons</th><th>Auxiliary weapons</th><th>Cost each</th><th>Total</th>${isShipyard ? "<th>Requisitioned</th>" : ""}${opts.trackers ? "<th>Hull tracker</th>" : ""}
         </tr>
       </thead>
       <tbody>${unitRows}</tbody>
       <tfoot>
-        <tr><td colspan="9" class="pr-total-label">Total</td><td class="pr-num pr-cost">${credits(total)}</td></tr>
+        <tr><td colspan="9" class="pr-total-label">Total</td><td class="pr-num pr-cost">${credits(total)}</td>${Array.from({ length: rosterColCount - 9 }, () => "<td></td>").join("")}</tr>
       </tfoot>
     </table>
     </div>`
@@ -1137,8 +1181,10 @@ function printView(state: AppState): string {
   // The project's single interpunct lives in this subtitle, and its single
   // em-dash lives in the attribution line below. Nowhere else, ever.
   const subtitle = `${escapeHtml(faction?.name ?? "Mixed forces")}${era ? ` · ${era}` : ""}`;
+  const guideAvailable = !!TRAINING_GUIDES[list.mode];
 
   return `
+  ${topbar()}
   <div class="print-page">
     <div class="print-toolbar">
       <a class="bar-btn" href="#/list/${list.id}">Back to the builder</a>
@@ -1146,6 +1192,7 @@ function printView(state: AppState): string {
         <span class="segment" role="group" aria-label="Layout">
           <button class="${opts.format === "roster" ? "selected" : ""}" data-action="print-format" data-format="roster">Roster</button>
           <button class="${opts.format === "cards" ? "selected" : ""}" data-action="print-format" data-format="cards">Cards</button>
+          ${guideAvailable ? `<button class="${opts.format === "guide" ? "selected" : ""}" data-action="print-format" data-format="guide">Steps</button>` : ""}
         </span>
         <label class="print-toggle"><input type="checkbox" data-action="print-trackers" ${opts.trackers ? "checked" : ""} /> Trackers</label>
         <button class="bar-btn" data-action="copy-list-text" data-id="${list.id}">${icon("duplicate", 15)} Copy as text</button>
@@ -1178,8 +1225,11 @@ function printView(state: AppState): string {
 
       ${trackerStrip}
 
-      <h2 class="sheet-section">Units</h2>
-      ${(opts.format === "cards" ? cardBlocks : unitBlocks) || '<p class="print-note">No units.</p>'}
+      ${
+        opts.format === "guide" && guideAvailable
+          ? `<h2 class="sheet-section">How to play</h2>${trainingPrintBlocks(list.mode)}`
+          : `<h2 class="sheet-section">${isShipyard ? "Shipyard" : "Units"}</h2>${(opts.format === "cards" ? cardBlocks : unitBlocks) || '<p class="print-note">No units.</p>'}`
+      }
 
       <h2 class="sheet-section">High-Value Personnel</h2>
       ${hvpBlocks || '<p class="print-note">None selected.</p>'}
@@ -1203,6 +1253,99 @@ function printView(state: AppState): string {
       </table>`;
       })()}
       ${list.fleet.notes ? `<section class="print-notes"><h3 class="sheet-section">Notes</h3><p>${escapeHtml(list.fleet.notes)}</p></section>` : ""}
+    </article>
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Quick Reference (printable in-app sheet, verbatim from the rulebook's own
+// Quick Reference chapter, p.219-222 - not a paraphrase)
+// ---------------------------------------------------------------------------
+
+function referenceView(): string {
+  const rule = (title: string, items: string[]) => `
+      <div class="ref-block">
+        <h3 class="sheet-section">${title}</h3>
+        <ul class="ref-list">${items.map((t) => `<li>${t}</li>`).join("")}</ul>
+      </div>`;
+
+  return `
+  ${topbar()}
+  <div class="print-page">
+    <div class="print-toolbar">
+      <a class="bar-btn" href="#/">${icon("chevronRight", 14)} Back</a>
+      <button class="cta-btn" data-action="do-print">${icon("print", 17)} Print this document</button>
+    </div>
+
+    <article class="sheet">
+      <header class="sheet-head">
+        <div class="sheet-title-block">
+          <h1 class="sheet-title">Quick Reference</h1>
+          <p class="sheet-subtitle">A Billion Suns, Second Edition &middot; p.219&ndash;222</p>
+        </div>
+      </header>
+
+      <div class="ref-columns">
+        <div class="ref-block">
+          <h3 class="sheet-section">Round Structure</h3>
+          <ol class="ref-list ref-list-numbered">
+            <li><b>Command Phase:</b> Gain CMD tokens (number set by your faction). Make an Initiative Check: the winner picks who has Initiative. Each loser gets +1 CMD token.</li>
+            <li><b>Jump Phase:</b> Take turns. On your turn: Open a Jump Point, Jump In a unit (deploy within 6&quot; of a friendly Jump Point), or Pass (no further turns). Ends when all players have passed.</li>
+            <li><b>Tactical Phase:</b> Take turns. Drag to Select a battlegroup and activate it, completing each activation step for every unit before the next. Give each unit an Activated token. Ends when all units have activated.</li>
+            <li><b>End Phase:</b> Check mission scoring. Clear Activated tokens. Discard unused CMD tokens. Begin a new round.</li>
+          </ol>
+        </div>
+
+        ${rule("Initiative Check", [
+          "Each player rolls a number of D6 equal to their faction&rsquo;s Initiative value.",
+          "Each <b>2 or 3</b> is one success; each <b>1</b> is two successes.",
+          "Most successes wins and chooses who holds Initiative this round. Ties: lowest dice sum wins, then clockwise from the last holder.",
+          "Every player who did not win gains +1 CMD token.",
+        ])}
+
+        <div class="ref-block">
+          <h3 class="sheet-section">Activations (per unit)</h3>
+          <ol class="ref-list ref-list-numbered">
+            <li><b>Movement Step:</b> Pivot any amount, then move ahead up to the Thrust value.</li>
+            <li><b>Passive Attacks Step:</b> Suffer Passive Attacks from enemies in range and arc.</li>
+            <li><b>Action Step:</b> Take one Action.</li>
+          </ol>
+        </div>
+
+        ${rule("Actions", [
+          "<b>Open Fire:</b> Attack with all weapon systems. Roll equal to or under Silhouette to hit. Target rolls Shield saves against the dice that hit. Assign unsaved hits to already-damaged ships first.",
+          "<b>Scan:</b> Scan a single object or ship within 3&quot;, or collect any or all Free-floating asset tokens within 3&quot;.",
+          "<b>Scramble Squadrons:</b> Deploy one carried Mass 0 unit wholly within 6&quot;. It takes one action, then gets an Activated token.",
+          "<b>Jump Hop:</b> If all ships in the unit are within 6&quot; of a friendly Jump Point, remove them and set them up within 6&quot; of a friendly Jump Point in another Sector.",
+          "<b>Jump Out:</b> If all ships are within 6&quot; of a friendly Jump Point, remove them and place them in your Reserves.",
+          "<b>Resupply</b> (Utility Ships): Select a friendly Mass 1&ndash;3 ship. Until the end of the round it counts as +1 Mass for Blockading, up to a maximum of its own Mass.",
+        ])}
+
+        ${rule("Commands", [
+          "<b>All Hands</b> (1 CMD): After a friendly unit takes its first action, spend 1 CMD to take a second, different action with it.",
+          "<b>Executive Oversight</b> (1 CMD): Re-roll one attack die, initiative die, or saving throw.",
+          "<b>Power to Engines</b> (1 CMD): At the start of a unit&rsquo;s movement step, move twice this step (pivot and move both times).",
+          "<b>Power to Weapons</b> (1 CMD): Before rolling to attack, subtract 1 from each attack die (minimum 1) for this Salvo. Raises the chance of criticals; does not prevent duds.",
+          "<b>Power to Shields</b> (1 CMD): Before rolling saves (Shields 1+), add 1 to the unit&rsquo;s Shields value for this Salvo.",
+          "<b>Red Alert</b> (1 CMD): A friendly ship without an Activated token that would be destroyed is not; it regains 1HP. At the end of its next activation it drops to 0HP (no second Red Alert), unless it jumped out.",
+          "<b>Requisition</b> (1 CMD, Hypergrowth): On your Jump In turn, form a new unit from Shipyard ships, pay their cost in Credits, and jump them in as if from Reserves.",
+        ])}
+
+        ${rule("Rules you might forget", [
+          "<b>Unit Coherence:</b> ships stay within 6&quot; of all other ships in their unit.",
+          "<b>Drag to Select:</b> a lead unit plus unactivated units within 6&quot; of it, Combined Mass 10 or less.",
+          "<b>Squadron Capacity:</b> a unit carries Squadrons up to twice its Combined Mass.",
+          "<b>Attack Dice Damage:</b> D6 = 1, D8 = 2, D10 = 3, D12 = 5.",
+          "<b>Arcs:</b> Primary 45&deg; front; Auxiliary 180&deg; front; Facilities 360&deg; (passive attack all in range).",
+          "<b>Explosion Check:</b> roll a D6; equal to or under the ship&rsquo;s Silhouette and it explodes, hitting all units within 3&quot; with a D6 attack (1 damage per hit).",
+          "<b>Easy Target:</b> a unit that moved under 3&quot; and did not Jump; enemies may re-roll attack dice against it.",
+          "<b>Inertial Strain:</b> if any single pivot is over 90&deg;, the ship cannot make Primary attacks.",
+          "<b>Escort / Blockade:</b> greatest Combined Mass within 6&quot; (tie-break: most ships within 6&quot;).",
+          "<b>Gravity Well:</b> Jump Points cannot be placed, and units cannot jump, within 9&quot; of a Planetoid.",
+        ])}
+      </div>
+
+      <p class="print-note">Unofficial player aid for A Billion Suns, Second Edition, by Mike Hutchinson (Osprey Games). Page references are to the rulebook. Not affiliated with the publisher.</p>
     </article>
   </div>`;
 }
@@ -1359,7 +1502,14 @@ function foundryEditView(state: AppState, factionId: string): string {
   ${topbar()}
   <main class="foundry-main">
     <p class="breadcrumb"><a href="#/foundry">Custom Rules</a> / ${escapeHtml(f.name)}</p>
-    <h1 class="page-title">${escapeHtml(f.name)}</h1>
+    <div class="cf-title-row">
+      <h1 class="page-title">${escapeHtml(f.name)}</h1>
+      ${
+        f.ships.length
+          ? `<button class="bar-btn" data-action="open-new-fleet-with-faction" data-faction="${f.id}">${icon("flag", 14)} Build a fleet with this faction</button>`
+          : ""
+      }
+    </div>
 
     <section class="cf-section">
       <h2 class="panel-title">Identity</h2>
@@ -1761,10 +1911,17 @@ function shipsView(state: AppState): string {
       }
       g.rows.push(r);
     }
+    // A build-with-this-faction deep link into the actual builders: Junkspace
+    // ships route to Solo (there is no fleet list for them), everyone else to
+    // the New Fleet modal, pre-selected.
+    const buildLink = (g: { key: string; name: string }) =>
+      g.key === "__junkspace__"
+        ? `<a class="cg-build" href="#/solo">${icon("book", 13)} Build an outfit</a>`
+        : `<button class="cg-build" data-action="open-new-fleet-with-faction" data-faction="${g.key}">${icon("flag", 13)} Build a fleet</button>`;
     bodyHtml = groups
       .map(
         (g) => `
-        <tr class="comp-group"><td colspan="8"><span class="cg-name">${escapeHtml(g.name)}</span><span class="cg-era">${escapeHtml(g.era)}</span><span class="cg-count">${g.rows.length} ${g.rows.length === 1 ? "ship" : "ships"}</span></td></tr>
+        <tr class="comp-group"><td colspan="8"><span class="cg-name">${escapeHtml(g.name)}</span><span class="cg-era">${escapeHtml(g.era)}</span><span class="cg-count">${g.rows.length} ${g.rows.length === 1 ? "ship" : "ships"}</span>${buildLink(g)}</td></tr>
         ${g.rows.map((r) => `<tr><td class="comp-name">${escapeHtml(r.name)}</td>${shipCells(r)}</tr>`).join("")}`,
       )
       .join("");
@@ -1856,6 +2013,8 @@ export function render(state: AppState): string {
         return builderView(state);
       case "print":
         return printView(state);
+      case "reference":
+        return referenceView();
       case "foundry":
         return state.route.factionId ? foundryEditView(state, state.route.factionId) : foundryListView(state);
       case "solo":

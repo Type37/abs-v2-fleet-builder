@@ -131,33 +131,38 @@ export function tacticalDiagram(kind: "deployment" | "arcs"): string {
     // Schematic, not a scale drawing - the numbers are the real rule values,
     // annotated onto an illustrative layout so you know which distance is
     // which before you measure it out for real at the table.
+    // Per the rulebook's own setup diagram (p.62): flank points sit at the
+    // table's side edges (X = 24", i.e. half the 48"-wide table) and are only
+    // Z = 5" onto the table from your own edge; the central point is further
+    // in, at Y = 15" from your own edge, on the centreline. (A prior version
+    // of this diagram had Z and Y swapped - fixed here against the book art.)
     return `
-    <svg class="tut-diagram" viewBox="0 0 320 232" role="img" aria-label="Table setup: a Central Objective in the middle, three Jump Points along each player's own edge - flank points 15 inches in from each short edge, the central point 5 inches from your own edge">
+    <svg class="tut-diagram" viewBox="0 0 320 232" role="img" aria-label="Table setup: a Central Objective in the middle, three Jump Points along each player's own edge - flank points 5 inches in from your own edge at the table's side edges, the central point 15 inches in from your own edge on the centreline">
       <rect x="4" y="16" width="312" height="212" fill="none" stroke="currentColor" stroke-width="2"/>
       <text x="160" y="12" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" opacity="0.65">OPPONENT'S EDGE</text>
-      <circle cx="60" cy="26" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
-      <circle cx="160" cy="51" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
-      <circle cx="260" cy="26" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="30" cy="45" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="160" cy="104" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="290" cy="45" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
       <circle cx="160" cy="122" r="11" fill="var(--red, #fc3d21)"/>
       <text x="160" y="152" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor">CENTRAL OBJECTIVE</text>
-      <circle cx="60" cy="218" r="7" fill="var(--blue, #0b3d91)" stroke="currentColor" stroke-width="2"/>
-      <circle cx="160" cy="193" r="7" fill="var(--blue, #0b3d91)" stroke="currentColor" stroke-width="2"/>
-      <circle cx="260" cy="218" r="7" fill="var(--blue, #0b3d91)" stroke="currentColor" stroke-width="2"/>
+      <circle cx="30" cy="199" r="7" fill="var(--blue, #0b3d91)" stroke="currentColor" stroke-width="2"/>
+      <circle cx="160" cy="140" r="7" fill="var(--blue, #0b3d91)" stroke="currentColor" stroke-width="2"/>
+      <circle cx="290" cy="199" r="7" fill="var(--blue, #0b3d91)" stroke="currentColor" stroke-width="2"/>
       <text x="160" y="228" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" opacity="0.65">YOUR EDGE</text>
-      <!-- dimension: 15" in from the short edge, to the left flank point -->
+      <!-- dimension: 5" from your edge, to the left flank point -->
       <g opacity="0.6" stroke="currentColor">
-        <line x1="4" y1="205" x2="55" y2="205" stroke-width="1"/>
-        <line x1="4" y1="200" x2="4" y2="210" stroke-width="1"/>
-        <line x1="55" y1="200" x2="55" y2="210" stroke-width="1"/>
+        <line x1="4" y1="211" x2="26" y2="211" stroke-width="1"/>
+        <line x1="4" y1="206" x2="4" y2="216" stroke-width="1"/>
+        <line x1="26" y1="206" x2="26" y2="216" stroke-width="1"/>
       </g>
-      <text x="30" y="200" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor" opacity="0.75">15"</text>
-      <!-- dimension: 5" from your edge, up to the central point -->
+      <text x="15" y="206" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor" opacity="0.75">5"</text>
+      <!-- dimension: 15" from your edge, up to the central point -->
       <g opacity="0.6" stroke="currentColor">
-        <line x1="290" y1="218" x2="290" y2="193" stroke-width="1"/>
-        <line x1="285" y1="218" x2="295" y2="218" stroke-width="1"/>
-        <line x1="285" y1="193" x2="295" y2="193" stroke-width="1"/>
+        <line x1="300" y1="228" x2="300" y2="140" stroke-width="1"/>
+        <line x1="295" y1="228" x2="305" y2="228" stroke-width="1"/>
+        <line x1="295" y1="140" x2="305" y2="140" stroke-width="1"/>
       </g>
-      <text x="304" y="209" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor" opacity="0.75">5"</text>
+      <text x="311" y="187" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor" opacity="0.75" transform="rotate(-90 311 187)">15"</text>
     </svg>`;
   }
   return `

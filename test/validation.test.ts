@@ -245,13 +245,17 @@ test("must select exactly 3 HVP", () => {
   assert.ok(hasCode(validateFleet(four), "HVP_COUNT"));
 });
 
-test("duplicate HVP selection is allowed", () => {
+test("duplicate HVP selection is rejected", () => {
+  // Only one of each HVP type may ride in a fleet (rules p.55-57; the "3 HVP"
+  // are three distinct people). Selecting the same HVP twice is an error.
   const f = fleet({
     factionId: "vyke",
     units: [u("a", "king-crab", 1)],
     hvp: [h("brood-mother", "a"), h("brood-mother", "a"), h("war-singer", "a")],
   });
-  assert.ok(validateFleet(f).valid);
+  const r = validateFleet(f);
+  assert.ok(hasCode(r, "HVP_DUPLICATE"));
+  assert.equal(r.valid, false);
 });
 
 test("HVP from another faction is not available", () => {

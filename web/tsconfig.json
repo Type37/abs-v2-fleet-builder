@@ -8,7 +8,12 @@
     "noEmit": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    // Left OFF for the web layer only (the rules engine in src/ keeps it ON via
+    // the root tsconfig). The UI code pervasively resets optional state fields
+    // with `{ ...s.ui, modal: undefined }`, an idiomatic pattern this flag
+    // fights; enabling it produced ~28 false-positive errors that buried the
+    // real ones. Correctness-critical code lives in src/, where it stays strict.
+    "exactOptionalPropertyTypes": false,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },

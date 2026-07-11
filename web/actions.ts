@@ -31,7 +31,9 @@ function d(sides: number): number {
 
 function rowFor(rows: RollRow[], v: number): RollRow | undefined {
   return rows.find((r) => {
-    const [lo, hi] = r.roll.includes("-") ? r.roll.split("-").map(Number) : [Number(r.roll), Number(r.roll)];
+    const nums = r.roll.includes("-") ? r.roll.split("-").map(Number) : [Number(r.roll)];
+    const lo = nums[0] ?? NaN;
+    const hi = nums[1] ?? lo;
     return v >= lo && v <= hi;
   });
 }
@@ -553,8 +555,9 @@ function handleClick(e: MouseEvent): void {
     case "set-catalog-view": {
       // Clicking the already-active view returns to the plain list, so each
       // button is a real on/off toggle rather than a one-way switch.
+      // "chart" is the only non-list view; anything else (i.e. "list") clears it.
       const view = target.dataset["view"];
-      const next = view === "mass" || view === "chart" ? view : undefined;
+      const next = view === "chart" ? view : undefined;
       store.setState((s) => ({
         ...s,
         ui: { ...s.ui, catalogView: s.ui.catalogView === next ? undefined : next },
@@ -568,7 +571,8 @@ function handleClick(e: MouseEvent): void {
       break;
     }
     case "print-format": {
-      const format = target.dataset["format"] === "cards" ? "cards" : "roster";
+      const raw = target.dataset["format"];
+      const format = raw === "cards" ? "cards" : raw === "guide" ? "guide" : "roster";
       store.setState((s) => ({
         ...s,
         ui: { ...s.ui, print: { format, trackers: s.ui.print?.trackers ?? false } },
@@ -726,6 +730,21 @@ function handleClick(e: MouseEvent): void {
         ...s,
         ui: { ...s.ui, modal: { kind: "new-fleet", era: "Armageddon", limit: 300, showAll: false } },
       }));
+      break;
+    }
+    // Contextual deep-link from the Compendium or Custom Rules: opens the New
+    // Fleet modal (on the Fleets page, where it renders) with this faction and
+    // its era already selected.
+    case "open-new-fleet-with-faction": {
+      const factionId = target.dataset["faction"];
+      if (!factionId) return;
+      const fac = findFaction(factionId, state.customFactions);
+      const era = fac?.era ?? "Armageddon";
+      store.setState((s) => ({
+        ...s,
+        ui: { ...s.ui, modal: { kind: "new-fleet", era, limit: 300, factionId, showAll: true } },
+      }));
+      if (location.hash !== "#/fleets") location.hash = "#/fleets";
       break;
     }
     case "nf-era": {
@@ -1379,6 +1398,18 @@ function handleChange(e: Event): void {
 export function wireActions(root: HTMLElement): void {
   root.addEventListener("click", handleClick);
   root.addEventListener("change", handleChange);
+  // Keyboard activation for the custom role="button" controls (the ship-row and
+  // personnel-row "Add" tiles are <article>s, which - unlike <button>/<a>/
+  // <summary> - do not fire click on Enter/Space on their own). Route those keys
+  // through the same click path so the core "add to fleet" action is reachable
+  // without a mouse. Native controls handle their own keys and are left alone.
+  root.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const el = (e.target as HTMLElement | null)?.closest<HTMLElement>('[role="button"][data-action]');
+    if (!el || el.tagName === "BUTTON" || el.tagName === "A") return;
+    e.preventDefault(); // stop Space from scrolling the page
+    el.click();
+  });
   // Live-filter the compendium search as the user types. Only this field is
   // routed on input; it carries an id, so focus and caret survive re-render.
   root.addEventListener("input", (e) => {

@@ -28,8 +28,8 @@ export const ICON_LIBRARY: LibraryIcon[] = Object.entries(urls)
   .map(([path, url]) => {
     const rel = path.replace(/^\.\/emblems\//, "");
     const parts = rel.split("/");
-    const category = parts.length > 1 ? parts[0] : "General";
-    const file = parts[parts.length - 1];
+    const category = parts.length > 1 ? (parts[0] ?? "General") : "General";
+    const file = parts[parts.length - 1] ?? rel;
     return { id: rel, url, category, label: titleCase(file.replace(/\.[^.]+$/, "")) };
   })
   .sort((a, b) => a.category.localeCompare(b.category) || a.label.localeCompare(b.label));

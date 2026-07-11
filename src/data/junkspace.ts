@@ -11,12 +11,11 @@ import { w } from "./_helpers.ts";
 // Stock ship classes (p.202)
 // ---------------------------------------------------------------------------
 
-// Reconstruction note: the p.202 spec table extracted with the 7 class names
-// vertically compressed away from their 7 stat rows. Stat rows were re-matched
-// to names using the shared human-fleet designs elsewhere in the book (the
-// Training Fleet p.61, Galactic Credit p.148, the Junkspace Pirates p.211),
-// which pin every row except the two Mass 1, cost 10 ships. See the UNCERTAIN
-// note on those two entries.
+// Ship stats table p.202, confirmed against the final layout. (An earlier
+// text-only extraction drifted the class names off their stat rows and led to
+// the Light Freighter and Gunship being entered swapped; the printed table has
+// Light Freighter as the Thrust 6 / dual-Blasters row and Gunship as the
+// Thrust 4 / single-Laser-Cannon row, corrected below.)
 export const JUNKSPACE_SHIPS: ShipClass[] = [
   { id: "recon-ship", name: "Recon Ship", mass: 0, thrust: 8, silhouette: 2, shields: 1,
     primary: [w("Light Blasters", 1, "D6", 0, 3)], auxiliary: [], utilityBays: false,
@@ -25,18 +24,10 @@ export const JUNKSPACE_SHIPS: ShipClass[] = [
     primary: [], auxiliary: [w("Auto Blasters", 3, "D6", 0, 6)], utilityBays: false, cost: 5 },
   { id: "bomber", name: "Bomber", mass: 0, thrust: 4, silhouette: 3, shields: 1,
     primary: [w("Torpedoes", 1, "D10", 6, 12)], auxiliary: [], utilityBays: false, cost: 8 },
-  // UNCERTAIN: the extract's name column reads "Light Freighter" then "Gunship",
-  // which by strict order would give the Freighter this row's stats and the
-  // Gunship the next row's. Assigned the other way because every other Gunship
-  // in the book (Training Fleet p.61, Argenteus Gunship p.148, Pirate Gunship
-  // p.211) is Mass 1, Thrust 6, Blasters, and a "Light Freighter" fits the
-  // slow, single-aux-weapon row far better. Verify against the printed book.
-  { id: "gunship", name: "Gunship", mass: 1, thrust: 6, silhouette: 4, shields: 2,
+  { id: "light-freighter", name: "Light Freighter", mass: 1, thrust: 6, silhouette: 4, shields: 2,
     primary: [w("Blasters", 2, "D6", 0, 6)], auxiliary: [w("Blasters", 2, "D6", 0, 6)],
     utilityBays: false, cost: 10 },
-  // UNCERTAIN: see note on Gunship above; strict extract order would swap the
-  // stats of these two entries.
-  { id: "light-freighter", name: "Light Freighter", mass: 1, thrust: 4, silhouette: 4, shields: 2,
+  { id: "gunship", name: "Gunship", mass: 1, thrust: 4, silhouette: 4, shields: 2,
     primary: [], auxiliary: [w("Laser Cannon", 2, "D8", 0, 6)], utilityBays: false, cost: 10 },
   { id: "corvette", name: "Corvette", mass: 2, thrust: 8, silhouette: 5, shields: 3,
     primary: [w("Turbo Blasters", 4, "D6", 0, 6)], auxiliary: [w("Blasters", 2, "D6", 0, 6)],

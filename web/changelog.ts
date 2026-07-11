@@ -9,6 +9,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.6",
+    date: "2026-07-11",
+    title: "Printable reference, sharper rosters, and an accuracy pass",
+    items: [
+      "A new Quick Reference page (linked in the footer) prints the whole round structure, actions, commands, and rules-you-might-forget on one sheet, taken word for word from the rulebook. It replaces the old link to the separate PDF.",
+      "The roster printout dropped its line-number column and now shows each ship's own cost alongside the stack total. Turn on Trackers to add a per-ship hull-damage box row.",
+      "Shipyard modes (Hypergrowth, Management Training) now print as an actual Shipyard: a catalog of what you can requisition, with a tick box per ship to check off as it jumps into play, rather than a fixed pre-built roster.",
+      "The two tutorials (Combat Simulator, Management Training) gained a \"Steps\" print layout: the full how-to-play walkthrough in plain numbered steps, for reading at the table.",
+      "The Ship Compendium and each Custom Rules faction now have a \"Build a fleet with this faction\" shortcut straight into the new-fleet flow.",
+      "Fixed the Combat Simulator setup diagram: the flank Jump Points are 5\" in from your own edge and the central point is 15\" in, which the previous diagram had the wrong way round.",
+      "Corrected the Junkspace Gunship and Light Freighter, whose stats were entered swapped. The Light Freighter is the faster twin-Blaster hull; the Gunship is the slower Laser Cannon one.",
+      "The faction rule on the Play Mode screen is no longer clipped to three lines, so long rules read in full during a game.",
+      "The ship and personnel \"Add\" tiles are now reachable and operable by keyboard, and every control shows a clear focus outline when tabbed to.",
+    ],
+  },
+  {
     version: "0.8.5",
     date: "2026-07-10",
     title: "Quieter hierarchy, real weapon columns, a status that fits",
