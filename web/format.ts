@@ -43,6 +43,18 @@ export function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ESCAPE_MAP[c] ?? c);
 }
 
+/**
+ * Escape rules prose for display. Same as escapeHtml, but also swaps the
+ * circled-M Mass symbol (Ⓜ, U+24C2) - which the body fonts don't include and
+ * which fell back to a stray "@"-looking glyph - for a styled inline circled M
+ * that renders on any font, in the app and in print. Use for any faction rule,
+ * HVP rule, or tutorial text; do NOT use for <textarea> values (the raw symbol
+ * must survive a round-trip there).
+ */
+export function ruleText(s: string): string {
+  return escapeHtml(s).replace(/Ⓜ/g, '<span class="mass-inline" role="img" aria-label="Mass">M</span>');
+}
+
 export function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });

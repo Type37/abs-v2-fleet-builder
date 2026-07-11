@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.7",
+    date: "2026-07-11",
+    title: "The tutorials now print the real rules, word for word",
+    items: [
+      "The Combat Simulator and Management Training guides are now the rulebook's own text, transcribed verbatim rather than summarised. Every section the book prints is here in full: setup, the Central Objective table, High-Value Personnel with the Seasoned Captain and Red Alert wording, the special rules, the victory-point breakdown, and the standing rules. Both the on-screen guide and the printable \"Steps\" sheet read from the same complete text.",
+      "The printable \"Steps\" sheet now lays each section out as a proper numbered walkthrough with the setup diagram in place and sub-rules as bullet lists, so it reads like a page from the book instead of a set of collapsed chips.",
+      "Fixed the Mass symbol (the circled M used all through the rules) rendering as a stray \"@\" in faction rules, personnel rules, and the tutorials. It now draws as a real circled M everywhere, on screen and in print.",
+    ],
+  },
+  {
     version: "0.8.6",
     date: "2026-07-11",
     title: "Printable reference, sharper rosters, and an accuracy pass",

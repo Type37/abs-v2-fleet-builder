@@ -115,6 +115,15 @@ summary { outline-offset: 2px; }
 
 .muted { color: var(--ink-3); font-weight: 400; }
 .icon { vertical-align: middle; flex-shrink: 0; }
+/* The Mass symbol (Ⓜ) inside rules prose, drawn as a circled M so it renders
+   identically on every font and in print (the raw glyph is missing from the
+   body fonts and fell back to a stray "@"). Sized to the surrounding text. */
+.mass-inline {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.15em; height: 1.15em; margin: 0 0.05em; vertical-align: -0.18em;
+  border: 1.3px solid currentColor; border-radius: 50%;
+  font-family: var(--sans); font-weight: 700; font-size: 0.74em; line-height: 1;
+}
 .emblem { display: inline-block; vertical-align: middle; }
 
 /* Uppercase micro-labels: the NASA/Swiss data-label voice. */
@@ -887,6 +896,10 @@ button { font-family: inherit; }
 .ref-list-numbered { list-style: decimal; padding-left: 18px; }
 .ref-list-numbered li { padding-left: 4px; }
 .ref-list b { font-weight: 800; }
+/* Sub-points under a numbered step (e.g. the D6 objective table, the VP list). */
+.ref-subpoints { margin: 6px 0 2px; }
+.ref-subpoints li { padding-left: 14px; }
+.ref-subpoints li::before { content: "\2022"; position: absolute; left: 2px; color: var(--blue); }
 .print-guide-intro { font-family: var(--serif); font-size: 14px; line-height: 1.55; margin-bottom: 16px; }
 
 .print-score th, .print-score td { border: 1px solid var(--ink); padding: 9px 10px; font-size: 12px; }
@@ -972,6 +985,12 @@ button { font-family: inherit; }
 .guide-notes-title { font-family: var(--display); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-2); margin: 18px 0 2px; padding-top: 14px; border-top: 1px solid var(--hair-soft); }
 .guide-notes-sub { font-size: 12px; color: var(--ink-3); margin-bottom: 8px; }
 .guide-step-body p { font-family: var(--serif); font-size: 14px; line-height: 1.55; color: var(--ink); margin: 0; }
+/* Sub-points (rule lists, D6 tables) shown under a guide step, on-screen. */
+.guide-points { list-style: none; margin: 8px 0 0; padding: 0; }
+.guide-points li { position: relative; padding-left: 15px; margin-bottom: 5px; font-family: var(--serif); font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+.guide-points li:last-child { margin-bottom: 0; }
+.guide-points li::before { content: "\2022"; position: absolute; left: 2px; color: var(--blue); }
+.guide-step-body p + .guide-points { margin-top: 10px; }
 /* Original diagrams for the two most spatially-confusing tutorial concepts
    (table setup, weapon arcs) - not reproductions of any published artwork,
    just this app's own house style illustrating the same rules concepts the

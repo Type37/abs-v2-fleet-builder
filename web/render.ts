@@ -4,7 +4,7 @@ import { validateFleet, type ValidationIssue } from "../src/validation.ts";
 import { GENERIC_HVP } from "../src/data/index.ts";
 import { JUNKSPACE_SHIPS } from "../src/data/junkspace.ts";
 import { allFactions, factionsByEra, findFaction, makeCatalog, ERA_ORDER } from "./catalog.ts";
-import { auxSlotText, credits, escapeHtml, formatDate, primarySlotText } from "./format.ts";
+import { auxSlotText, credits, escapeHtml, formatDate, primarySlotText, ruleText } from "./format.ts";
 import { emblemMark, icon, initiativeDice, massGlyph, statChips, tacticalDiagram } from "./icons.ts";
 import { iconLibraryControls, iconLibraryGrid, libraryUrl } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
@@ -39,94 +39,130 @@ const MODE_ERA: Partial<Record<GameMode, Era>> = {
 
 interface GuideStep {
   title: string;
-  text: string;
+  /** Lead paragraph. Verbatim from the rulebook. */
+  text?: string;
+  /** Sub-points / table rows the book prints as a bulleted or tabulated list. */
+  points?: string[];
   diagram?: "deployment" | "arcs";
 }
 
+// The two Basic Training scenarios, transcribed VERBATIM from the rulebook
+// (Combat Simulator p.62-64, Management Training p.65-68), not summarised. The
+// book's own section headings are the step titles, and sub-rules the book
+// prints as lists are carried in `points`. Only mechanical smoothing is applied:
+// dropped "see page XX" cross-references, and the circled-M mass symbol rendered
+// as Ⓜ. This is the source of both the on-screen guide and the printable "Steps"
+// sheet, so a player reads the real, complete rules either way.
 const TRAINING_GUIDES: Partial<Record<GameMode, { intro: string; steps: GuideStep[]; notes: GuideStep[] }>> = {
   "combat-simulator": {
     intro:
-      "Your first game of A Billion Suns. It plays like Armageddon and teaches the basics of activating your fleet: moving and attacking. Your Training Fleet is already loaded.",
-    // What you actually DO, once, in order, before and during the game.
+      "This scenario is intended as a two-player tutorial, to be played as your first game of A Billion Suns. It is a simple era of play that provides a pre-set fleet, a limited set of ship classes, and simple setup and victory conditions. It focuses on teaching you the basics of activating your fleet: moving and attacking. Combat Simulator operates in basically the same way as Armageddon and so acts as a tutorial for that era of play too. To play, you either build your own ¢300bn fleet or use the Training Fleet. At the start of the game, all your units start in your Reserves area, and will be jumped in during the first Round.",
     steps: [
       {
-        title: "Set up the table",
-        text: 'Clear a play area roughly 4 feet by 3 feet. Pick or roll a D6 for a Central Objective and place it in the middle of the board: 1-2 a ComSat, 3-4 a Facility, 5-6 a Planetoid. Each player deploys 3 Jump Points: the flank points 5" in from your own edge, out at the table\'s side edges; the central point 15" in from your own edge, on the centreline.',
+        title: "Setup",
+        text: 'Clear a play area roughly 4 feet by 3 feet. Pick or roll for a Central Objective and place it in the middle of the board. Deploy 3 Jump Points for each player, according to the setup diagram: the two flank Jump Points sit at the table\'s side edges, 5" in from your own edge and 24" apart; the central Jump Point is 15" in from your own edge, on the centreline.',
         diagram: "deployment",
       },
       {
-        title: "Place your High-Value Personnel",
-        text: "Gather three HVP tokens that are distinguishable as yours and place them on friendly ships of Mass 1 or higher. All three of your HVP are Seasoned Captains: units in their battlegroup can use the Red Alert command for 0 CMD, once per Round.",
+        title: "Central Objective",
+        text: "Pick or roll for a Central Objective and place a single object of the selected type in the centre of the play area.",
+        points: ["D6 1-2: ComSat", "D6 3-4: Facility", "D6 5-6: Planetoid"],
       },
       {
-        title: "Play four rounds",
-        text: "Your Initiative Value is 3D6. Rapid Ingress applies: all units Jump In during the Round 1 Jump Phase. Each round runs Command, Jump, Tactical, End.",
+        title: "High Value Personnel",
+        text: "Before the game, gather three High Value Personnel (HVP) tokens or miniatures that are distinguishable as belonging to you. Place them on friendly ships of Mass 1 or higher. HVP tokens are asset tokens. Units can carry any number of HVP tokens. All three of your HVP are Seasoned Captains.",
+        points: [
+          "Seasoned Captain: Units in this unit's battlegroup can use the Red Alert command for 0 CMD, once per Round.",
+          "Red Alert (1 CMD): When a friendly ship without an Activated token would be destroyed, spend 1 CMD token: it isn't destroyed, and regains Ⓜ HP instead. At the end of your next activation, if this ship is still in play, it is reduced to 0HP, and you cannot use Red Alert to save it.",
+        ],
       },
       {
-        title: "Score in each End Phase",
-        text: "Gain 2VP for each enemy flank Jump Point you are blockading, 5VP if you are blockading the enemy's central Jump Point, and 3VP if you are blockading the central objective. Blockading means having the greatest Combined Mass of friendly ships within 6\" of it.",
+        title: "Special rules",
+        points: [
+          "Initiative Checks: During Basic Training, your Initiative Value is 3D6.",
+          "Rapid Ingress: All units Jump In during the Round 1 Jump Phase.",
+          "Blockading Objectives: You can Blockade enemy Jump Points and the central objective. (Blockading a Jump Point doesn't affect who it belongs to, or stop its owner from Jumping In or Jump Hopping with it.) While you have the greatest Combined Mass of friendly ships within 6\" of an objective, you are Blockading it. In the case of a tie, the player with the greatest number of friendly ships within 6\" is Blockading it. (In the case of a further tie, no player is Blockading it.)",
+        ],
       },
       {
-        title: "Game end",
-        text: "At the end of the game, gain 2VP for each enemy HVP token you are carrying. The game ends at the end of Round 4 and the player with the most VP is the winner.",
+        title: "Victory points",
+        points: [
+          "In each End Phase: gain 2VP for each enemy flank Jump Point you are blockading.",
+          "Gain 5VP if you are blockading the enemy's central Jump Point.",
+          "Gain 3VP if you are blockading the central objective.",
+          "At the end of the game: gain 2VP for each enemy HVP token you are carrying.",
+        ],
+      },
+      {
+        title: "Game end and victory",
+        text: "The game ends at the end of Round 4 and the player with the most VP is the winner.",
       },
     ],
-    // Good-to-know rules that apply throughout, not a moment you act on once -
-    // "Load your squadrons" used to sit in the numbered sequence above like it
-    // was step 3 of setup, when it's really a standing reminder about how
-    // carrying capacity works whenever you deploy those two hulls.
     notes: [
       {
-        title: "Loading squadrons",
-        text: "When you deploy your Heavy Cruiser or Frigate, you can load units of Fighters and Bombers into them, or deploy those units directly. A unit can carry Squadrons up to twice its Combined Mass: the Heavy Cruiser carries up to six wings, the Frigate four, and a unit of three Corvettes up to six.",
+        title: "Carrying Squadrons",
+        text: "When you deploy your Heavy Cruiser or Frigate, you can load units of Fighters and Bombers into them, or you can deploy those units directly. A unit can carry a number of Squadrons up to twice its Combined Mass, so the Heavy Cruiser can carry up to six Fighter or Bomber Wings; the Frigate can carry four; and a unit of three Corvettes can carry up to six.",
       },
     ],
   },
   "management-training": {
     intro:
-      "Your second game, once you have played the Combat Simulator. It plays like Hypergrowth and teaches resource management: requisitioning and jumping in ships as and where you need them, across two Sectors. Your Training Fleet starts in your Shipyard, not in play.",
+      "This scenario is intended as a two-player tutorial, to be played as your second game of A Billion Suns, once you have played the Combat Simulator scenario. It focuses on teaching you the basics of managing your resources: requisitioning and jumping in ships as and where you need them, as well as playing across multiple tables. Management Training operates very similarly to the Hypergrowth game mode and so acts as a tutorial for that.",
     steps: [
       {
-        title: "Set up two Sectors",
-        text: "Divide your play area into two roughly equal sections, or use two different surfaces, to represent two separate Sectors of space. You cannot fly ships between them; you have to Jump Hop.",
+        title: "Shipyard",
+        text: "At the start of a game of Management Training, the ships in your Training Fleet start in your Shipyard, and must be requisitioned before you can jump them in. When you requisition your Heavy Cruiser or Frigate, you can load units of Fighters and Bombers into them, or you can deploy those units individually. The Heavy Cruiser can carry two units of Mass 0 ships, the Frigate can carry one. You can pick and choose from the ships in your Shipyard to form units of any size you like, deciding only at the point you requisition them.",
       },
       {
-        title: "Deploy ComSats and gather Jump Points",
-        text: "Deploy 3 ComSats: the first anywhere on the first Sector and the other two anywhere on the other Sector. Each player starts with 3 Jump Points in their supply. Then begin Round 1.",
+        title: "Setup",
+        text: "Divide your play area into two roughly equal sections (or use two different surfaces, like a table and a counter-top) to represent two separate Sectors of space. You can't fly ships between these two Sectors, you have to Jump Hop between them.",
+        points: [
+          "ComSats: Deploy 3 ComSats, the first anywhere on the first Sector and the other two anywhere on the other Sector.",
+          "Jump Points: Each player starts the game with 3 Jump Points in their supply.",
+          "Start the game: Once you have the tables and ComSats set up, begin Round 1.",
+        ],
       },
       {
-        title: "Requisition units from your Shipyard",
-        text: "You start with no units in play, nothing in Reserve, and 0 credits. In the Jump Phase, spend 1 CMD to use the Requisition command: form a new unit from any ships in your Shipyard, of any size you like, pay their cost in credits (going into debt at first), and jump them into play. Your Heavy Cruiser can carry two units of Mass 0 ships when requisitioned; the Frigate one.",
+        title: "Initiative Checks",
+        text: "During Basic Training, your Initiative Value is 3D6.",
       },
       {
-        title: "Earn credits in each End Phase",
-        text: "Secure Sectors: gain ¢20bn for each Sector you control (most ships there; ties go to the greatest Combined Mass). Infowar: gain ¢20bn for each ComSat you are Blockading. There is a maximum of ¢100bn available to earn each round.",
+        title: "Requisitioning units",
+        text: "You start with no units in play and nothing in Reserve; the ships in your fleet are all in your Shipyard. You must spend credits (initially putting you into debt) to Requisition units from your Shipyard. In the Jump Phase, when you want to jump in a unit, first requisition it: spend a CMD token to use the Requisition command, check off the ships from your Roster Sheet, and jump the appropriate miniatures into play. You start with 0 credits, and recover that expenditure by earning credits from the objectives. There are a maximum of ¢100bn credits available to earn on each of the three game rounds, so be careful not to spend outside your means.",
       },
-      {
-        title: "Game end",
-        text: "Your Initiative Value is 3D6. At the end of the third game round, the game ends and the player with the most credits is the winner.",
-      },
-    ],
-    // Same fix as Combat Simulator: this was sitting in the numbered sequence
-    // as if it were a discrete action, when it's really a standing rule about
-    // what happens whenever a ship dies over the course of the game.
-    notes: [
       {
         title: "Reinforcements",
-        text: "When a ship is destroyed it returns to your Shipyard and can be requisitioned again as a reinforcement. If you are prepared to keep paying, you can keep deploying: just watch your balance sheet.",
+        text: "When a ship is destroyed, it returns to your Shipyard and can be requisitioned again as a reinforcement. This represents the massive wealth and construction power of your corporation. If you are prepared to keep paying for more ships, you can keep deploying more ships: just keep an eye on your balance sheet.",
+      },
+      {
+        title: "Earning credits",
+        points: [
+          "Secure Sectors: In each End Phase, you gain ¢20bn for each Sector you control. You control a Sector if you are the player with the greatest number of ships in that Sector. In the case of a tie, the tied player with the greatest Combined Mass in that Sector controls it.",
+          "Infowar: In each End Phase, you gain ¢20bn for each ComSat you are Blockading.",
+        ],
+      },
+      {
+        title: "Winning the game",
+        text: "At the end of the third game round, the game ends and the player with the most credits is the winner.",
       },
     ],
+    notes: [],
   },
 };
 
 function trainingGuide(mode: GameMode): string {
   const g = TRAINING_GUIDES[mode];
   if (!g) return "";
+  const pointsHtml = (points?: string[]) =>
+    points && points.length
+      ? `<ul class="guide-points">${points.map((p) => `<li>${ruleText(p)}</li>`).join("")}</ul>`
+      : "";
   const stepHtml = (s: GuideStep, n?: number) => `
       <details class="guide-step ${n ? "" : "guide-step-note"}" ${n === 1 ? "open" : ""}>
         <summary>${n ? `<span class="guide-step-n">${n}</span>` : ""}${escapeHtml(s.title)}</summary>
         <div class="guide-step-body">
-          <p>${escapeHtml(s.text)}</p>
+          ${s.text ? `<p>${ruleText(s.text)}</p>` : ""}
+          ${pointsHtml(s.points)}
           ${s.diagram ? tacticalDiagram(s.diagram) : ""}
         </div>
       </details>`;
@@ -155,14 +191,22 @@ function trainingGuide(mode: GameMode): string {
 function trainingPrintBlocks(mode: GameMode): string {
   const g = TRAINING_GUIDES[mode];
   if (!g) return "";
+  const subPoints = (points?: string[]) =>
+    points && points.length
+      ? `<ul class="ref-list ref-subpoints">${points.map((p) => `<li>${ruleText(p)}</li>`).join("")}</ul>`
+      : "";
   const stepItems = g.steps
-    .map((s) => `<li><b>${escapeHtml(s.title)}:</b> ${escapeHtml(s.text)}</li>`)
+    .map(
+      (s) => `<li><b>${escapeHtml(s.title)}${s.text ? ":" : ""}</b>${s.text ? " " + ruleText(s.text) : ""}${subPoints(
+        s.points,
+      )}${s.diagram ? tacticalDiagram(s.diagram) : ""}</li>`,
+    )
     .join("");
   const noteItems = g.notes
-    .map((s) => `<li><b>${escapeHtml(s.title)}:</b> ${escapeHtml(s.text)}</li>`)
+    .map((s) => `<li><b>${escapeHtml(s.title)}:</b> ${ruleText(s.text ?? "")}${subPoints(s.points)}</li>`)
     .join("");
   return `
-    <p class="print-guide-intro">${escapeHtml(g.intro)}</p>
+    <p class="print-guide-intro">${ruleText(g.intro)}</p>
     <div class="ref-block">
       <ol class="ref-list ref-list-numbered">${stepItems}</ol>
     </div>
@@ -427,7 +471,7 @@ function factionDetailPane(f: Faction): string {
       ${f.playstyle ? `<p class="nfd-playstyle">${escapeHtml(f.playstyle)}</p>` : ""}
       <div class="nfd-ability">
         <h4 class="nfd-h">Signature ability</h4>
-        <p class="nfd-rule"><span class="nfd-rule-name">${escapeHtml(f.rule.name)}.</span> ${escapeHtml(f.rule.text)}</p>
+        <p class="nfd-rule"><span class="nfd-rule-name">${escapeHtml(f.rule.name)}.</span> ${ruleText(f.rule.text)}</p>
       </div>
       <dl class="nfd-stats">
         <div><dt>Initiative</dt><dd>${escapeHtml(f.initiative)}</dd></div>
@@ -767,7 +811,7 @@ function builderView(state: AppState): string {
     const isGeneric = source === "Generic";
     const body = `<div class="personnel-body">
         <span class="personnel-name ${isGeneric ? "is-generic" : ""}">${escapeHtml(h.name)}</span>
-        <span class="personnel-rule">${escapeHtml(h.rule)}</span>
+        <span class="personnel-rule">${ruleText(h.rule)}</span>
       </div>`;
     if (isChosen) {
       const sel = list.fleet.hvp[selIndex]!;
@@ -818,7 +862,7 @@ function builderView(state: AppState): string {
       const carryMarkup = carried.length
         ? `<span class="ru-carry">${icon("personnel", 12)}${carried
             .map(
-              (c) => `<details class="hvp-pop"><summary title="What does ${escapeHtml(c.name)} do?">${escapeHtml(c.name)}</summary><span class="hvp-pop-panel"><span class="hvp-pop-name">${escapeHtml(c.name)}</span><span class="hvp-pop-rule">${escapeHtml(c.rule)}</span></span></details>`,
+              (c) => `<details class="hvp-pop"><summary title="What does ${escapeHtml(c.name)} do?">${escapeHtml(c.name)}</summary><span class="hvp-pop-panel"><span class="hvp-pop-name">${escapeHtml(c.name)}</span><span class="hvp-pop-rule">${ruleText(c.rule)}</span></span></details>`,
             )
             .join('<span class="ru-carry-sep">,</span> ')}</span>`
         : "";
@@ -989,7 +1033,7 @@ function builderView(state: AppState): string {
             ? `<div class="mf-rule">
                 <div class="mf-rule-meta">Init <b>${escapeHtml(faction.initiative)}</b> ${initiativeDice(faction.initiative, 13)} <span class="mf-sep">/</span> CMD <b>${escapeHtml(faction.cmdTokens)}</b>/rd</div>
                 <div class="mf-rule-name">${escapeHtml(faction.rule.name)}</div>
-                <div class="mf-rule-text">${escapeHtml(faction.rule.text)}</div>
+                <div class="mf-rule-text">${ruleText(faction.rule.text)}</div>
               </div>`
             : ""
         }
@@ -1173,7 +1217,7 @@ function printView(state: AppState): string {
       return `
       <section class="print-hvp">
         <h4>${escapeHtml(displayName)}</h4>
-        <p>${escapeHtml(def.rule)}</p>
+        <p>${ruleText(def.rule)}</p>
       </section>`;
     })
     .join("");
@@ -1217,7 +1261,7 @@ function printView(state: AppState): string {
         faction
           ? `<section class="print-rule">
               <h3>Faction rule: ${escapeHtml(faction.rule.name)}</h3>
-              <p>${escapeHtml(faction.rule.text)}</p>
+              <p>${ruleText(faction.rule.text)}</p>
               <p class="print-note">Initiative ${escapeHtml(faction.initiative)}. Command tokens each round: ${escapeHtml(faction.cmdTokens)}.</p>
             </section>`
           : ""
@@ -1773,7 +1817,7 @@ function playView(state: AppState): string {
       <section class="solo-card solo-card-quiet">
         <h3 class="roster-section">Scoring reminders</h3>
         ${notes ? `<ul class="rule-list">${notes}</ul>` : '<p class="muted">Check your mission sheet for scoring.</p>'}
-        ${faction ? `<h4 class="ref-sub">${escapeHtml(faction.rule.name)}</h4><p class="rule-card-text">${escapeHtml(faction.rule.text)}</p>` : ""}
+        ${faction ? `<h4 class="ref-sub">${escapeHtml(faction.rule.name)}</h4><p class="rule-card-text">${ruleText(faction.rule.text)}</p>` : ""}
       </section>
     </div>
   </main>
