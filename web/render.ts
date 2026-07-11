@@ -314,7 +314,7 @@ function footer(): string {
     <div class="gif-inner">
       <span class="gif-title">A Billion Suns</span>${sep}
       <span>by <a href="https://planetsmashergames.com/a-billion-suns/" target="_blank" rel="noopener">Mike Hutchinson</a>, Osprey Games</span>${sep}
-      <a href="#/reference">Quick Reference</a>${sep}
+      <a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">${icon("scroll", 13)} Quick Reference</a>${sep}
       <span class="gif-builder">Fleet builder by <a class="wl-sig" href="https://linktr.ee/warlore" target="_blank" rel="noopener">WarLore</a></span>${sep}
       <a href="mailto:warlore1@outlook.com">Send Feedback</a>${sep}
       <a href="https://github.com/Type37/a-billion-suns-shipyard" target="_blank" rel="noopener">Source on GitHub</a>${sep}
@@ -1302,99 +1302,6 @@ function printView(state: AppState): string {
 }
 
 // ---------------------------------------------------------------------------
-// Quick Reference (printable in-app sheet, verbatim from the rulebook's own
-// Quick Reference chapter, p.219-222 - not a paraphrase)
-// ---------------------------------------------------------------------------
-
-function referenceView(): string {
-  const rule = (title: string, items: string[]) => `
-      <div class="ref-block">
-        <h3 class="sheet-section">${title}</h3>
-        <ul class="ref-list">${items.map((t) => `<li>${t}</li>`).join("")}</ul>
-      </div>`;
-
-  return `
-  ${topbar()}
-  <div class="print-page">
-    <div class="print-toolbar">
-      <a class="bar-btn" href="#/">${icon("chevronRight", 14)} Back</a>
-      <button class="cta-btn" data-action="do-print">${icon("print", 17)} Print this document</button>
-    </div>
-
-    <article class="sheet">
-      <header class="sheet-head">
-        <div class="sheet-title-block">
-          <h1 class="sheet-title">Quick Reference</h1>
-          <p class="sheet-subtitle">A Billion Suns, Second Edition &middot; p.219&ndash;222</p>
-        </div>
-      </header>
-
-      <div class="ref-columns">
-        <div class="ref-block">
-          <h3 class="sheet-section">Round Structure</h3>
-          <ol class="ref-list ref-list-numbered">
-            <li><b>Command Phase:</b> Gain CMD tokens (number set by your faction). Make an Initiative Check: the winner picks who has Initiative. Each loser gets +1 CMD token.</li>
-            <li><b>Jump Phase:</b> Take turns. On your turn: Open a Jump Point, Jump In a unit (deploy within 6&quot; of a friendly Jump Point), or Pass (no further turns). Ends when all players have passed.</li>
-            <li><b>Tactical Phase:</b> Take turns. Drag to Select a battlegroup and activate it, completing each activation step for every unit before the next. Give each unit an Activated token. Ends when all units have activated.</li>
-            <li><b>End Phase:</b> Check mission scoring. Clear Activated tokens. Discard unused CMD tokens. Begin a new round.</li>
-          </ol>
-        </div>
-
-        ${rule("Initiative Check", [
-          "Each player rolls a number of D6 equal to their faction&rsquo;s Initiative value.",
-          "Each <b>2 or 3</b> is one success; each <b>1</b> is two successes.",
-          "Most successes wins and chooses who holds Initiative this round. Ties: lowest dice sum wins, then clockwise from the last holder.",
-          "Every player who did not win gains +1 CMD token.",
-        ])}
-
-        <div class="ref-block">
-          <h3 class="sheet-section">Activations (per unit)</h3>
-          <ol class="ref-list ref-list-numbered">
-            <li><b>Movement Step:</b> Pivot any amount, then move ahead up to the Thrust value.</li>
-            <li><b>Passive Attacks Step:</b> Suffer Passive Attacks from enemies in range and arc.</li>
-            <li><b>Action Step:</b> Take one Action.</li>
-          </ol>
-        </div>
-
-        ${rule("Actions", [
-          "<b>Open Fire:</b> Attack with all weapon systems. Roll equal to or under Silhouette to hit. Target rolls Shield saves against the dice that hit. Assign unsaved hits to already-damaged ships first.",
-          "<b>Scan:</b> Scan a single object or ship within 3&quot;, or collect any or all Free-floating asset tokens within 3&quot;.",
-          "<b>Scramble Squadrons:</b> Deploy one carried Mass 0 unit wholly within 6&quot;. It takes one action, then gets an Activated token.",
-          "<b>Jump Hop:</b> If all ships in the unit are within 6&quot; of a friendly Jump Point, remove them and set them up within 6&quot; of a friendly Jump Point in another Sector.",
-          "<b>Jump Out:</b> If all ships are within 6&quot; of a friendly Jump Point, remove them and place them in your Reserves.",
-          "<b>Resupply</b> (Utility Ships): Select a friendly Mass 1&ndash;3 ship. Until the end of the round it counts as +1 Mass for Blockading, up to a maximum of its own Mass.",
-        ])}
-
-        ${rule("Commands", [
-          "<b>All Hands</b> (1 CMD): After a friendly unit takes its first action, spend 1 CMD to take a second, different action with it.",
-          "<b>Executive Oversight</b> (1 CMD): Re-roll one attack die, initiative die, or saving throw.",
-          "<b>Power to Engines</b> (1 CMD): At the start of a unit&rsquo;s movement step, move twice this step (pivot and move both times).",
-          "<b>Power to Weapons</b> (1 CMD): Before rolling to attack, subtract 1 from each attack die (minimum 1) for this Salvo. Raises the chance of criticals; does not prevent duds.",
-          "<b>Power to Shields</b> (1 CMD): Before rolling saves (Shields 1+), add 1 to the unit&rsquo;s Shields value for this Salvo.",
-          "<b>Red Alert</b> (1 CMD): A friendly ship without an Activated token that would be destroyed is not; it regains 1HP. At the end of its next activation it drops to 0HP (no second Red Alert), unless it jumped out.",
-          "<b>Requisition</b> (1 CMD, Hypergrowth): On your Jump In turn, form a new unit from Shipyard ships, pay their cost in Credits, and jump them in as if from Reserves.",
-        ])}
-
-        ${rule("Rules you might forget", [
-          "<b>Unit Coherence:</b> ships stay within 6&quot; of all other ships in their unit.",
-          "<b>Drag to Select:</b> a lead unit plus unactivated units within 6&quot; of it, Combined Mass 10 or less.",
-          "<b>Squadron Capacity:</b> a unit carries Squadrons up to twice its Combined Mass.",
-          "<b>Attack Dice Damage:</b> D6 = 1, D8 = 2, D10 = 3, D12 = 5.",
-          "<b>Arcs:</b> Primary 45&deg; front; Auxiliary 180&deg; front; Facilities 360&deg; (passive attack all in range).",
-          "<b>Explosion Check:</b> roll a D6; equal to or under the ship&rsquo;s Silhouette and it explodes, hitting all units within 3&quot; with a D6 attack (1 damage per hit).",
-          "<b>Easy Target:</b> a unit that moved under 3&quot; and did not Jump; enemies may re-roll attack dice against it.",
-          "<b>Inertial Strain:</b> if any single pivot is over 90&deg;, the ship cannot make Primary attacks.",
-          "<b>Escort / Blockade:</b> greatest Combined Mass within 6&quot; (tie-break: most ships within 6&quot;).",
-          "<b>Gravity Well:</b> Jump Points cannot be placed, and units cannot jump, within 9&quot; of a Planetoid.",
-        ])}
-      </div>
-
-      <p class="print-note">Unofficial player aid for A Billion Suns, Second Edition, by Mike Hutchinson (Osprey Games). Page references are to the rulebook. Not affiliated with the publisher.</p>
-    </article>
-  </div>`;
-}
-
-// ---------------------------------------------------------------------------
 // Foundry (custom factions)
 // ---------------------------------------------------------------------------
 
@@ -2057,8 +1964,6 @@ export function render(state: AppState): string {
         return builderView(state);
       case "print":
         return printView(state);
-      case "reference":
-        return referenceView();
       case "foundry":
         return state.route.factionId ? foundryEditView(state, state.route.factionId) : foundryListView(state);
       case "solo":

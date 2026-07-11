@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.8",
+    date: "2026-07-11",
+    title: "Quick Reference is now a proper PDF",
+    items: [
+      "The Quick Reference is now a downloadable PDF — a single-sheet card in the app's NASA/Swiss house style, with every section (round structure, initiative, activations, actions, all seven commands, combat rules, and the rules-you-might-forget checklist) laid out in a clean two-column format. All text is verbatim from the rulebook. Open it from the footer link.",
+      "The old in-app HTML reference page has been retired in favour of the PDF.",
+    ],
+  },
+  {
     version: "0.8.7",
     date: "2026-07-11",
     title: "The tutorials now print the real rules, word for word",

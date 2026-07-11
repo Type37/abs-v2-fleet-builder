@@ -887,8 +887,7 @@ button { font-family: inherit; }
 .print-hvp h4 { font-family: var(--display); font-size: 15px; margin-bottom: 3px; }
 .print-hvp p { font-family: var(--serif); font-size: 13.5px; line-height: 1.5; }
 
-/* Quick Reference / training-guide print sheets: dense, newspaper-style. */
-.ref-columns { columns: 2; column-gap: 28px; }
+/* Training-guide print sheets: dense, newspaper-style. */
 .ref-block { break-inside: avoid; margin-bottom: 18px; }
 .ref-list { list-style: none; margin: 0; padding: 0; font-family: var(--serif); font-size: 12.5px; line-height: 1.5; }
 .ref-list li { position: relative; padding-left: 14px; margin-bottom: 6px; }
