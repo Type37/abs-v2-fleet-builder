@@ -8,6 +8,7 @@ import { auxSlotText, credits, escapeHtml, formatDate, primarySlotText, ruleText
 import { emblemMark, icon, initiativeDice, massGlyph, statChips, tacticalDiagram } from "./icons.ts";
 import { iconLibraryControls, iconLibraryGrid, libraryUrl } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
+import { FACTION_LORE } from "./faction-lore.ts";
 import type { AppState } from "./state.ts";
 import { activeList } from "./state.ts";
 import type { SavedList } from "./storage.ts";
@@ -464,11 +465,18 @@ function fleetsView(state: AppState): string {
 // dump. The point at pick-time is "who are these people and what do they do",
 // which the builder itself lays out in full once you commit.
 function factionDetailPane(f: Faction): string {
+  // Verbatim rulebook flavour where we have it; fall back to the faction's own
+  // `playstyle` field (custom factions) otherwise. The briefing is the
+  // in-universe fiction, set in italic serif; the playstyle is plain prose.
+  const lore = FACTION_LORE[f.id];
+  const playstyle = lore?.playstyle ?? f.playstyle;
   return `
     <div class="nf-detail">
       <h3 class="nfd-title">${escapeHtml(f.name)}</h3>
       <p class="nfd-era-tag">${escapeHtml(f.era)}</p>
-      ${f.playstyle ? `<p class="nfd-playstyle">${escapeHtml(f.playstyle)}</p>` : ""}
+      ${lore?.tagline ? `<p class="nfd-tagline">${escapeHtml(lore.tagline)}</p>` : ""}
+      ${lore?.briefing ? `<p class="nfd-briefing">${escapeHtml(lore.briefing)}</p>` : ""}
+      ${playstyle ? `<p class="nfd-playstyle">${escapeHtml(playstyle)}</p>` : ""}
       <div class="nfd-ability">
         <h4 class="nfd-h">Signature ability</h4>
         <p class="nfd-rule"><span class="nfd-rule-name">${escapeHtml(f.rule.name)}.</span> ${ruleText(f.rule.text)}</p>

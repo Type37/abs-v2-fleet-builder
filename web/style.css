@@ -1613,7 +1613,13 @@ button { font-family: inherit; }
 .nf-detail-empty { display: flex; align-items: center; justify-content: center; min-height: 220px; text-align: center; }
 .nfd-title { font-family: var(--display); font-weight: 800; font-size: 22px; margin-bottom: 2px; text-transform: none; letter-spacing: -0.01em; color: var(--ink); }
 .nfd-era-tag { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); margin-bottom: 12px; }
-.nfd-playstyle { font-size: 14px; line-height: 1.5; color: var(--ink); margin-bottom: 4px; font-weight: 500; font-style: normal; letter-spacing: normal; text-transform: none; }
+/* Tagline: the faction's own epigraph. Some are spoken lines, some are
+   machine logs (starting with >), so no auto-quotes - just set it apart. */
+.nfd-tagline { font-family: var(--serif); font-style: italic; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--ink); margin-bottom: 10px; }
+/* Briefing: the in-universe fiction. Italic serif, the one place the app
+   leans literary - deliberately distinct from the plain-prose playstyle. */
+.nfd-briefing { font-family: var(--serif); font-style: italic; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); margin-bottom: 12px; }
+.nfd-playstyle { font-family: var(--sans); font-size: 13.5px; line-height: 1.5; color: var(--ink); margin-bottom: 4px; font-weight: 500; font-style: normal; letter-spacing: normal; text-transform: none; }
 .nfd-h { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--hair-soft); }
 .nfd-rule { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); font-weight: 400; letter-spacing: normal; text-transform: none; }
 .nfd-rule-name { font-weight: 700; color: var(--ink); }

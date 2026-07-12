@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.10",
+    date: "2026-07-12",
+    title: "Faction briefings, straight from the rulebook",
+    items: [
+      "Every faction now shows its full flavour text when you pick it in the New Fleet dialog: the epigraph, the in-universe briefing (set in italic serif), and Mike Hutchinson's note on the faction's strengths and intended playstyle. All transcribed verbatim from the rulebook's Factions chapter.",
+    ],
+  },
+  {
     version: "0.8.9",
     date: "2026-07-11",
     title: "Quick Reference PDF corrected and expanded",
