@@ -9,6 +9,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.9",
+    date: "2026-07-11",
+    title: "Quick Reference PDF corrected and expanded",
+    items: [
+      "Fixed Explosion Check: the trigger is the ship's Mass, not its Silhouette. The original third-party card had it wrong; the actual rulebook says Mass.",
+      "Fixed Escort and Blockade: they were combined into one bullet with the criteria swapped. They are now two separate entries with the correct tie-break for each (Escort: most ships wins; Blockade: greatest Combined Mass wins).",
+      "Added Mother's Wing to the reference card (radius is 2×Mass\"; can protect Objectives) — it was on the book's own QR page but missing from our card.",
+      "Added Dangerous Space rule: movement that passes through or ends in Dangerous Space inflicts a Mass×D6 attack on the unit at the end of the movement step.",
+      "Added Line of Sight rule: draw lines from the attacker to each ship in the target unit; if all lines pass through Obscuring terrain the target cannot be attacked.",
+    ],
+  },
+  {
     version: "0.8.8",
     date: "2026-07-11",
     title: "Quick Reference is now a proper PDF",
