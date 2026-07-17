@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.17",
+    date: "2026-07-17",
+    title: "Faction panel shows just the slogan",
+    items: [
+      "The one-line playstyle summary was dropped from the New Fleet faction panel; the faction's slogan carries the flavour on its own. The Signature ability heading below it still holds its position as you click between factions.",
+    ],
+  },
+  {
     version: "0.8.16",
     date: "2026-07-17",
     title: "New fleet button sits by the heading",

@@ -494,14 +494,17 @@ function fleetsView(state: AppState): string {
 // which the builder itself lays out in full once you commit.
 function factionDetailPane(f: Faction): string {
   const lore = FACTION_LORE[f.id];
-  const summary = lore?.summary ?? f.playstyle;
+  const slogan = lore?.tagline;
+  // Custom factions have no slogan on file; fall back to their own playstyle
+  // blurb so their panel is not left blank.
+  const fallback = slogan ? undefined : f.playstyle;
   return `
     <div class="nf-detail">
       <h3 class="nfd-title">${escapeHtml(f.name)}</h3>
       <p class="nfd-era-tag">${escapeHtml(f.era)}</p>
       <div class="nfd-intro">
-        ${lore?.tagline ? `<p class="nfd-tagline">${escapeHtml(lore.tagline)}</p>` : ""}
-        ${summary ? `<p class="nfd-summary">${escapeHtml(summary)}</p>` : ""}
+        ${slogan ? `<p class="nfd-tagline">${escapeHtml(slogan)}</p>` : ""}
+        ${fallback ? `<p class="nfd-summary">${escapeHtml(fallback)}</p>` : ""}
       </div>
       <div class="nfd-ability">
         <h4 class="nfd-h">Signature ability</h4>

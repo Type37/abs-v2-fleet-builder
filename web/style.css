@@ -1936,12 +1936,13 @@ button { font-family: inherit; }
 .nf-detail-empty { display: flex; align-items: center; justify-content: center; min-height: 220px; text-align: center; }
 .nfd-title { font-family: var(--display); font-weight: 800; font-size: 22px; margin-bottom: 2px; text-transform: none; letter-spacing: -0.01em; color: var(--ink); }
 .nfd-era-tag { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); margin-bottom: 12px; }
-/* Slogan + summary sit in a fixed-height well so the "Signature ability"
-   heading and the stat plates below hold the same position no matter which
-   faction you click - the shorter blurbs pad out with air rather than letting
-   everything beneath them jump up the pane. Sized to the tallest blurb at a
-   normal detail-column width; nothing is clipped if one runs longer. */
-.nfd-intro { min-height: 110px; }
+/* The slogan sits in a fixed-height well so the "Signature ability" heading and
+   the stat plates below hold the same position no matter which faction you
+   click - the one-line slogans pad out with air rather than letting everything
+   beneath them jump up the pane when a two-line slogan comes along. Sized to
+   the tallest slogan at a normal detail-column width; nothing is clipped if one
+   runs longer. */
+.nfd-intro { min-height: 44px; }
 /* Slogan: the faction's own epigraph, verbatim. Some are spoken lines, some
    machine logs (starting with >), so no auto-quotes - italic serif sets it
    apart as the one literary line in the pane. */
