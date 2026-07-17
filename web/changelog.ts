@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.16",
+    date: "2026-07-17",
+    title: "New fleet button sits by the heading",
+    items: [
+      "The Assemble new fleet button now sits just to the right of the Fleets heading, rather than pushed out to the far edge of the page.",
+    ],
+  },
+  {
     version: "0.8.15",
     date: "2026-07-17",
     title: "One builder list, fleets as cards, and a livelier New Fleet",
