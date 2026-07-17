@@ -506,10 +506,6 @@ function factionDetailPane(f: Faction): string {
         ${slogan ? `<p class="nfd-tagline">${escapeHtml(slogan)}</p>` : ""}
         ${fallback ? `<p class="nfd-summary">${escapeHtml(fallback)}</p>` : ""}
       </div>
-      <div class="nfd-ability">
-        <h4 class="nfd-h">Signature ability</h4>
-        <p class="nfd-rule"><span class="nfd-rule-name">${escapeHtml(f.rule.name)}.</span> ${ruleText(f.rule.text)}</p>
-      </div>
       <div class="nfd-stats">
         <div class="nfd-stat">
           <span class="nfd-stat-label">Initiative</span>
@@ -518,8 +514,13 @@ function factionDetailPane(f: Faction): string {
         </div>
         <div class="nfd-stat">
           <span class="nfd-stat-label">CMD / round</span>
-          <span class="nfd-stat-val">${escapeHtml(f.cmdTokens)} ${commandToken(24, "nfd-cmd-token")}</span>
+          <span class="nfd-stat-val">${escapeHtml(f.cmdTokens)}</span>
+          <span class="dice-row">${commandToken(22)}</span>
         </div>
+      </div>
+      <div class="nfd-ability">
+        <h4 class="nfd-h">Signature ability</h4>
+        <p class="nfd-rule"><span class="nfd-rule-name">${escapeHtml(f.rule.name)}.</span> ${ruleText(f.rule.text)}</p>
       </div>
     </div>`;
 }
@@ -2046,7 +2047,7 @@ function shipsView(state: AppState): string {
 
   const headRow = grouped
     ? `<tr>${textH("name", "Ship")}${statHeaders}<th>Primary</th><th>Auxiliary</th>${textH("cost", "Cost")}</tr>`
-    : `<tr>${textH("name", "Ship")}${textH("faction", "Faction")}${statHeaders}<th>Primary</th><th>Auxiliary</th>${textH("cost", "Cost")}</tr>`;
+    : `<tr>${textH("name", "Ship")}<th>Faction</th>${statHeaders}<th>Primary</th><th>Auxiliary</th>${textH("cost", "Cost")}</tr>`;
   const colspan = grouped ? 8 : 9;
 
   return `
@@ -2069,7 +2070,14 @@ function shipsView(state: AppState): string {
       ${f.era || f.faction || f.mass || f.q ? '<button class="ghost-btn" data-action="ship-filter-clear">Clear filters</button>' : ""}
     </div>
 
-    <p class="comp-count">${shown.length} of ${rows.length} ships</p>
+    <div class="comp-sortbar">
+      <label class="comp-groupcheck ${grouped ? "on" : ""}">
+        <input type="checkbox" data-action="ship-group-faction" ${grouped ? "checked" : ""} />
+        <span class="comp-groupcheck-box">${icon("check", 14)}</span>
+        <span class="comp-groupcheck-label">Sort by faction</span>
+      </label>
+      <p class="comp-count">${shown.length} of ${rows.length} ships</p>
+    </div>
     <div class="table-scroll comp-scroll">
       <table class="comp-table ${grouped ? "grouped" : ""}">
         <thead>${headRow}</thead>

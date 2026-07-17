@@ -177,7 +177,15 @@ function enhanceNav(): void {
     pill.style.width = `${el.offsetWidth}px`;
     pill.style.transform = `translateX(${el.offsetLeft}px)`;
   };
+  // innerHTML rebuilds the pill from scratch on every re-render, so it starts
+  // at width 0 each time. Placing it with the CSS transition live would slide it
+  // in from nothing on every single click - it reads as the nav reloading. Kill
+  // the transition for this first placement only, then restore it so hover still
+  // eases.
+  pill.style.transition = "none";
   place(active);
+  void pill.offsetWidth; // force reflow so the instant placement commits
+  pill.style.transition = "";
   links.forEach((a) => a.addEventListener("mouseenter", () => place(a)));
   nav.addEventListener("mouseleave", () => place(active));
 }

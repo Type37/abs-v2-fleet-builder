@@ -1258,6 +1258,17 @@ function handleChange(e: Event): void {
       });
       break;
     }
+    case "ship-group-faction": {
+      // The obvious control for grouping: checked groups the table by faction
+      // (the default); unchecked drops to a flat list sorted by name, which the
+      // column headers can then re-sort by any stat.
+      store.setState((s) => {
+        const current = s.ui.shipFilter ?? { ...EMPTY_SHIP_FILTER };
+        const sort = target.checked ? "faction" : "name";
+        return { ...s, ui: { ...s.ui, shipFilter: { ...current, sort } } };
+      });
+      break;
+    }
 
     // ---- Foundry ----------------------------------------------------------
     case "cf-field": {

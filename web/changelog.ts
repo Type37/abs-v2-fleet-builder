@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.18",
+    date: "2026-07-17",
+    title: "Steadier faction panel, an obvious compendium toggle, and a calmer nav",
+    items: [
+      "In the New Fleet faction panel, the Initiative and Command figures now sit above the signature ability text, so both plates stay in exactly the same place as you click between factions instead of drifting with the length of each rule. The command symbol is blue to match the dice and lines up beside its number.",
+      "The Ship Compendium gained a clear Sort by faction checkbox, on by default, in place of the hidden behaviour where clicking the Faction column heading quietly re-grouped the table.",
+      "The highlight on the top-right navigation no longer slides in from nothing every time you click something; it just rests on the current section and only moves when you hover.",
+      "The Junkspace page now uses the same heading as the rest of the app rather than its own large dark banner.",
+    ],
+  },
+  {
     version: "0.8.17",
     date: "2026-07-17",
     title: "Faction panel shows just the slogan",
