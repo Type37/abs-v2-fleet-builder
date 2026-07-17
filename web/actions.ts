@@ -575,14 +575,38 @@ function handleClick(e: MouseEvent): void {
       const format = raw === "cards" ? "cards" : raw === "guide" ? "guide" : "roster";
       store.setState((s) => ({
         ...s,
-        ui: { ...s.ui, print: { format, trackers: s.ui.print?.trackers ?? false } },
+        ui: {
+          ...s.ui,
+          print: { format, trackers: s.ui.print?.trackers ?? false, rules: s.ui.print?.rules ?? true },
+        },
       }));
       break;
     }
     case "print-trackers": {
       store.setState((s) => ({
         ...s,
-        ui: { ...s.ui, print: { format: s.ui.print?.format ?? "roster", trackers: !(s.ui.print?.trackers ?? false) } },
+        ui: {
+          ...s.ui,
+          print: {
+            format: s.ui.print?.format ?? "roster",
+            trackers: !(s.ui.print?.trackers ?? false),
+            rules: s.ui.print?.rules ?? true,
+          },
+        },
+      }));
+      break;
+    }
+    case "print-rules": {
+      store.setState((s) => ({
+        ...s,
+        ui: {
+          ...s.ui,
+          print: {
+            format: s.ui.print?.format ?? "roster",
+            trackers: s.ui.print?.trackers ?? false,
+            rules: !(s.ui.print?.rules ?? true),
+          },
+        },
       }));
       break;
     }

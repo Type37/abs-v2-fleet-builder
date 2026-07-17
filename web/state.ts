@@ -142,8 +142,10 @@ export interface AppState {
     modal?: { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean };
     /** In-progress first-visit coachmark tour, once the user has advanced past step 0. */
     tour?: { tourId: string; step: number };
-    /** Print-setup options for the print view (never persisted). */
-    print?: { format: "roster" | "cards" | "guide"; trackers: boolean };
+    /** Print-setup options for the print view (never persisted). `rules` prints
+     * the faction rule block; on by default so a first-time printer gets it,
+     * off for players who know their faction rule by heart. */
+    print?: { format: "roster" | "cards" | "guide"; trackers: boolean; rules: boolean };
     /** Ship-classes catalog view: undefined is the flat list, "chart" is a
      * bar-chart stat comparison. */
     catalogView?: "chart";

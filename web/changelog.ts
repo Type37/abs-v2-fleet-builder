@@ -9,6 +9,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.11",
+    date: "2026-07-17",
+    title: "Denser on every screen, and a print sheet that stops repeating itself",
+    items: [
+      "Faction entries in the New Fleet dialog are now a single original sentence on how the faction plays, in place of the transcribed rulebook briefings.",
+      "Print: the Steps sheet is now just the tutorial, with no personnel list or score table stapled to the back of it. An empty personnel section no longer prints a heading over the words \"None selected\", the score table has dropped its Command tokens row (command tokens are a per-round pool, not something the rules ask you to score), and a new Rules toggle sits beside Trackers for players who know their faction rule by heart.",
+      "Print: ships you have named now appear on both the roster and the cards, the sheet is dated the day you print it rather than the day you last edited the fleet, and the cards use the mass glyph instead of spelling it out.",
+      "Print: the faction rule bar, the personnel bar and the tactical diagrams now survive printing with background graphics turned off, weapon columns wrap instead of running off the edge of the page, and pressing Ctrl+P on the builder now opens every tutorial step instead of printing them collapsed.",
+      "Phones: the navigation is one row instead of two, the home nameplate folds to a single line, and the Fleets and Compendium tables become stacked cards with every column still labelled and readable. Nothing is hidden or truncated to make room, and no text is left below 11px.",
+      "Phones: the faction list in the New Fleet dialog no longer traps your scroll, the Print button sits at the top of the print controls where you can reach it, and long faction names stop pushing the era label off the screen.",
+      "Builder: the tutorial band collapses to its title after your first session, the ship catalog folds away once your fleet has ships in it, and a legal fleet no longer spends a line telling you so. Section headings are tighter throughout.",
+    ],
+  },
+  {
     version: "0.8.10",
     date: "2026-07-12",
     title: "Faction briefings, straight from the rulebook",

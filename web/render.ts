@@ -151,7 +151,11 @@ const TRAINING_GUIDES: Partial<Record<GameMode, { intro: string; steps: GuideSte
   },
 };
 
-function trainingGuide(mode: GameMode): string {
+// `firstSession` opens the band outright for a player who has never been here;
+// after that it collapses to its title bar, because a tutorial you have already
+// read is a wall of text between you and the builder. The steps inside keep
+// their own open/closed state either way.
+function trainingGuide(mode: GameMode, firstSession: boolean): string {
   const g = TRAINING_GUIDES[mode];
   if (!g) return "";
   const pointsHtml = (points?: string[]) =>
@@ -171,18 +175,20 @@ function trainingGuide(mode: GameMode): string {
   const notes = g.notes.map((s) => stepHtml(s)).join("");
   return `
   <section class="guide-band">
-    <div class="guide-inner">
-      <h3 class="guide-title">${icon("book", 16)} Guided tutorial</h3>
-      <p class="guide-intro">${escapeHtml(g.intro)}</p>
-      ${steps}
-      ${
-        notes
-          ? `<h4 class="guide-notes-title">Good to know</h4>
-             <p class="guide-notes-sub">Rules that apply throughout the game, not a step you take once.</p>
-             ${notes}`
-          : ""
-      }
-    </div>
+    <details class="guide-shell" ${firstSession ? "open" : ""}>
+      <summary class="guide-title">${icon("book", 16)} Guided tutorial</summary>
+      <div class="guide-inner">
+        <p class="guide-intro">${escapeHtml(g.intro)}</p>
+        ${steps}
+        ${
+          notes
+            ? `<h4 class="guide-notes-title">Good to know</h4>
+               <p class="guide-notes-sub">Rules that apply throughout the game, not a step you take once.</p>
+               ${notes}`
+            : ""
+        }
+      </div>
+    </details>
   </section>`;
 }
 
@@ -421,10 +427,10 @@ function fleetsView(state: AppState): string {
       <tr>
         <td class="cell-emblem"><span class="emblem-chip">${listEmblem(l, 28)}</span></td>
         <td class="cell-name"><a href="#/list/${l.id}">${escapeHtml(l.fleet.name || "Unnamed fleet")}</a></td>
-        <td>${escapeHtml(faction?.name ?? "Mixed forces")}</td>
-        <td>${l.freePlay ? "Free Play" : MODE_LABEL[l.mode]}</td>
-        <td class="cell-num">${credits(total)}</td>
-        <td class="cell-date">${formatDate(l.updatedAt)}</td>
+        <td data-label="Faction">${escapeHtml(faction?.name ?? "Mixed forces")}</td>
+        <td data-label="Mode">${l.freePlay ? "Free Play" : MODE_LABEL[l.mode]}</td>
+        <td class="cell-num" data-label="Cost">${credits(total)}</td>
+        <td class="cell-date" data-label="Updated">${formatDate(l.updatedAt)}</td>
         <td class="cell-actions">
           <button class="ghost-btn" data-action="duplicate-list" data-id="${l.id}" title="Duplicate this fleet">${icon("duplicate", 16)}</button>
           <button class="ghost-btn" data-action="share-list" data-id="${l.id}" title="Copy a share link">${icon("link", 16)}</button>
@@ -465,18 +471,13 @@ function fleetsView(state: AppState): string {
 // dump. The point at pick-time is "who are these people and what do they do",
 // which the builder itself lays out in full once you commit.
 function factionDetailPane(f: Faction): string {
-  // Verbatim rulebook flavour where we have it; fall back to the faction's own
-  // `playstyle` field (custom factions) otherwise. The briefing is the
-  // in-universe fiction, set in italic serif; the playstyle is plain prose.
   const lore = FACTION_LORE[f.id];
-  const playstyle = lore?.playstyle ?? f.playstyle;
+  const summary = lore?.summary ?? f.playstyle;
   return `
     <div class="nf-detail">
       <h3 class="nfd-title">${escapeHtml(f.name)}</h3>
       <p class="nfd-era-tag">${escapeHtml(f.era)}</p>
-      ${lore?.tagline ? `<p class="nfd-tagline">${escapeHtml(lore.tagline)}</p>` : ""}
-      ${lore?.briefing ? `<p class="nfd-briefing">${escapeHtml(lore.briefing)}</p>` : ""}
-      ${playstyle ? `<p class="nfd-playstyle">${escapeHtml(playstyle)}</p>` : ""}
+      ${summary ? `<p class="nfd-summary">${escapeHtml(summary)}</p>` : ""}
       <div class="nfd-ability">
         <h4 class="nfd-h">Signature ability</h4>
         <p class="nfd-rule"><span class="nfd-rule-name">${escapeHtml(f.rule.name)}.</span> ${ruleText(f.rule.text)}</p>
@@ -559,13 +560,6 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
                      <div class="faction-plaques nf-all">${others.map(plaque).join("")}</div>`
                   : ""
               }
-            </div>
-          </div>
-          <div class="nf-alt">
-            <span class="control-label">Or try a tutorial</span>
-            <div class="nf-alt-opts">
-              <button class="bar-btn" data-action="new-training" data-mode="combat-simulator">${icon("book", 14)} Combat Simulator</button>
-              <button class="bar-btn" data-action="new-training" data-mode="management-training">${icon("book", 14)} Management Training</button>
             </div>
           </div>
         </div>
@@ -799,6 +793,22 @@ function builderView(state: AppState): string {
     catalogHtml = faction.ships.map((s) => catalogShipRow(s, faction, false, ownedCount(s.id))).join("");
   }
 
+  // Merged view: catalog filtered to ship classes not yet in fleet.
+  const ownedClassIds = new Set(list.fleet.units.map((u) => u.shipClassId));
+  let unownedCatalogHtml = "";
+  let unownedCount = 0;
+  if (list.freePlay) {
+    // Free Play keeps its faction grouping (and so its full class list) rather
+    // than filtering: a class already in the fleet may legitimately be taken
+    // again from another faction's section.
+    unownedCatalogHtml = catalogHtml;
+    unownedCount = allFactions(customs).reduce((n, f) => n + f.ships.length, 0);
+  } else if (faction) {
+    const unowned = faction.ships.filter((s) => !ownedClassIds.has(s.id));
+    unownedCount = unowned.length;
+    unownedCatalogHtml = unowned.map((s) => catalogShipRow(s, faction, false, 0)).join("");
+  }
+
   // Personnel catalog. Turning one on is the whole interaction: the card you
   // just clicked becomes its own complete record, holding the carried-by
   // assignment and a rename field right there. Nothing lives in a second
@@ -972,6 +982,7 @@ function builderView(state: AppState): string {
       <div class="mf-menu-panel">
         <a href="#/print/${list.id}">${icon("print", 16)} Print setup</a>
         <button data-action="share-list" data-id="${list.id}">${icon("link", 16)} Share link</button>
+        <button data-action="copy-list-text" data-id="${list.id}">${icon("scroll", 16)} Copy as text</button>
         <button data-action="duplicate-list" data-id="${list.id}">${icon("duplicate", 16)} Duplicate</button>
         <button class="danger" data-action="delete-list" data-id="${list.id}">${icon("trash", 16)} Delete fleet</button>
       </div>
@@ -986,9 +997,9 @@ function builderView(state: AppState): string {
 
   return `
   ${topbar()}
-  ${trainingGuide(list.mode)}
+  ${trainingGuide(list.mode, state.onboarding.visits <= 1)}
 
-  <main class="builder ${remaining < 0 ? "is-over" : ""}">
+  <main class="builder mf-preview-merged ${remaining < 0 ? "is-over" : ""}">
     <header class="mf-head">
       <div class="mf-headline">
         <span class="mf-emblem">${emblemPicker}</span>
@@ -1010,31 +1021,19 @@ function builderView(state: AppState): string {
 
     <div class="mf-body">
       <section class="mf-manifest">
-        <h3 class="mf-h">Roster <span class="mf-h-count">${list.fleet.units.length} ${unitWord}</span></h3>
-        <div class="mf-list">
-          ${unitRows || '<p class="mf-empty">Nothing requisitioned yet. Add classes from the yard on the right.</p>'}
-        </div>
-
-        <details class="mf-notes" ${list.fleet.notes ? "open" : ""}>
-          <summary>Notes${list.fleet.notes ? ` <span class="mf-h-count">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
-          <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
-        </details>
-      </section>
-
-      <section class="mf-yard">
         ${
-          // Legality status: a single small line right by the buying section
-          // instead of its own block under the roster. Clean fleets get a
-          // quiet one-line check; problems collapse into a tiny popover count
-          // so the issue text is available without permanently taking space.
+          // A legal fleet says nothing worth a standing line: silence is the
+          // confirmation, and the line is only spent when there is something to
+          // resolve. Free Play still announces itself, because "no rules check"
+          // is not the absence of a result, it is a different result.
           list.freePlay
             ? '<p class="yard-status is-muted">Free Play, no rules check</p>'
-            : issues.length === 0
-              ? `<p class="yard-status is-ok">${icon("check", 12)} Legal</p>`
-              : `<details class="yard-status-pop">
+            : issues.length > 0
+              ? `<details class="yard-status-pop">
                   <summary class="yard-status is-fail">${icon("warning", 12)} ${issues.length} to resolve</summary>
                   <ul class="yard-status-panel issue-list">${issues.map(issueLine).join("")}</ul>
                 </details>`
+              : ""
         }
         ${
           faction && !list.freePlay
@@ -1045,7 +1044,7 @@ function builderView(state: AppState): string {
               </div>`
             : ""
         }
-        <h3 class="mf-h">Ship classes ${
+        <h3 class="mf-h">Ships <span class="mf-h-count">${list.fleet.units.length} ${unitWord}</span>${
           faction && !list.freePlay
             ? switcher(
                 "Ship classes view",
@@ -1062,10 +1061,33 @@ function builderView(state: AppState): string {
         ${
           catalogView === "chart" && faction && !list.freePlay
             ? `${catalogChartPicker(chartStat)}${catalogChart(faction, chartStat)}`
-            : `<div class="mf-list">${catalogHtml || '<p class="mf-empty">Pick a faction to see its ships.</p>'}</div>`
+            : `<div class="mf-list">
+                ${unitRows}
+                ${
+                  // An empty fleet needs the catalog open - it is the only thing
+                  // to do. Once units are aboard the catalog is a wall of rows
+                  // between the roster and everything below it, so it folds away
+                  // behind its own title until asked for.
+                  !unownedCatalogHtml
+                    ? list.fleet.units.length === 0
+                      ? '<p class="mf-empty">Pick a faction and add ships below.</p>'
+                      : ""
+                    : list.fleet.units.length === 0
+                      ? unownedCatalogHtml
+                      : `<details class="mf-addships">
+                          <summary class="mf-sub-h">${icon("plus", 14)} Add ships <span class="mf-h-count">${unownedCount} ${unownedCount === 1 ? "class" : "classes"}</span></summary>
+                          ${unownedCatalogHtml}
+                        </details>`
+                }
+              </div>`
         }
         <h3 class="mf-h">Personnel pool <span class="mf-h-count">${hvpCount}</span></h3>
         <div class="mf-list personnel-grid">${personnelCatalog}</div>
+
+        <details class="mf-notes" ${list.fleet.notes ? "open" : ""}>
+          <summary>Notes${list.fleet.notes ? ` <span class="mf-h-count">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
+          <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
+        </details>
       </section>
     </div>
 
@@ -1086,7 +1108,7 @@ function printView(state: AppState): string {
   const faction = findFaction(list.fleet.factionId, customs);
   const { total } = listTotals(list, customs);
   const era = MODE_ERA[list.mode];
-  const opts = state.ui.print ?? { format: "roster" as const, trackers: false };
+  const opts = state.ui.print ?? { format: "roster" as const, trackers: false, rules: true };
   // Shipyard-shape modes (Hypergrowth, Management Training) don't bring a
   // fixed pre-built roster to the table (p.122): the printed sheet is a
   // shopping catalogue of what's in the Shipyard, requisitioned piecemeal
@@ -1121,6 +1143,10 @@ function printView(state: AppState): string {
       ]
         .filter(Boolean)
         .join(". ");
+      // Player-given ship names are cosmetic but they are how the player refers
+      // to the ship at the table, so the sheet has to carry them. Blank slots in
+      // a partially-named stack are dropped rather than printed as gaps.
+      const named = (u.shipNames ?? []).slice(0, u.count).filter((n) => n && n.trim());
       // One hull-tracker box group per ship in the stack, so a 4-ship unit gets
       // four separately-trackable damage tallies, not one shared box.
       const trackCell = opts.trackers
@@ -1136,6 +1162,7 @@ function printView(state: AppState): string {
         <td class="pr-unit">
           <span class="pr-unit-name">${escapeHtml(title)}</span>
           <span class="pr-unit-class">${escapeHtml(ship.name)}${list.freePlay ? `, ${escapeHtml(r.owner.name)}` : ""}</span>
+          ${named.length ? `<span class="pr-unit-ships">${escapeHtml(named.join(" / "))}</span>` : ""}
           ${notes ? `<span class="pr-unit-notes">${escapeHtml(notes)}</span>` : ""}
         </td>
         <td class="pr-num">${u.count}</td>
@@ -1186,6 +1213,7 @@ function printView(state: AppState): string {
           const def = hvpById(h.hvpId, faction);
           return h.customName ? `${h.customName}, ${def?.name ?? h.hvpId}` : (def?.name ?? h.hvpId);
         });
+      const named = (u.shipNames ?? []).slice(0, u.count).filter((n) => n && n.trim());
       return `
       <article class="print-card">
         <header class="pc-head">
@@ -1193,7 +1221,8 @@ function printView(state: AppState): string {
           <span class="pc-name">${escapeHtml(title)}</span>
           <span class="pc-cost">${credits(ship.cost * u.count)}</span>
         </header>
-        <p class="pc-sub">${u.count}× ${escapeHtml(ship.name)} · Mass ${ship.mass}${u.species ? ` · ${escapeHtml(u.species)}` : ""}</p>
+        <p class="pc-sub">${u.count}× ${escapeHtml(ship.name)} · ${massGlyph(ship.mass, 13)} Mass ${ship.mass}${u.species ? ` · ${escapeHtml(u.species)}` : ""}</p>
+        ${named.length ? `<p class="pc-ships">${escapeHtml(named.join(" / "))}</p>` : ""}
         <table class="pc-stats"><tbody>
           <tr><th>Thrust</th><td>${ship.thrust}"</td><th>Silhouette</th><td>${ship.silhouette}</td><th>Shields</th><td>${ship.shields}</td></tr>
         </tbody></table>
@@ -1247,7 +1276,7 @@ function printView(state: AppState): string {
           ${guideAvailable ? `<button class="${opts.format === "guide" ? "selected" : ""}" data-action="print-format" data-format="guide">Steps</button>` : ""}
         </span>
         <label class="print-toggle"><input type="checkbox" data-action="print-trackers" ${opts.trackers ? "checked" : ""} /> Trackers</label>
-        <button class="bar-btn" data-action="copy-list-text" data-id="${list.id}">${icon("duplicate", 15)} Copy as text</button>
+        <label class="print-toggle"><input type="checkbox" data-action="print-rules" ${opts.rules ? "checked" : ""} /> Rules</label>
       </div>
       <button class="cta-btn" data-action="do-print">${icon("print", 17)} Print this document</button>
     </div>
@@ -1261,12 +1290,12 @@ function printView(state: AppState): string {
         </div>
         <div class="sheet-totals">
           <p class="sheet-total-line">${credits(total)} of ${credits(list.fleet.creditsLimit)}</p>
-          <p class="sheet-date">${formatDate(list.updatedAt)}</p>
+          <p class="sheet-date">${formatDate(new Date().toISOString())}</p>
         </div>
       </header>
 
       ${
-        faction
+        faction && opts.rules
           ? `<section class="print-rule">
               <h3>Faction rule: ${escapeHtml(faction.rule.name)}</h3>
               <p>${ruleText(faction.rule.text)}</p>
@@ -1283,8 +1312,15 @@ function printView(state: AppState): string {
           : `<h2 class="sheet-section">${isShipyard ? "Shipyard" : "Units"}</h2>${(opts.format === "cards" ? cardBlocks : unitBlocks) || '<p class="print-note">No units.</p>'}`
       }
 
-      <h2 class="sheet-section">High-Value Personnel</h2>
-      ${hvpBlocks || '<p class="print-note">None selected.</p>'}
+      ${
+        // The Steps sheet is a how-to-play handout, not a fleet record: HVP
+        // rules and a score table belong on the roster the player brings to the
+        // table, not stapled to the back of the tutorial. An empty HVP section
+        // is dropped outright rather than printing a header over "None selected".
+        opts.format === "guide"
+          ? ""
+          : `
+      ${hvpBlocks ? `<h2 class="sheet-section">High-Value Personnel</h2>${hvpBlocks}` : ""}
 
       <h2 class="sheet-section">Score record</h2>
       ${(() => {
@@ -1299,11 +1335,11 @@ function printView(state: AppState): string {
         <tbody>
           <tr><th>${isCredits ? "Credits earned" : "Victory points"}</th>${cells}<td></td></tr>
           <tr><th>Opponent</th>${cells}<td></td></tr>
-          <tr><th>Command tokens spent</th>${cells}<td></td></tr>
           <tr><th>Notes</th>${cells}<td></td></tr>
         </tbody>
       </table>`;
-      })()}
+      })()}`
+      }
       ${list.fleet.notes ? `<section class="print-notes"><h3 class="sheet-section">Notes</h3><p>${escapeHtml(list.fleet.notes)}</p></section>` : ""}
     </article>
   </div>`;
@@ -1847,14 +1883,16 @@ function shipsView(state: AppState): string {
   const statHeaders = `${sortH("mass", "stat-mass", "Mass")}${sortH("thrust", "stat-thrust", "Thr")}${sortH("silhouette", "stat-silhouette", "Sil")}${sortH("shields", "stat-shields", "Shd")}`;
 
   // A ship's data cells (stats + weapons + cost), shared by both layouts.
+  // data-label carries each column's heading down into the cell, so the mobile
+  // card layout can label every value in place once the <thead> is off-screen.
   const shipCells = (r: CompRow) => `
-    <td class="comp-num">${r.mass}</td>
-    <td class="comp-num">${r.thrust}"</td>
-    <td class="comp-num">${r.silhouette}</td>
-    <td class="comp-num">${r.shields}</td>
-    <td class="comp-weap">${r.primary || '<span class="muted">None</span>'}</td>
-    <td class="comp-weap">${r.auxiliary || '<span class="muted">None</span>'}</td>
-    <td class="comp-num comp-cost">${r.costLabel}</td>`;
+    <td class="comp-num" data-label="Mass">${r.mass}</td>
+    <td class="comp-num" data-label="Thrust">${r.thrust}"</td>
+    <td class="comp-num" data-label="Silhouette">${r.silhouette}</td>
+    <td class="comp-num" data-label="Shields">${r.shields}</td>
+    <td class="comp-weap" data-label="Primary">${r.primary || '<span class="muted">None</span>'}</td>
+    <td class="comp-weap" data-label="Auxiliary">${r.auxiliary || '<span class="muted">None</span>'}</td>
+    <td class="comp-num comp-cost" data-label="Cost">${r.costLabel}</td>`;
 
   // Grouped by faction (the default): a full-width faction bar, then its ships,
   // with the redundant Faction/Era columns dropped. Sorted by a stat instead:
@@ -1887,7 +1925,8 @@ function shipsView(state: AppState): string {
   } else {
     bodyHtml = shown
       .map(
-        (r) => `<tr><td class="comp-name">${escapeHtml(r.name)}</td><td class="comp-fac">${escapeHtml(r.factionName)}</td>${shipCells(r)}</tr>`,
+        (r) =>
+          `<tr><td class="comp-name">${escapeHtml(r.name)}</td><td class="comp-fac" data-label="Faction">${escapeHtml(r.factionName)}</td>${shipCells(r)}</tr>`,
       )
       .join("");
   }
