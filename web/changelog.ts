@@ -9,6 +9,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.14",
+    date: "2026-07-17",
+    title: "Usable without a mouse, and readable on a phone",
+    items: [
+      "The control you just used keeps the focus. Every click used to throw focus back to the top of the page, so anyone working by keyboard had to tab all the way in again after each step, add, or removal.",
+      "Weapons are readable on a phone. The five aligned columns did not fit a narrow screen and squeezed the weapon's name down to about a centimetre; the row now breaks onto two lines instead, with the name on its own line and Attack, Range and Damage labelled underneath. The wide layout is unchanged.",
+      "Actions like copying or duplicating a fleet are now announced to screen readers, the page title says which view you are on, Escape closes the New Fleet dialog and any open menu, and a Skip to main content link appears when you tab into the page.",
+      "Errors and warnings say which they are and carry their own symbol, instead of relying on a red-or-amber colour difference that is invisible to many readers. Placeholder text, the over-budget figure, small labels on tinted panels, and the focus ring on the blue masthead were all too faint to meet contrast guidelines and have been darkened.",
+      "The plus button at a unit's maximum size no longer drops out of the keyboard order; it stays reachable and now says which unit it belongs to and what the maximum is. All the steppers name their unit rather than each announcing an identical \"one more ship\".",
+      "Animations are dropped when the system asks for reduced motion, instead of only the sliding masthead highlight.",
+    ],
+  },
+  {
     version: "0.8.13",
     date: "2026-07-17",
     title: "The tutorial no longer opens broken",

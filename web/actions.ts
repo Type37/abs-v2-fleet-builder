@@ -1,4 +1,6 @@
 import type { Faction, GameMode, Mass, PilotClass, Weapon } from "../src/types.ts";
+import { maxUnitSize } from "../src/validation.ts";
+import { announce } from "./announce.ts";
 import { findFaction, isCustom } from "./catalog.ts";
 import { resolveShip } from "./render.ts";
 import { newId, persistCustomFactions, persistLists, persistOnboarding, persistOutfits } from "./storage.ts";
@@ -96,6 +98,9 @@ let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 function showToast(message: string): void {
   if (toastTimer) clearTimeout(toastTimer);
+  // The toast is rendered inside #app, which is replaced wholesale on every
+  // state change, so it cannot announce itself. Speak it separately.
+  announce(message);
   store.setState((s) => ({ ...s, ui: { ...s.ui, toast: message } }));
   toastTimer = setTimeout(() => {
     store.setState((s) => ({ ...s, ui: { ...s.ui, toast: undefined } }));
@@ -495,8 +500,14 @@ function handleClick(e: MouseEvent): void {
       const unitId = target.dataset["unit"];
       const delta = Number(target.dataset["delta"]);
       if (!id || !unitId || !Number.isFinite(delta)) return;
-      store.setState((s) =>
-        updateFleet(s, id, (f) => {
+      store.setState((s) => {
+        const list = s.lists.find((l) => l.id === id);
+        const faction = list ? findFaction(list.fleet.factionId, s.customFactions) : undefined;
+        // The (+) is aria-disabled at the cap rather than disabled, so it stays
+        // focusable and still fires - the ceiling has to be enforced here rather
+        // than by the browser refusing the click.
+        const uncapped = list?.freePlay || list?.mode === "hypergrowth";
+        return updateFleet(s, id, (f) => {
           // Stepping below 1 removes the unit entirely (its (-) button turns
           // red at count 1 to signal the delete).
           const current = f.units.find((u) => u.id === unitId);
@@ -514,13 +525,15 @@ function handleClick(e: MouseEvent): void {
             ...f,
             units: f.units.map((u) => {
               if (u.id !== unitId) return u;
-              const count = Math.max(1, u.count + delta);
+              const ship = resolveShip(u.shipClassId, faction, s.customFactions)?.ship;
+              const ceiling = uncapped ? 99 : ship ? maxUnitSize(ship.mass) : 3;
+              const count = Math.min(ceiling, Math.max(1, u.count + delta));
               const shipNames = u.shipNames ? u.shipNames.slice(0, count) : undefined;
               return { ...u, count, ...(shipNames ? { shipNames } : {}) };
             }),
           };
-        }),
-      );
+        });
+      });
       break;
     }
     case "add-hvp": {
@@ -1439,5 +1452,24 @@ export function wireActions(root: HTMLElement): void {
   root.addEventListener("input", (e) => {
     const t = e.target as HTMLElement | null;
     if (t?.dataset?.["action"] === "ship-search") handleChange(e);
+  });
+  // Escape closes whatever is on top. Bound to the document, not root, because
+  // focus can legitimately sit outside #app (the skip link, the address bar
+  // returning focus to body) and Escape must still work from there.
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const s = store.getState();
+    if (s.ui.modal) {
+      e.preventDefault();
+      store.setState((st) => ({ ...st, ui: { ...st.ui, modal: undefined } }));
+      return;
+    }
+    // No modal: fall back to closing an open transient popover, innermost first.
+    const open = document.querySelector<HTMLDetailsElement>("details[open]:not([data-persist])");
+    if (open) {
+      e.preventDefault();
+      open.open = false;
+      open.querySelector<HTMLElement>("summary")?.focus();
+    }
   });
 }

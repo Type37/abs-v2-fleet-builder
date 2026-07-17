@@ -23,7 +23,11 @@
   --ground: #f2f4f8;      /* used sparingly, only to seat white cards */
   --ink: #0a0e14;
   --ink-2: #3a424f;
-  --ink-3: #6b7480;
+  /* Carries most of the app's small labels. #6b7480 passed on white (4.74:1)
+     but not on --blue-wash (4.14:1), where plenty of those labels actually sit:
+     the guide band, hovered ship rows, the phase checklist. One step darker
+     clears 4.5:1 on both grounds. */
+  --ink-3: #5c6472;
 
   --blue: #0b3d91;
   --blue-deep: #062a6b;
@@ -31,6 +35,11 @@
   --red: #fc3d21;
   --red-deep: #d32c12;
   --red-wash: #ffece7;
+  /* Placeholders were set per-field at #c7cdd6 / #b4bcc8 / #aab2be - 1.6:1 to
+     2.1:1 on white, well under the 4.5:1 body text needs. One token at 5.96:1
+     instead. The unit-name field in particular shows a real, load-bearing value
+     here (the auto-generated unit name), not a hint. */
+  --placeholder: #5c6472;
   --amber: #b4520a;
   --amber-wash: #fbeddc;
   --go: #0b6b3a;
@@ -109,6 +118,40 @@ a:focus-visible, button:focus-visible, summary:focus-visible,
 input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid var(--red);
   outline-offset: 2px;
+}
+/* On the blue chrome the red ring is only 2.79:1 against #0b3d91, under the 3:1
+   that a focus indicator has to meet. A white inner ring carries the contrast
+   there (8.6:1) while the red halo keeps the ring recognisably the same object
+   as everywhere else. */
+.topbar a:focus-visible, .topbar button:focus-visible,
+.cta-btn:focus-visible, .mf-play-cta:focus-visible, .nameplate a:focus-visible {
+  outline-color: #fff;
+  box-shadow: 0 0 0 4px var(--red);
+}
+
+/* Available to any element that must be spoken but not seen. Uses the clip-rect
+   idiom, not display:none or visibility:hidden - both of those also remove the
+   element from the accessibility tree, which is the opposite of the point. */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%);
+  overflow: hidden; white-space: nowrap;
+}
+
+/* Keyboard users land here first and can jump the masthead nav. Off-screen
+   until focused, then a normal-looking control in the top-left. */
+.skip-link {
+  position: absolute; top: 0; left: 0; z-index: 100;
+  transform: translateY(-120%);
+  background: var(--paper); color: var(--color-ink);
+  font-family: var(--display); font-weight: 800; font-size: 13px;
+  padding: 10px 16px; border: 2px solid var(--red);
+}
+.skip-link:focus {
+  transform: translateY(0);
+  text-decoration: none;
 }
 /* Native focus ring is fine as a fallback where :focus-visible is unsupported. */
 summary { outline-offset: 2px; }
@@ -250,7 +293,19 @@ button { font-family: inherit; }
   padding: 9px 14px; border: 1px solid transparent; transition: color 0.16s ease;
 }
 .topnav a:hover { color: #fff; text-decoration: none; }
-@media (prefers-reduced-motion: reduce) { .nav-pill { transition: opacity 0.16s ease; } }
+/* The sliding nav highlight, the CTA shine sweep, the index rows that slide on
+   hover, the switcher thumb, the meter fills - all of it is decoration, and a
+   reader who has asked the OS for less motion should get none of it. Colour and
+   opacity changes still land instantly, so nothing loses its state cue. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .nav-pill { transition: opacity 0.16s ease !important; }
+}
 
 /* Uniform WarLore builder footer: one centered, dot-separated line. */
 .game-info-footer { margin-top: 64px; border-top: 1px solid var(--hair-soft); padding: 18px 16px 30px; }
@@ -468,7 +523,7 @@ button { font-family: inherit; }
   letter-spacing: -0.01em; color: var(--ink); border: none; border-bottom: 2px solid transparent;
   padding: 1px 0; width: min(560px, 70vw); background: transparent;
 }
-.fleet-name-input::placeholder { color: #b4bcc8; }
+.fleet-name-input::placeholder { color: var(--placeholder); }
 .fleet-name-input:focus { outline: none; border-bottom-color: var(--red); }
 
 .emblem-picker { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -695,10 +750,17 @@ button { font-family: inherit; }
    column a real fixed track, so "Attack"/"Range"/"Dmg" sit tight and aligned
    under their own header no matter how wide the row is. Max-width caps it at
    a legible line length instead of stretching across a wide desktop column. */
-.weap-table {
-  display: grid; grid-template-columns: 14px minmax(0, 1fr) 46px 56px 28px; column-gap: 10px; row-gap: 3px;
-  align-items: baseline; max-width: 420px; margin-top: 6px; font-variant-numeric: tabular-nums;
+.weap-table { max-width: 420px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+/* Every row - header, weapon, note - shares one template, so the columns line
+   up down the whole table without the table being one big grid (which left the
+   cells with no owning row for assistive tech). */
+.wt-row {
+  display: grid; grid-template-columns: 14px minmax(0, 1fr) 46px 56px 28px;
+  column-gap: 10px; align-items: baseline; margin-bottom: 3px;
 }
+/* On desktop the column header names each figure, so the inline label would be
+   saying it twice. */
+.wt-inline-lbl { display: none; }
 .weap-table .wt-h {
   font-family: var(--sans); font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   color: var(--ink-3); padding-bottom: 3px; border-bottom: 1px solid var(--hair-soft); align-self: end;
@@ -752,7 +814,7 @@ button { font-family: inherit; }
 .roster-unit.unresolved { background: var(--red-wash); }
 .roster-unit-glyph { color: var(--blue); flex-shrink: 0; }
 .unit-name-input { flex: 1; min-width: 0; font-family: var(--display); font-weight: 700; font-size: 15px; border: none; border-bottom: 1px solid transparent; padding: 3px 0; background: transparent; color: var(--ink); }
-.unit-name-input::placeholder { color: #aab2be; font-weight: 600; }
+.unit-name-input::placeholder { color: var(--placeholder); font-weight: 600; }
 .unit-name-input:focus { outline: none; border-bottom-color: var(--red); }
 .roster-unit-cost { font-family: var(--display); font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--blue); white-space: nowrap; }
 .roster-unit-sub { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px; }
@@ -761,7 +823,13 @@ button { font-family: inherit; }
 .stepper { display: inline-flex; align-items: center; border: 1px solid var(--hair); }
 .stepper button { background: var(--paper); border: none; padding: 6px 9px; cursor: pointer; color: var(--ink); display: inline-flex; }
 .stepper button:hover { background: var(--ink); color: #fff; }
-.stepper button:disabled { color: var(--ink-3); cursor: default; background: var(--paper); }
+/* aria-disabled, not disabled: the button keeps its place in the tab order and
+   can still hold focus (a disabled one cannot, so stepping up to the cap threw
+   focus back to the top of the document). It looks and behaves inert; the
+   ceiling is enforced in the handler. */
+.stepper button:disabled,
+.stepper button[aria-disabled="true"] { color: var(--ink-3); cursor: default; background: var(--paper); }
+.stepper button[aria-disabled="true"]:hover { background: var(--paper); color: var(--ink-3); }
 /* At count 1 the (-) deletes the unit: warn in red on hover. */
 .stepper button.will-remove:hover { background: var(--red); color: #fff; }
 .stepper-count { padding: 0 12px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; border-left: 1px solid var(--hair); border-right: 1px solid var(--hair); line-height: 28px; }
@@ -780,6 +848,7 @@ button { font-family: inherit; }
 .inspection-pass { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: var(--go); }
 .issue-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
 .issue-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.4; }
+.issue-sev { font-weight: 800; }
 .issue-error { color: var(--red-deep); font-weight: 600; }
 .issue-warning { color: var(--amber); font-weight: 600; }
 
@@ -788,7 +857,10 @@ button { font-family: inherit; }
 .roster-notes > summary::-webkit-details-marker { display: none; }
 .notes-input { display: block; width: 100%; border: none; border-top: 1px solid var(--hair-soft); padding: 10px 20px 14px; font-family: var(--sans); font-size: 13px; line-height: 1.5; color: var(--ink); resize: vertical; background: var(--paper); }
 .notes-input::placeholder { color: var(--ink-3); font-style: italic; }
-.notes-input:focus { outline: none; background: var(--blue-wash); }
+/* The wash alone is a 1.13:1 change against white - not a focus indicator. It
+   stays as the "you are typing here" tint, but the ring has to come back. */
+.notes-input:focus { background: var(--blue-wash); }
+.notes-input:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 /* Print setup: options bar (screen only), per-unit cards, and trackers. */
 .print-opts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .print-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
@@ -1209,7 +1281,29 @@ button { font-family: inherit; }
   .stat-chip-mini { font-size: 13px; }
   .stat-lbl, .readout-label, .control-label, .mf-h-count,
   .faction-plaque-rule, .faction-era-label { font-size: 11px; }
-  .weap-table .wt-h { font-size: 11px; }
+
+  /* Five columns do not fit: the fixed tracks and gaps come to 184px of a
+     ~196px row, which left the weapon name about 12px wide - unreadable. The
+     row reflows instead of shrinking. The name takes its own line, the figures
+     sit under it carrying the inline labels the column header supplies on
+     desktop, and the now-redundant header row steps aside. Every figure keeps a
+     visible label; nothing is dropped. */
+  .wt-row {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px;
+    margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px solid var(--hair-soft);
+  }
+  .wt-row:last-child { border-bottom: none; }
+  /* After .wt-row, not before: the header row carries both classes, so at equal
+     specificity the later rule is the one that lands. */
+  .wt-headrow { display: none; }
+  .wt-name { flex: 1 1 100%; font-size: 13px; }
+  .wt-arc { flex: 0 0 auto; }
+  .wt-num { font-size: 12px; text-align: left; }
+  .wt-inline-lbl {
+    display: inline; font-family: var(--sans); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .wt-noterow .wt-note { flex: 1 1 100%; }
 
   /* The nameplate is a first-visit handshake, not something to re-scroll every
      session: on a phone it folds to a single compact line so the index sits
@@ -1366,7 +1460,7 @@ button { font-family: inherit; }
   letter-spacing: -0.01em; text-transform: none; line-height: 1.15; color: var(--ink);
   border-bottom: 2px dotted var(--hair-soft);
 }
-.mf-name::placeholder { color: #c7cdd6; font-weight: 400; }
+.mf-name::placeholder { color: var(--placeholder); font-weight: 400; }
 /* Dotted underline at rest signals "editable text" the same way the credits
    cap and faction switcher already do - without it this reads as a plain
    heading, not a field, until you happen to click it. */
@@ -1377,7 +1471,9 @@ button { font-family: inherit; }
 .mf-tally { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 7px; font-family: var(--display); font-variant-numeric: tabular-nums; }
 .mf-tally-now { font-size: clamp(26px, 3.4vw, 42px); font-weight: 900; color: var(--ink); }
 .mf-tally-free { margin-left: 6px; font-family: var(--display); font-size: 17px; font-weight: 900; color: var(--go); }
-.builder.is-over .mf-tally-now, .builder.is-over .mf-tally-free { color: var(--red); }
+/* --red is 3.60:1 on white; at 17px this is normal-size text needing 4.5:1.
+   --red-deep is 5.07:1 and reads identically at a glance. */
+.builder.is-over .mf-tally-now, .builder.is-over .mf-tally-free { color: var(--red-deep); }
 
 .mf-meter { margin-top: 8px; height: 7px; background: var(--ground); border: 1px solid var(--hair-soft); }
 .mf-meter-fill { display: block; height: 100%; background: var(--blue); }

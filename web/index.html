@@ -16,7 +16,15 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <div id="app"></div>
+    <!--
+      Announcements for screen readers. This lives OUTSIDE #app on purpose: the
+      app replaces #app wholesale on every state change, and a live region that
+      is created in the same breath as its own text is not announced - the
+      region has to already exist, and empty, for the insertion to register.
+    -->
+    <div id="sr-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

@@ -297,11 +297,14 @@ function listEmblem(l: SavedList, size: number, cls = ""): string {
   return emblemMark(l.emblem, l.emblemImage ?? libraryUrl(l.emblemLib), size, cls);
 }
 
+// The sliding highlight that marks the current page is aria-hidden decoration.
+// enhanceNav() in main.ts already resolves which item the route lands on, so it
+// sets aria-current there rather than every caller threading the route in here.
 function topbar(): string {
   return `
   <header class="topbar">
     <a class="wordmark" href="#/">${icon("logo", 26)}<span class="wordmark-text">A Billion Suns 2e</span><span class="wordmark-sub">Shipyard</span></a>
-    <nav class="topnav">
+    <nav class="topnav" aria-label="Main">
       <span class="nav-pill" aria-hidden="true"></span>
       <a href="#/fleets">${icon("flag", 16)} Fleets</a>
       <a href="#/ships">${icon("compare", 16)} Compendium</a>
@@ -579,9 +582,16 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
 // Builder
 // ---------------------------------------------------------------------------
 
+// An error and a warning used the same glyph and differed only by colour - and
+// by a red/amber pair at that, which is the one pair a red-green colour-blind
+// reader cannot separate. The severity is now said in words and carries its own
+// glyph, so the colour is reinforcement rather than the whole message.
 function issueLine(issue: ValidationIssue): string {
-  const cls = issue.severity === "error" ? "issue-error" : "issue-warning";
-  return `<li class="${cls}">${icon("warning", 15)}<span>${escapeHtml(issue.message)}</span></li>`;
+  const isError = issue.severity === "error";
+  const cls = isError ? "issue-error" : "issue-warning";
+  return `<li class="${cls}">${icon(isError ? "close" : "warning", 15)}<span><b class="issue-sev">${
+    isError ? "Error" : "Warning"
+  }:</b> ${escapeHtml(issue.message)}</span></li>`;
 }
 
 function speciesSelect(unit: FleetUnit): string {
@@ -629,12 +639,27 @@ function switcher(
 // widths are fixed by the grid template instead of an HTML table's auto
 // layout, which stretches short columns apart with huge, uneven gaps.
 function weaponsTable(ship: ShipClass): string {
-  const row = (w: Weapon, arc: "primary" | "aux") =>
-    `<span class="wt-arc" role="cell" title="${arc === "primary" ? "Primary — 45 degree arc" : "Auxiliary — 180 degree arc"}">${icon(arc === "primary" ? "arc-primary" : "arc-aux", 11, "slot-arc")}</span>
-    <span class="wt-name" role="cell">${escapeHtml(w.name)}</span>
-    <span class="wt-num" role="cell">${w.count}${w.die}</span>
-    <span class="wt-num" role="cell">${w.rangeMin}-${w.rangeMax}"</span>
-    <span class="wt-num" role="cell">${DAMAGE_BY_DIE[w.die]}</span>`;
+  // Each weapon is wrapped in its own role="row". Previously the cells were
+  // direct children of the role="table" with no row between them, which is
+  // invalid ARIA - cells without an owning row get dropped or flattened, so the
+  // grid lost its structure entirely for anyone using a screen reader.
+  //
+  // The row wrapper also carries the responsive layout: five aligned columns on
+  // desktop, and on a phone the fixed columns plus gaps come to 184px of a
+  // ~196px track, leaving ~12px for the weapon name. There the row reflows -
+  // name on its own line, figures beneath it - and each figure shows the inline
+  // label that the column header carries on desktop. Nothing is dropped at
+  // either size; only which of the two labels is visible changes.
+  const row = (w: Weapon, arc: "primary" | "aux") => {
+    const arcLabel = arc === "primary" ? "Primary, 45 degree arc" : "Auxiliary, 180 degree arc";
+    return `<div class="wt-row" role="row">
+      <span class="wt-arc" role="cell"><span class="visually-hidden">${arcLabel}</span>${icon(arc === "primary" ? "arc-primary" : "arc-aux", 11, "slot-arc")}</span>
+      <span class="wt-name" role="cell">${escapeHtml(w.name)}</span>
+      <span class="wt-num wt-atk" role="cell"><span class="wt-inline-lbl">Attack </span>${w.count}${w.die}</span>
+      <span class="wt-num wt-rng" role="cell"><span class="wt-inline-lbl">Range </span>${w.rangeMin}-${w.rangeMax}"</span>
+      <span class="wt-num wt-dmg" role="cell"><span class="wt-inline-lbl">Damage </span>${DAMAGE_BY_DIE[w.die]}</span>
+    </div>`;
+  };
   const rows = [...ship.primary.map((w) => row(w, "primary")), ...ship.auxiliary.map((w) => row(w, "aux"))];
   // Utility Bays / non-weapon fittings that are not in the weapon arrays.
   const notes: string[] = [];
@@ -643,9 +668,15 @@ function weaponsTable(ship: ShipClass): string {
   if (ship.primary.length === 0 && pText !== "None") notes.push(pText);
   if (ship.auxiliary.length === 0 && aText !== "None") notes.push(aText);
   if (rows.length === 0 && notes.length === 0) return '<p class="weap-none">No weapons</p>';
-  const noteRow = notes.length ? `<span class="wt-arc" role="cell"></span><span class="wt-note" role="cell">${notes.map(escapeHtml).join(", ")}</span>` : "";
+  const noteRow = notes.length
+    ? `<div class="wt-row wt-noterow" role="row"><span class="wt-arc" role="cell"></span><span class="wt-note" role="cell">${notes
+        .map(escapeHtml)
+        .join(", ")}</span></div>`
+    : "";
   return `<div class="weap-table" role="table" aria-label="Weapons">
-    <span class="wt-arc wt-h" role="columnheader"></span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">Dmg</span>
+    <div class="wt-row wt-headrow" role="row">
+      <span class="wt-arc wt-h" role="columnheader"><span class="visually-hidden">Firing arc</span></span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">Dmg</span>
+    </div>
     ${rows.join("")}${noteRow}
   </div>`;
 }
@@ -908,6 +939,9 @@ function builderView(state: AppState): string {
           return { name: def?.name ?? h.hvpId, rule: def?.rule ?? "" };
         });
       const maxCount = list.freePlay || list.mode === "hypergrowth" ? 99 : r?.ship.mass === 3 ? 1 : 3;
+      // What this unit is called out loud: the player's own name for it if they
+      // gave it one, otherwise the auto-generated one shown in the field.
+      const unitLabel = u.name || unitName || r?.ship.name || "this unit";
       const showSpecies = faction?.requiresSpecies && !list.freePlay;
       // Each carried person is a tap target: the title shows, a popover reveals
       // the rule. Popover is position:absolute, so opening it shifts nothing.
@@ -940,10 +974,23 @@ function builderView(state: AppState): string {
         <div class="ru-controls">
           ${
             r
-              ? `<span class="stepper ru-stepper">
-                  <button class="${u.count <= 1 ? "will-remove" : ""}" data-action="unit-count" data-unit="${u.id}" data-delta="-1" title="${u.count <= 1 ? "Remove this unit" : "One fewer ship"}">${icon("minus", 14)}</button>
+              ? // Every stepper on the roster used to announce the identical
+                // "One fewer ship" / "One more ship", so with eight units a
+                // screen reader heard the same two strings sixteen times with
+                // no way to tell which unit it was on. The unit's name goes in
+                // the label. At the cap the (+) is aria-disabled rather than
+                // disabled: a disabled button cannot hold focus, so pressing it
+                // up to the limit threw focus to the top of the document.
+                `<span class="stepper ru-stepper">
+                  <button class="${u.count <= 1 ? "will-remove" : ""}" data-action="unit-count" data-unit="${u.id}" data-delta="-1" aria-label="${u.count <= 1 ? `Remove ${escapeHtml(unitLabel)}` : `One fewer ship in ${escapeHtml(unitLabel)}`}" title="${u.count <= 1 ? "Remove this unit" : "One fewer ship"}">${icon("minus", 14)}</button>
                   <span class="stepper-count">${u.count}</span>
-                  <button data-action="unit-count" data-unit="${u.id}" data-delta="1" ${u.count >= maxCount ? "disabled" : ""} title="One more ship">${icon("plus", 14)}</button>
+                  <button data-action="unit-count" data-unit="${u.id}" data-delta="1" ${
+                    u.count >= maxCount ? 'aria-disabled="true"' : ""
+                  } aria-label="${
+                    u.count >= maxCount
+                      ? `${escapeHtml(unitLabel)} is at its maximum of ${maxCount} ships`
+                      : `One more ship in ${escapeHtml(unitLabel)}`
+                  }" title="${u.count >= maxCount ? `Maximum ${maxCount} ships in a unit` : "One more ship"}">${icon("plus", 14)}</button>
                 </span>`
               : ""
           }

@@ -12,12 +12,53 @@ const rootEl = document.getElementById("app");
 if (!rootEl) throw new Error("Missing #app root element.");
 const root: HTMLElement = rootEl;
 
+// Identifies an interactive element across a re-render. innerHTML replacement
+// destroys the node you just used, so the only way to hand focus back is to
+// find its replacement by something stable. Almost nothing here carries an id -
+// controls are identified by data-action plus whatever data-* narrows it to one
+// element (data-id, data-index, data-ship...), so that tuple IS the identity.
+// Returns null for anything unidentifiable, which simply means no restore.
+function focusKey(el: Element | null): string | null {
+  if (!(el instanceof HTMLElement)) return null;
+  if (el.id) return `id:${el.id}`;
+  if (!el.dataset["action"]) return null;
+  const parts: string[] = [];
+  for (const k of Object.keys(el.dataset).sort()) {
+    const v = el.dataset[k];
+    if (v !== undefined) parts.push(`${k}=${v}`);
+  }
+  return `data:${parts.join("&")}`;
+}
+
+const SITE_NAME = "A Billion Suns 2e Shipyard";
+const VIEW_TITLE: Record<string, string> = {
+  home: "Home",
+  fleets: "Fleets",
+  builder: "Fleet builder",
+  print: "Print setup",
+  foundry: "Custom Rules",
+  solo: "Solo",
+  "solo-outfit": "Outfit",
+  ships: "Ship Compendium",
+  play: "Play Mode",
+  changelog: "Changelog",
+};
+
+// The hash router repaints the whole page without touching the title, so every
+// route read as the same document. A screen reader gets no signal that the view
+// changed at all; the title is the primary one it has.
+function syncDocumentTitle(): void {
+  const view = store.getState().route.view;
+  const name = VIEW_TITLE[view];
+  document.title = name ? `${name} - ${SITE_NAME}` : SITE_NAME;
+}
+
 function paint(): void {
   // Most text fields commit on `change` (blur), so typing does not re-render.
-  // The compendium search is the exception: it filters live on `input`, so we
-  // preserve focus and caret for any focused element that carries an id.
+  // The compendium search is the exception: it filters live on `input`, so
+  // focus and caret are preserved for the focused control either way.
   const active = document.activeElement;
-  const activeId = active instanceof HTMLElement && active.id ? active.id : null;
+  const activeKey = focusKey(active);
   const caret = active instanceof HTMLInputElement ? active.selectionStart : null;
 
   // The builder's roster panel scrolls independently (position: sticky,
@@ -43,6 +84,11 @@ function paint(): void {
   }
 
   root.innerHTML = render(store.getState());
+  // Every view builds its own <main>; tagging the first one here rather than in
+  // eighteen templates keeps the skip link's target correct on all of them.
+  const mainEl = root.querySelector("main");
+  if (mainEl) mainEl.id = "main-content";
+  syncDocumentTitle();
   enhanceNav();
   positionTour();
 
@@ -57,8 +103,13 @@ function paint(): void {
     else if (closedPanels.has(key)) d.open = false;
   }
 
-  if (activeId) {
-    const restored = document.getElementById(activeId);
+  // Hand focus back to the control the player was actually using. Without this
+  // every click lands focus on <body>, so a keyboard user re-tabs from the top
+  // of the document after every single interaction.
+  if (activeKey) {
+    const restored = activeKey.startsWith("id:")
+      ? document.getElementById(activeKey.slice(3))
+      : [...root.querySelectorAll<HTMLElement>("[data-action]")].find((el) => focusKey(el) === activeKey);
     if (restored instanceof HTMLElement) {
       restored.focus();
       if (restored instanceof HTMLInputElement && caret !== null) {
@@ -110,6 +161,12 @@ function enhanceNav(): void {
     const h = a.getAttribute("href")?.replace(/^#/, "") ?? "";
     return h !== "/" && (path === h || path.startsWith(h + "/"));
   });
+  // The pill is aria-hidden, so it tells a screen reader nothing about where it
+  // is. Mark the same item programmatically. Hover moves the pill but must not
+  // move aria-current - that tracks the route, not the pointer.
+  for (const a of links) a.removeAttribute("aria-current");
+  if (active) active.setAttribute("aria-current", "page");
+
   const place = (el?: HTMLElement): void => {
     if (!el) {
       pill.style.opacity = "0";
