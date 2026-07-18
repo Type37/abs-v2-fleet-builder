@@ -2053,6 +2053,11 @@ button { font-family: inherit; }
    what actually stops it from shifting anything below. */
 .nf-faction-scroll { height: 320px; overflow-y: auto; padding-right: 4px; }
 .nf-detail-col { min-width: 0; border-left: 1px solid var(--hair-soft); padding-left: 22px; }
+/* Clip horizontally so the Armageddon title's slam (a brief scale-up) can never
+   spill past the panel and toggle a scrollbar - which read as the whole screen
+   shaking. overflow-x:clip does not force the y-axis to scroll, so nothing else
+   changes. */
+.nf-detail { overflow-x: clip; }
 .nf-detail-empty { display: flex; align-items: center; justify-content: center; min-height: 220px; text-align: center; }
 /* The title carries an era-keyed desktop entrance (main.ts). inline-block so the
    underline and the wipe clip hug the text; the era class sets the resting
@@ -2060,7 +2065,7 @@ button { font-family: inherit; }
 .nfd-title { position: relative; display: inline-block; font-family: var(--display); font-weight: 800; font-size: 22px; margin-bottom: 2px; text-transform: none; letter-spacing: -0.01em; color: var(--ink); }
 .nfd-title--unity { color: var(--blue); }
 .nfd-title .c { display: inline-block; white-space: pre; }
-.nfd-title .nfd-underline { position: absolute; left: 0; bottom: -5px; height: 3px; width: 100%; background: var(--red); transform: scaleX(0); transform-origin: left bottom; transition: transform 260ms ease-out; }
+.nfd-title .nfd-underline { position: absolute; left: 0; bottom: -1px; height: 3px; width: 100%; background: var(--red); transform: scaleX(0); transform-origin: left bottom; transition: transform 260ms ease-out; }
 /* Armageddon's underline is shown at rest (mobile / reduced-motion / repaint).
    During the slam the title carries .is-landing, which holds it collapsed with
    no transition; removing that class on landing lets the transition draw it in. */

@@ -270,13 +270,17 @@ function slamTitle(el: HTMLElement, text: string): void {
   el.textContent = text;
   el.appendChild(titleRule());
   el.classList.add("is-landing"); // hold the underline collapsed through the slam
-  el.style.transformOrigin = "0% 50%";
+  // Centre-bottom origin so the scale-in grows symmetrically and lands on the
+  // baseline - a left origin plus a big scale pushed a long faction name off the
+  // right edge and toggled a scrollbar every frame (the whole-screen "shake").
+  // The .nf-detail container also clips, so no residual overflow can move layout.
+  el.style.transformOrigin = "50% 100%";
   el.animate(
     [
-      { opacity: 0, transform: "scale(1.9)" },
-      { opacity: 1, transform: "scale(.96)", offset: 0.6 },
-      { transform: "translate(3px,-2px)", offset: 0.78 },
-      { transform: "translate(-3px,2px)", offset: 0.9 },
+      { opacity: 0, transform: "scale(1.45)" },
+      { opacity: 1, transform: "scale(.97)", offset: 0.6 },
+      { transform: "translateY(-2px) scale(1.01)", offset: 0.78 },
+      { transform: "translateY(1px) scale(0.995)", offset: 0.9 },
       { transform: "translate(0,0) scale(1)" },
     ],
     { duration: 340, easing: "cubic-bezier(.2,.9,.2,1)", fill: "forwards" },

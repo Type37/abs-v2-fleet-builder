@@ -407,7 +407,7 @@ function homeView(state: AppState): string {
       ${tutorialCallout(state)}
       <nav class="index">
         ${row("01", "#/fleets", "Fleets", "Build, save, print, and share army lists for any faction and era.")}
-        ${row("02", "#/solo", "Solo Play", "Junkspace: build an outfit, roll for the enemy, run the debt campaign.")}
+        ${row("02", "#/solo", "Solo Play", "Solitaire narrative campaign. Now with Debt!")}
         ${row("03", "#/ships", "Ship Compendium", "Every ship in the game in one filterable, sortable table.")}
         ${row("04", "#/fleets", "Learn to Play", "A guided tutorial battle with a ready-made Training Fleet: setup, every phase, and scoring, walked through step by step.", "new-training", 'data-mode="combat-simulator"')}
         ${row("05", "#/foundry", "Custom Rules", "Design your own factions, ship classes, and personnel.")}

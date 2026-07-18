@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.29",
+    date: "2026-07-17",
+    title: "Steadier Armageddon slam, tighter red underline",
+    items: [
+      "The Armageddon title slam no longer shakes the screen on a long faction name like the Alliance of Non-Human Worlds. The scale-in is centred and bounded, and the panel clips so the animation can never spill out and toggle a scrollbar.",
+      "Raised the red underline on the faction title so it sits right under the name instead of floating low beneath it.",
+      "New Solo Play blurb on the home menu: \"Solitaire narrative campaign. Now with Debt!\"",
+    ],
+  },
+  {
     version: "0.8.28",
     date: "2026-07-17",
     title: "A clearer builder header, labelled weapon arcs, and a tidier footer",
