@@ -1,5 +1,6 @@
 import type { ShipClass, Weapon } from "../src/types.ts";
 import { DAMAGE_BY_DIE } from "../src/types.ts";
+import { creditsGlyph } from "./icons.ts";
 
 // Project style rules: no abbreviations in anything user-visible, no monospace,
 // and a hard budget of one em-dash and one interpunct across the whole project
@@ -27,7 +28,17 @@ export function auxSlotText(ship: ShipClass): string {
   return "None";
 }
 
+/**
+ * A credits figure for display: the credits mark followed by the amount. Main
+ * (fleet) modes only - solo money is ¢k and keeps the plain cent sign.
+ * Returns markup, so use creditsText() anywhere the result is not HTML.
+ */
 export function credits(n: number): string {
+  return `${creditsGlyph(12)}${n}bn`;
+}
+
+/** The same figure as plain text, for exports, attributes and clipboard copy. */
+export function creditsText(n: number): string {
   return `¢${n}bn`;
 }
 

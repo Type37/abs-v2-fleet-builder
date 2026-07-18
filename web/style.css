@@ -694,12 +694,17 @@ button { font-family: inherit; }
 .ep-lib-close:hover { border-color: var(--ink); }
 .ep-lib-scroll { overflow-y: auto; padding: 14px; }
 .lib-cat-title { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--hair-soft); }
-.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
 /* A faint checkerboard behind each tile so all-white / transparent sigils are
    still visible while browsing (colours read fine over it too). */
-.lib-icon { padding: 4px; border: 1px solid var(--hair-soft); cursor: pointer; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+.lib-icon { padding: 6px; border: 1px solid var(--hair-soft); cursor: pointer; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
   background:
     repeating-conic-gradient(var(--hair-soft) 0% 25%, var(--paper) 0% 50%) 0 0 / 16px 16px; }
+/* No content-visibility here, despite the 250-tile grid looking like the textbook
+   case for it. Measured on this grid it saved about 1ms of a 14ms keystroke: the
+   cost was never tile layout, it was image weight, and downscaled thumbnails
+   (scripts/make-emblem-thumbs.py) took that from 9.7MB to 1.3MB. Not worth the
+   extra moving part for 1ms. */
 .lib-icon:hover { border-color: var(--ink); }
 .lib-icon.selected { border-color: var(--blue); box-shadow: inset 0 0 0 2px var(--blue); }
 .lib-icon img { width: 100%; height: 100%; object-fit: contain; }
@@ -1072,6 +1077,11 @@ button { font-family: inherit; }
 .print-ref-list dd { margin: 0 0 1px; font-family: var(--serif); font-size: 11.5px; line-height: 1.35; color: var(--ink-2); }
 .print-ref-cost { font-family: var(--sans); font-weight: 700; font-size: 9.5px; color: var(--blue); letter-spacing: 0.02em; }
 .print-ref-note { font-size: 10.5px; font-style: italic; color: var(--ink-2); margin: 8px 0 0; }
+/* What this fleet's own rules do to a command: a discount, or an alteration.
+   Set in red so it reads as an override of the printed core cost above it. */
+.print-ref-mod { display: block; font-size: 9.5px; color: var(--red); margin-top: 2px; }
+.print-ref-cost s { color: var(--ink-3); font-weight: 400; margin-right: 2px; }
+.is-inksaver .print-ref-mod { color: var(--ink-2); }
 
 /* Roster as one continuous unit-row table (Army Forge / Infinity Army style). */
 .print-roster { width: 100%; border-collapse: collapse; }
@@ -2409,16 +2419,16 @@ button { font-family: inherit; }
 .emblem-choose-label { display: inline-flex; align-items: center; gap: 7px; font-family: var(--sans); font-weight: 700; font-size: 14px; color: var(--ink); }
 
 /* Modal */
-.em-modal { width: min(500px, 100%); display: flex; flex-direction: column; }
+.em-modal { width: min(680px, 100%); display: flex; flex-direction: column; }
 .em-head { display: flex; align-items: center; gap: 12px; }
-.em-preview { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; background: rgba(255,255,255,0.14); color: #fff; flex-shrink: 0; }
-.em-preview .emblem, .em-preview .emblem-img { width: 30px; height: 30px; }
+.em-preview { display: inline-flex; width: 56px; height: 56px; align-items: center; justify-content: center; background: rgba(255,255,255,0.14); color: #fff; flex-shrink: 0; }
+.em-preview .emblem, .em-preview .emblem-img { width: 44px; height: 44px; }
 .em-tabs { display: flex; border-bottom: 1px solid var(--hair); }
 .em-tab { flex: 1; padding: 12px 8px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(--sans); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-3); }
 .em-tab:hover { color: var(--ink); }
 .em-tab.on { color: var(--ink); border-bottom-color: var(--blue); }
 .em-body { padding: 16px 18px; min-height: 220px; }
-.em-scroll { max-height: 46vh; overflow-y: auto; }
+.em-scroll { max-height: 42vh; overflow-y: auto; }
 .em-drop {
   display: flex; align-items: center; justify-content: center; min-height: 180px; cursor: pointer;
   border: 1.5px dashed var(--hair); background: var(--paper); color: var(--ink-3);
@@ -2426,8 +2436,9 @@ button { font-family: inherit; }
 }
 .em-drop:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-wash); }
 .em-drop-cue { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; font-family: var(--sans); font-weight: 700; font-size: 14px; }
-.em-colour { padding: 8px 0; }
-.em-colour-note { font-size: 13px; font-weight: 700; color: var(--ink); margin: 0 0 10px; }
+.em-colour { padding: 14px 0 0; margin-top: 14px; border-top: 1px solid var(--hair); }
+.em-colour-note { font-size: 13px; font-weight: 700; color: var(--ink); margin: 0 0 8px; }
+.em-colour-note + .em-swatches + .em-colour-note { margin-top: 14px; }
 .em-colour-sub { font-weight: 500; font-size: 11px; color: var(--ink-3); }
 .em-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
 .em-swatches .tint-swatch { width: 34px; height: 34px; }
@@ -2460,10 +2471,19 @@ button { font-family: inherit; }
 .pc-cmd-cost { font-family: var(--sans); font-weight: 800; font-size: 10px; color: var(--blue); white-space: nowrap; }
 .pc-cmd-text { font-family: var(--serif); font-size: 12.5px; line-height: 1.4; color: var(--ink-2); margin: 4px 0 0; }
 .pc-cmd-note { font-size: 11.5px; font-style: italic; color: var(--ink-3); margin: 10px 0 0; }
+/* Where a command came from, or what one of your rules does to it. */
+.pc-cmd-from { display: block; font-size: 11px; color: var(--red); margin-top: 4px; }
+.pc-cmd-cost s { color: var(--ink-3); font-weight: 400; margin-right: 2px; }
+/* A discounted command stays visually available even when tokens run low. */
+.pc-cmd.is-discounted { border-color: var(--red); }
+.pc-cmd.is-discounted.is-short { opacity: 1; }
 .pc-cmd-none { font-size: 13px; color: var(--ink-3); margin: 0; }
 
 /* Damage mark: its own hot red, distinct from the error/over-budget red. */
 .dmg-glyph { color: var(--damage); vertical-align: -1px; }
+/* The credits mark sits immediately before its figure, so it needs the same
+   optical baseline as the digits and a hair of air after it. */
+.credits-glyph { vertical-align: -1px; margin-right: 2px; flex: none; }
 .wt-h .dmg-glyph { margin-right: 2px; }
 
 /* ---------------------------------------------------------------------------

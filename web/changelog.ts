@@ -9,6 +9,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.52",
+    date: "2026-07-18",
+    title: "The sheet reads your rules for you",
+    items: [
+      "Commands now show what YOUR fleet actually pays. If a rule discounts a command, it prints at the real cost with the old one struck through and the rule named. If a rule grants a command, it appears in the list as a full entry instead of a footnote telling you to go and look it up.",
+      "In Play Mode, a command your rules make free stays lit even at zero CMD tokens — the moment you most need to notice you can still use it.",
+      "The emblem picker got a lot faster. The library was serving full-size artwork (some of it 2000 pixels square) to fill 95-pixel tiles; it now uses proper thumbnails, cutting the images from 9.7MB to 1.3MB.",
+      "Emblem search actually works. It matched only the filename before, so searching skull, wings, money or alien found nothing. Every mark now carries keywords for what it depicts.",
+      "Bigger emblem tiles and a bigger preview, and the Colour tab is folded into Library so you can see the sigil while you colour it.",
+      "The PAC logo was mostly empty space — its artwork filled 9% of its canvas, so it drew tiny next to everything else. Cropped to the mark; it now fills 86%.",
+      "Fleet costs use the new credits symbol.",
+    ],
+  },
+  {
     version: "0.8.51",
     date: "2026-07-18",
     title: "Adding a ship actually looks like something happened",

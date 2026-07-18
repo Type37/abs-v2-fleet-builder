@@ -5,6 +5,8 @@ import { GENERIC_HVP } from "../src/data/index.ts";
 import { JUNKSPACE_SHIPS } from "../src/data/junkspace.ts";
 import { TRAINING_FLEET } from "../src/data/training-fleet.ts";
 import { CORE_ACTIONS, CORE_COMMANDS } from "../src/data/commands.ts";
+import { deriveCommandEffects, effectiveCost } from "../src/command-effects.ts";
+import type { CommandCostChange, CommandEffects, RuleSource } from "../src/command-effects.ts";
 import { allFactions, factionsByEra, findFaction, makeCatalog, ERA_ORDER } from "./catalog.ts";
 import { auxSlotText, credits, escapeHtml, formatDate, primarySlotText, ruleText } from "./format.ts";
 import {
@@ -260,6 +262,32 @@ export function resolveShip(
 
 function hvpById(id: string, faction: Faction | undefined): Hvp | undefined {
   return faction?.hvp.find((h) => h.id === id) ?? GENERIC_HVP.find((h) => h.id === id);
+}
+
+/**
+ * Every rule actually in play for a list: the faction rule plus each carried
+ * HVP's rule. Feeds the command reader, so the command lists can show what this
+ * particular fleet's rules do to them instead of telling the player to go and
+ * look it up mid-game.
+ */
+function rulesInPlay(list: SavedList, faction: Faction | undefined): RuleSource[] {
+  const rules: RuleSource[] = faction ? [{ name: faction.rule.name, text: faction.rule.text }] : [];
+  for (const sel of list.fleet.hvp) {
+    const def = hvpById(sel.hvpId, faction);
+    if (def) rules.push({ name: def.name, text: def.rule });
+  }
+  return rules;
+}
+
+/** Effects of this list's rules on the command list. */
+function commandEffectsFor(list: SavedList, faction: Faction | undefined): CommandEffects {
+  return deriveCommandEffects(rulesInPlay(list, faction));
+}
+
+/** "0 CMD" / "1 CMD", with the qualifiers a rule attaches. */
+function costChangeSuffix(change: CommandCostChange): string {
+  const bits = [change.scope, change.limit].filter(Boolean).join(", ");
+  return bits ? ` (${escapeHtml(bits)})` : "";
 }
 
 // Auto-numbered unit names: the first unit of a ship class gets the ship's
@@ -1473,10 +1501,51 @@ function printView(state: AppState): string {
 
   // Actions and Commands reference: the full set every fleet can use, so the
   // sheet replaces the rulebook at the table. Requisition is Hypergrowth-only,
-  // so it only appears for the Shipyard-shape modes. The faction rule and each
-  // carried HVP (printed in their own sections) can grant EXTRA commands or
-  // change their cost, so a standing note points the reader to them.
+  // so it only appears for the Shipyard-shape modes.
+  //
+  // This fleet's own rules are read (see src/command-effects.ts) and folded in:
+  // a discounted command prints at its real cost with the old one struck out, a
+  // granted command prints as a full entry alongside the core ones, and a rule
+  // that alters a command prints under it. The sheet is meant to replace the
+  // rulebook, so it has to answer "what does Red Alert cost ME" without sending
+  // the reader off to cross-reference their own faction rule.
+  const effects = commandEffectsFor(list, faction);
   const usableCommands = CORE_COMMANDS.filter((c) => !c.shipyardOnly || isShipyard);
+  const commandEntry = (name: string, cost: number, text: string, extra: string) =>
+    `<dt>${escapeHtml(name)} <span class="print-ref-cost">${cost} CMD</span></dt><dd>${escapeHtml(text)}${extra}</dd>`;
+
+  const coreEntries = usableCommands
+    .map((c) => {
+      const { cost, change } = effectiveCost(c.name, c.cost, effects.costChanges);
+      const discount = change
+        ? `<span class="print-ref-mod">${cost} CMD for you${costChangeSuffix(change)} — ${escapeHtml(change.source)}</span>`
+        : "";
+      const mods = effects.notes
+        .filter((n) => n.command === c.name)
+        .map((n) => `<span class="print-ref-mod">${escapeHtml(n.text)} — ${escapeHtml(n.source)}</span>`)
+        .join("");
+      // Print the original cost struck through when a rule undercuts it, so the
+      // reader can see it IS the discounted one and not a misprint.
+      const costCell = change
+        ? `<span class="print-ref-cost"><s>${c.cost}</s> ${cost} CMD</span>`
+        : `<span class="print-ref-cost">${c.cost} CMD</span>`;
+      return `<dt>${escapeHtml(c.name)} ${costCell}</dt><dd>${escapeHtml(c.text)}${discount}${mods}</dd>`;
+    })
+    .join("");
+
+  const grantedEntries = effects.granted
+    .map((g) => commandEntry(g.name, g.cost, g.text, `<span class="print-ref-mod">from ${escapeHtml(g.source)}</span>`))
+    .join("");
+  const grantedBlock = grantedEntries
+    ? `<h4 class="print-ref-h">Your extra commands <span class="print-ref-sub">from your rules</span></h4>
+       <dl class="print-ref-list">${grantedEntries}</dl>`
+    : "";
+  const globalBlock = effects.global.length
+    ? `<p class="print-ref-note">${effects.global
+        .map((n) => `${escapeHtml(n.text)} <em>(${escapeHtml(n.source)})</em>`)
+        .join(" ")}</p>`
+    : "";
+
   const commandsSection = `
       <h2 class="sheet-section">Actions &amp; commands</h2>
       <div class="print-ref-cols">
@@ -1488,10 +1557,9 @@ function printView(state: AppState): string {
         </div>
         <div class="print-ref-col">
           <h4 class="print-ref-h">Commands <span class="print-ref-sub">spend CMD tokens</span></h4>
-          <dl class="print-ref-list">
-            ${usableCommands.map((c) => `<dt>${escapeHtml(c.name)} <span class="print-ref-cost">${c.cost} CMD</span></dt><dd>${escapeHtml(c.text)}</dd>`).join("")}
-          </dl>
-          <p class="print-ref-note">Your faction rule${list.fleet.hvp.length ? " and carried personnel" : ""} can grant more commands or change their cost — see ${faction ? `the ${escapeHtml(faction.rule.name)} rule` : "the faction rule"}${list.fleet.hvp.length ? " and the HVP below" : ""}.</p>
+          ${globalBlock}
+          <dl class="print-ref-list">${coreEntries}</dl>
+          ${grantedBlock}
         </div>
       </div>`;
 
@@ -1948,24 +2016,64 @@ const SCORING_NOTES: Partial<Record<GameMode, string[]>> = {
  * applies). Requisition only exists in the Shipyard modes. Faction rules and
  * carried HVP can grant more or change the cost, so a standing note says so.
  */
-function playCommandsPanel(list: SavedList, phase: number, cmdLeft: number): string {
+function playCommandsPanel(list: SavedList, phase: number, cmdLeft: number, faction: Faction | undefined): string {
   const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
-  const usable = CORE_COMMANDS.filter((c) => (!c.shipyardOnly || isShipyard) && c.phases.includes(phase));
-  const affordable = (c: { cost: number }) => cmdLeft >= c.cost;
+  const effects = commandEffectsFor(list, faction);
+
+  // Core commands at the cost THIS fleet pays, plus anything its rules grant.
+  // Affordability is judged on the real cost, so a command discounted to 0 stays
+  // lit when the player is out of tokens - which is exactly when they most need
+  // to notice they can still use it.
+  const core = CORE_COMMANDS.filter((c) => (!c.shipyardOnly || isShipyard) && c.phases.includes(phase)).map((c) => {
+    const { cost, change } = effectiveCost(c.name, c.cost, effects.costChanges);
+    return {
+      name: c.name,
+      cost,
+      text: c.text,
+      base: c.cost,
+      change,
+      notes: effects.notes.filter((n) => n.command === c.name),
+    };
+  });
+  // A granted command has no phase data of its own, so it shows in every phase.
+  // Better to see it once too often than to have it silently absent in the phase
+  // it was meant for.
+  const granted = effects.granted.map((g) => ({
+    name: g.name,
+    cost: g.cost,
+    text: g.text,
+    base: g.cost,
+    change: undefined as CommandCostChange | undefined,
+    notes: [] as { text: string; source: string }[],
+    from: g.source,
+  }));
+  const usable = [...core, ...granted];
+
   const body = usable.length
     ? `<div class="pc-cmd-grid">${usable
-        .map(
-          (c) => `
-        <article class="pc-cmd ${affordable(c) ? "" : "is-short"}">
+        .map((c) => {
+          const from = "from" in c && c.from ? `<span class="pc-cmd-from">from ${escapeHtml(c.from)}</span>` : "";
+          const disc = c.change
+            ? `<span class="pc-cmd-from">${c.cost} CMD${costChangeSuffix(c.change)} — ${escapeHtml(c.change.source)}</span>`
+            : "";
+          const mods = c.notes
+            .map((n) => `<span class="pc-cmd-from">${escapeHtml(n.text)} — ${escapeHtml(n.source)}</span>`)
+            .join("");
+          const costLabel = c.change ? `<s>${c.base}</s> ${c.cost} CMD` : `${c.cost} CMD`;
+          return `
+        <article class="pc-cmd ${cmdLeft >= c.cost ? "" : "is-short"} ${c.change ? "is-discounted" : ""}">
           <header class="pc-cmd-head">
             <h4 class="pc-cmd-name">${escapeHtml(c.name)}</h4>
-            <span class="pc-cmd-cost">${c.cost} CMD</span>
+            <span class="pc-cmd-cost">${costLabel}</span>
           </header>
           <p class="pc-cmd-text">${escapeHtml(c.text)}</p>
-        </article>`,
-        )
+          ${from}${disc}${mods}
+        </article>`;
+        })
         .join("")}</div>
-      <p class="pc-cmd-note">Your faction rule${list.fleet.hvp.length ? " and carried personnel" : ""} may grant more commands or change their cost.</p>`
+      ${effects.global
+        .map((n) => `<p class="pc-cmd-note">${escapeHtml(n.text)} <em>(${escapeHtml(n.source)})</em></p>`)
+        .join("")}`
     : `<p class="pc-cmd-none">No commands are spent in this phase.</p>`;
   return `
     <section class="pc-cmds">
@@ -2061,7 +2169,7 @@ function playView(state: AppState): string {
       }
     </div>
 
-    ${playCommandsPanel(list, play.phase, play.cmd)}
+    ${playCommandsPanel(list, play.phase, play.cmd, faction)}
 
     <div class="solo-grid" style="margin-top:20px">
       <section class="solo-card solo-card-primary">
@@ -2612,7 +2720,11 @@ function emblemModal(state: AppState): string {
   }
   if (!cfg) return "";
 
-  const tabDefs: Array<[string, string]> = [["library", "Library"], ["upload", "Upload"], ["colour", "Colour"]];
+  // Two tabs, not three. Colour used to be its own tab, which meant picking a
+  // sigil and then colouring it were separate places - you could not see the
+  // mark you were tinting. The colour controls now sit under the grid in the
+  // Library tab, with the live preview in the header above both.
+  const tabDefs: Array<[string, string]> = [["library", "Library"], ["upload", "Upload"]];
   const tab = tabDefs.some(([id]) => id === m.tab) ? m.tab : "library";
   const tabBtns = tabDefs
     .map(([id, label]) => `<button class="em-tab ${tab === id ? "on" : ""}" data-action="emblem-modal-tab" data-tab="${id}">${escapeHtml(label)}</button>`)
@@ -2635,22 +2747,27 @@ function emblemModal(state: AppState): string {
       ).join("")}
     </div>`;
 
+  // Colour controls, shown beneath the grid so the sigil and its colours are on
+  // screen together. Tinting is an SVG-only trick, so for a raster mark we say
+  // so plainly and offer the background instead of hiding the row.
+  const colourBlock = `<div class="em-colour">
+      <p class="em-colour-note">Background <span class="em-colour-sub">shown behind the sigil — good for all-white marks</span></p>
+      <div class="em-swatches">${bgSwatch("", "", "None")}${bgSwatch("ink", "background:var(--ink)", "Ink")}${bgSwatch("blue", "background:var(--blue)", "Blue")}${bgSwatch("red", "background:var(--red)", "Red")}${bgSwatch("steel", "background:#5b6472", "Steel")}${bgSwatch("sand", "background:#caa96a", "Sand")}</div>
+      ${
+        isSvg
+          ? `<p class="em-colour-note">Sigil tint <span class="em-colour-sub">vector marks only</span></p>
+             <div class="em-swatches">${tintSwatch("", "tint-none", "Original")}${tintSwatch("ink", "tint-ink", "Ink")}${tintSwatch("blue", "tint-blue", "Blue")}${tintSwatch("red", "tint-red", "Red")}</div>`
+          : `<p class="em-colour-note">Sigil tint <span class="em-colour-sub">this mark is an image, so only vector sigils can be tinted — use a background above</span></p>`
+      }
+    </div>`;
+
   const body =
     tab === "upload"
       ? `<label class="em-drop"><span class="em-drop-cue">${icon("upload", 22)}<span>Click to upload your own image</span></span><input type="file" accept="image/*" data-action="${cfg.upA}" hidden /></label>`
-      : tab === "colour"
-        ? `<div class="em-colour">
-            <p class="em-colour-note">Background <span class="em-colour-sub">shown behind the sigil — good for all-white marks</span></p>
-            <div class="em-swatches">${bgSwatch("", "", "None")}${bgSwatch("ink", "background:var(--ink)", "Ink")}${bgSwatch("blue", "background:var(--blue)", "Blue")}${bgSwatch("red", "background:var(--red)", "Red")}${bgSwatch("steel", "background:#5b6472", "Steel")}${bgSwatch("sand", "background:#caa96a", "Sand")}</div>
-            ${
-              isSvg
-                ? `<p class="em-colour-note" style="margin-top:16px">Sigil tint <span class="em-colour-sub">vector marks only</span></p><div class="em-swatches">${tintSwatch("", "tint-none", "Original")}${tintSwatch("ink", "tint-ink", "Ink")}${tintSwatch("blue", "tint-blue", "Blue")}${tintSwatch("red", "tint-red", "Red")}</div>`
-                : `<p class="muted" style="margin-top:14px">Tip: sigil recolouring works on the vector (SVG) marks. For any other sigil, set a background colour above.</p>`
-            }
-          </div>`
-        : `<input id="emblem-lib-search" class="em-search" type="search" placeholder="Search sigils…" value="${escapeHtml(m.libQuery ?? "")}" data-action="emblem-lib-search" aria-label="Search sigils" />
-           ${folderChips}
-           <div class="em-scroll">${iconLibraryGrid(cfg.libA, cfg.currentLib, activeCat, m.libQuery)}</div>`;
+      : `<input id="emblem-lib-search" class="em-search" type="search" placeholder="Search sigils — try skull, wings, money…" value="${escapeHtml(m.libQuery ?? "")}" data-action="emblem-lib-search" aria-label="Search sigils" />
+         ${folderChips}
+         <div class="em-scroll">${iconLibraryGrid(cfg.libA, cfg.currentLib, activeCat, m.libQuery)}</div>
+         ${colourBlock}`;
 
   return `
   <div class="modal-root">

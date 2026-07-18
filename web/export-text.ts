@@ -3,7 +3,7 @@
 
 import type { Faction, Hvp } from "../src/types.ts";
 import { GENERIC_HVP } from "../src/data/index.ts";
-import { credits, formatWeapon } from "./format.ts";
+import { creditsText, formatWeapon } from "./format.ts";
 import { findFaction } from "./catalog.ts";
 import { resolveShip, listTotals } from "./render.ts";
 import type { SavedList } from "./storage.ts";
@@ -29,7 +29,7 @@ export function fleetToMarkdown(list: SavedList, customs: Faction[]): string {
 
   lines.push(`# ${list.fleet.name || "Unnamed fleet"}`);
   const sub = [faction?.name ?? "Mixed forces", era].filter(Boolean).join(" — ");
-  lines.push(`${sub} · ${credits(total)} of ${credits(list.fleet.creditsLimit)}`);
+  lines.push(`${sub} · ${creditsText(total)} of ${creditsText(list.fleet.creditsLimit)}`);
   if (faction) lines.push(`**${faction.rule.name}:** ${faction.rule.text}`);
   lines.push("");
 
@@ -42,7 +42,7 @@ export function fleetToMarkdown(list: SavedList, customs: Faction[]): string {
       const ship = r?.ship;
       const name = u.name || `${ship?.name ?? u.shipClassId} unit`;
       const cost = ship ? ship.cost * u.count : 0;
-      lines.push(`- **${name}** — ${u.count}× ${ship?.name ?? u.shipClassId} (Mass ${ship?.mass ?? "?"}), ${credits(cost)}`);
+      lines.push(`- **${name}** — ${u.count}× ${ship?.name ?? u.shipClassId} (Mass ${ship?.mass ?? "?"}), ${creditsText(cost)}`);
       if (ship) {
         const weapons = [...ship.primary, ...ship.auxiliary].map(formatWeapon);
         for (const wline of weapons) lines.push(`    - ${wline}`);

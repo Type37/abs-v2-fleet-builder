@@ -1,3 +1,5 @@
+import creditsRaw from "./Credits.svg?raw";
+
 // Geometric inline SVG icons. All stroke-based, inherit currentColor, drawn on
 // a 24-unit grid so they align with the type baseline. No icon fonts.
 
@@ -233,4 +235,26 @@ export function tacticalDiagram(kind: "deployment" | "arcs"): string {
     <text x="100" y="176" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">AUXILIARY · 180°</text>
     <text x="100" y="55" text-anchor="middle" font-size="11" font-weight="700" fill="var(--red, #fc3d21)">PRIMARY · 45°</text>
   </svg>`;
+}
+
+// The "billions credits" mark, used wherever a fleet's cost is shown in the
+// main (fleet-building) modes. Solo money is ¢k and keeps the plain cent sign.
+//
+// The artwork ships as a drawing: a hard-coded white fill and its own canvas.
+// Strip both so it behaves like every other icon in this file - inherits
+// currentColor, sized by the caller - rather than being a white-on-white
+// rectangle everywhere the theme is light.
+const CREDITS_INNER = creditsRaw
+  .replace(/^[\s\S]*?<svg[^>]*>/i, "")
+  .replace(/<\/svg>[\s\S]*$/i, "")
+  .replace(/\sstyle="[^"]*"/gi, "")
+  .replace(/\sfill="(?!none)[^"]*"/gi, "")
+  .trim();
+
+const CREDITS_VB = { w: 44.81, h: 41.45 };
+
+/** The credits mark, sized by height so it sits on the type baseline. */
+export function creditsGlyph(size = 12): string {
+  const w = (size * CREDITS_VB.w) / CREDITS_VB.h;
+  return `<svg class="credits-glyph" width="${w.toFixed(2)}" height="${size}" viewBox="0 0 ${CREDITS_VB.w} ${CREDITS_VB.h}" fill="currentColor" aria-hidden="true" focusable="false">${CREDITS_INNER}</svg>`;
 }
