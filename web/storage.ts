@@ -161,6 +161,18 @@ export function loadOnboarding(): Onboarding {
   };
 }
 
+const PRINT_KEY = "abs2.print.v1";
+
+/** Print setup is remembered, so reprinting after an edit is one click. */
+export function loadPrintOpts<T>(fallback: T): T {
+  const p = read<Partial<T>>(PRINT_KEY, {});
+  return { ...fallback, ...p };
+}
+
+export function persistPrintOpts(o: unknown): void {
+  write(PRINT_KEY, o);
+}
+
 export function persistOnboarding(o: Onboarding): void {
   write(ONBOARDING_KEY, o);
 }

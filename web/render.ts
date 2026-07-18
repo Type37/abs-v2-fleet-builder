@@ -22,7 +22,7 @@ import { ICON_CATEGORIES, ICON_COUNT_BY_CATEGORY, categoryLabel, iconLibraryGrid
 import { CHANGELOG } from "./changelog.ts";
 import { FACTION_LORE } from "./faction-lore.ts";
 import type { AppState } from "./state.ts";
-import { activeList, activeOutfit } from "./state.ts";
+import { activeList, activeOutfit, DEFAULT_PRINT, PAPER } from "./state.ts";
 import type { SavedList } from "./storage.ts";
 import { soloListView, soloOutfitView } from "./solo.ts";
 import { activeTour } from "./tours.ts";
@@ -1269,7 +1269,9 @@ function printView(state: AppState): string {
   const faction = findFaction(list.fleet.factionId, customs);
   const { total } = listTotals(list, customs);
   const era = MODE_ERA[list.mode];
-  const opts = state.ui.print ?? { format: "roster" as const, trackers: false, rules: true };
+  const opts = state.ui.print ?? DEFAULT_PRINT;
+  const paper = PAPER[opts.paper] ?? PAPER.letter;
+  const excluded = new Set(opts.excluded ?? []);
   // Shipyard-shape modes (Hypergrowth, Management Training) don't bring a
   // fixed pre-built roster to the table (p.122): the printed sheet is a
   // shopping catalogue of what's in the Shipyard, requisitioned piecemeal
@@ -1299,12 +1301,14 @@ function printView(state: AppState): string {
   const hpBoxes = (hp: number) => `<span class="pr-hp">${Array.from({ length: hp }, () => '<span class="pr-hp-box"></span>').join("")}</span>`;
 
   const unitNames = unitDisplayNames(list.fleet.units, faction, customs);
+  // Units the player has dropped from this printout (still in the fleet).
+  const printUnits = list.fleet.units.filter((u) => !excluded.has(u.id));
 
   // One continuous unit-row table, in the manner of Army Forge / Infinity Army
   // roster printouts: every unit is one scannable row with stat columns, and
   // per-unit annotations (species, carried personnel) fold into a quiet
   // second line under the unit name rather than their own boxes.
-  const unitRows = list.fleet.units
+  const unitRows = printUnits
     .map((u) => {
       const r = resolveShip(u.shipClassId, faction, customs);
       if (!r) return "";
@@ -1339,6 +1343,7 @@ function printView(state: AppState): string {
       return `
       <tr>
         <td class="pr-unit">
+          <button class="pr-drop" data-action="print-exclude-unit" data-unit="${u.id}" title="Leave this unit out of the printout" aria-label="Leave ${escapeHtml(title)} out of the printout">${icon("close", 12)}</button>
           <span class="pr-unit-name">${escapeHtml(title)}</span>
           <span class="pr-unit-class">${escapeHtml(ship.name)}${list.freePlay ? `, ${escapeHtml(r.owner.name)}` : ""}</span>
           ${named.length ? `<span class="pr-unit-ships">${escapeHtml(named.join(" / "))}</span>` : ""}
@@ -1381,7 +1386,7 @@ function printView(state: AppState): string {
 
   // Per-unit cards: a stat card each, several to a page, cut-and-keep at the
   // table. Never split across a page. HP boxes appear when trackers are on.
-  const unitCards = list.fleet.units
+  const unitCards = printUnits
     .map((u, i) => {
       const r = resolveShip(u.shipClassId, faction, customs);
       if (!r) return "";
@@ -1400,6 +1405,7 @@ function printView(state: AppState): string {
           <span class="pc-index">${i + 1}</span>
           <span class="pc-name">${escapeHtml(title)}</span>
           <span class="pc-cost">${credits(ship.cost * u.count)}</span>
+          <button class="pr-drop" data-action="print-exclude-unit" data-unit="${u.id}" title="Leave this unit out of the printout" aria-label="Leave ${escapeHtml(title)} out of the printout">${icon("close", 12)}</button>
         </header>
         <p class="pc-sub">${u.count}× ${escapeHtml(ship.name)} · ${massGlyph(ship.mass, 13)} Mass ${ship.mass}${u.species ? ` · ${escapeHtml(u.species)}` : ""}</p>
         ${named.length ? `<p class="pc-ships">${escapeHtml(named.join(" / "))}</p>` : ""}
@@ -1483,22 +1489,36 @@ function printView(state: AppState): string {
 
   return `
   ${topbar()}
-  <div class="print-page">
+  <div class="print-page ${opts.inkSaver ? "is-inksaver" : ""}">
     <div class="print-toolbar">
-      <a class="bar-btn" href="#/list/${list.id}">Back to the builder</a>
+      <a class="bar-btn" href="#/list/${list.id}">${icon("chevronRight", 15, "flip-x")} Back to the builder</a>
       <div class="print-opts">
         <span class="segment" role="group" aria-label="Layout">
           <button class="${opts.format === "roster" ? "selected" : ""}" data-action="print-format" data-format="roster">Roster</button>
           <button class="${opts.format === "cards" ? "selected" : ""}" data-action="print-format" data-format="cards">Cards</button>
           ${guideAvailable ? `<button class="${opts.format === "guide" ? "selected" : ""}" data-action="print-format" data-format="guide">Steps</button>` : ""}
         </span>
+        <span class="segment" role="group" aria-label="Paper size">
+          <button class="${opts.paper === "letter" ? "selected" : ""}" data-action="print-paper" data-paper="letter">Letter</button>
+          <button class="${opts.paper === "a4" ? "selected" : ""}" data-action="print-paper" data-paper="a4">A4</button>
+        </span>
         <label class="print-toggle"><input type="checkbox" data-action="print-trackers" ${opts.trackers ? "checked" : ""} /> Trackers</label>
         <label class="print-toggle"><input type="checkbox" data-action="print-rules" ${opts.rules ? "checked" : ""} /> Rules</label>
+        <label class="print-toggle" title="No coloured fills, so it survives your browser's Background graphics setting and saves toner"><input type="checkbox" data-action="print-inksaver" ${opts.inkSaver ? "checked" : ""} /> Ink saver</label>
       </div>
-      <button class="cta-btn" data-action="do-print">${icon("print", 17)} Print this document</button>
+      <div class="print-go">
+        <span class="print-pagecount" data-print-pagecount>&nbsp;</span>
+        <button class="cta-btn" data-action="do-print">${icon("print", 17)} Print</button>
+      </div>
     </div>
+    ${
+      excluded.size
+        ? `<p class="print-excluded-note">${excluded.size} ${excluded.size === 1 ? "unit is" : "units are"} left out of this printout. <button class="linklike" data-action="print-include-all">Put them back</button></p>`
+        : ""
+    }
 
-    <article class="sheet">
+    <div class="sheet-viewport">
+    <article class="sheet" data-print-sheet data-paper-label="${paper.label}" style="--page-w:${paper.w}px;--page-h:${paper.h}px">
       <header class="sheet-head">
         <div class="sheet-emblem">${listEmblem(list, 52)}</div>
         <div class="sheet-title-block">
@@ -1570,6 +1590,7 @@ function printView(state: AppState): string {
       }
       ${list.fleet.notes ? `<section class="print-notes"><h3 class="sheet-section">Notes</h3><p>${escapeHtml(list.fleet.notes)}</p></section>` : ""}
     </article>
+    </div>
   </div>`;
 }
 

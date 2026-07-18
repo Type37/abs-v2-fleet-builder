@@ -97,6 +97,10 @@ function paint(): void {
 
   animateFactionTitle();
   animateNewRosterRows();
+  // After layout settles: measuring mid-paint reads pre-layout boxes, and web
+  // fonts landing later reflow the sheet and move every page boundary.
+  requestAnimationFrame(() => paginatePrintPreview());
+  void document.fonts?.ready.then(() => paginatePrintPreview());
 
   for (const d of document.querySelectorAll<HTMLDetailsElement>("details[data-persist]")) {
     const key = d.dataset["persist"];
@@ -163,6 +167,86 @@ function tryImportShare(): boolean {
   if (!decoded) return false;
   importDecodedShare(decoded);
   return true;
+}
+
+/**
+ * Draw real page boundaries on the print preview, and report the page count.
+ *
+ * The sheet is laid out at the true printable width for the chosen paper, so
+ * the preview is 1:1 with what the printer gets (same DOM, same stylesheet -
+ * there is deliberately no second renderer to drift out of sync). This walks the
+ * sheet's breakable units in document order and starts a new page whenever the
+ * next one would cross the page height, which mirrors how the browser fragments
+ * given our `break-inside: avoid` rules. Table rows are the breakable unit
+ * inside a table; everything else breaks between top-level blocks.
+ *
+ * The guides are absolutely positioned inside the (relative) sheet, so drawing
+ * them never moves any content.
+ */
+function paginatePrintPreview(): void {
+  const sheet = document.querySelector<HTMLElement>("[data-print-sheet]");
+  const readout = document.querySelector<HTMLElement>("[data-print-pagecount]");
+  if (!sheet) return;
+
+  for (const old of sheet.querySelectorAll(".page-guide")) old.remove();
+
+  const pageH = parseFloat(getComputedStyle(sheet).getPropertyValue("--page-h")) || 950;
+  const sheetTop = sheet.getBoundingClientRect().top;
+
+  // A flat list of LEAF breakable units in document order - never a container
+  // and its own descendants, or the same content would be counted twice. Table
+  // rows are the unit inside a table; anything else too tall to fit a page is
+  // recursed into (a card grid breaks between cards).
+  const units: HTMLElement[] = [];
+  const walk = (el: HTMLElement): void => {
+    for (const child of Array.from(el.children) as HTMLElement[]) {
+      if (child.classList.contains("page-guide")) continue;
+      const h = child.getBoundingClientRect().height;
+      if (h <= 0) continue;
+      const rows = child.querySelectorAll<HTMLElement>("tbody tr");
+      if (rows.length > 1) {
+        const thead = child.querySelector<HTMLElement>("thead");
+        if (thead) units.push(thead);
+        rows.forEach((tr) => units.push(tr));
+        continue;
+      }
+      if (h > pageH * 0.9 && child.children.length > 1) {
+        walk(child);
+        continue;
+      }
+      units.push(child);
+    }
+  };
+  walk(sheet);
+
+  // Walk in order; when a unit would cross the current page's bottom edge it
+  // moves whole onto the next page, which is where the break goes.
+  const breaks: number[] = [];
+  let pageBottom = pageH;
+  for (const u of units) {
+    const r = u.getBoundingClientRect();
+    const top = r.top - sheetTop;
+    const bottom = r.bottom - sheetTop;
+    if (bottom > pageBottom) {
+      if (top > 0 && top < bottom) breaks.push(top);
+      pageBottom = top + pageH;
+    }
+  }
+
+  breaks.forEach((y, i) => {
+    const g = document.createElement("div");
+    g.className = "page-guide";
+    g.style.top = `${y}px`;
+    g.dataset["page"] = String(i + 2);
+    g.setAttribute("aria-hidden", "true");
+    sheet.appendChild(g);
+  });
+
+  const pages = breaks.length + 1;
+  if (readout) {
+    const paperLabel = sheet.dataset["paperLabel"] ?? "";
+    readout.textContent = `${pages} ${pages === 1 ? "page" : "pages"}${paperLabel ? ` · ${paperLabel}` : ""}`;
+  }
 }
 
 // A single highlight that slides between the top-right nav items. It rests on

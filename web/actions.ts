@@ -12,6 +12,7 @@ import {
   persistCustomFactions,
   persistLists,
   persistOnboarding,
+  persistPrintOpts,
   persistOutfits,
 } from "./storage.ts";
 import type { SavedOutfit } from "./storage.ts";
@@ -19,6 +20,7 @@ import {
   createList,
   createOutfit,
   createTrainingList,
+  DEFAULT_PRINT,
   EMPTY_SHIP_FILTER,
   freshPlayState,
   nextOutfitShipId,
@@ -29,7 +31,7 @@ import {
   updateList,
   updateOutfit,
 } from "./state.ts";
-import type { AppState, LastRoll, ShipFilter } from "./state.ts";
+import type { AppState, LastRoll, PrintOpts, ShipFilter } from "./state.ts";
 import { RANDOM_BEHAVIOUR, GLITCH_BLIP, type RollRow } from "../src/data/junkspace-solo.ts";
 import { randomIconId } from "./emblems.ts";
 import { shareUrl } from "./share.ts";
@@ -127,6 +129,15 @@ function editFaction(factionId: string, fn: (f: Faction) => Faction): void {
     const customFactions = s.customFactions.map((f) => (f.id === factionId ? fn(f) : f));
     persistCustomFactions(customFactions);
     return { ...s, customFactions };
+  });
+}
+
+/** Update print setup and remember it, so reprinting after an edit is one click. */
+function patchPrint(patch: Partial<PrintOpts>): void {
+  store.setState((s) => {
+    const next: PrintOpts = { ...DEFAULT_PRINT, ...s.ui.print, ...patch };
+    persistPrintOpts(next);
+    return { ...s, ui: { ...s.ui, print: next } };
   });
 }
 
@@ -682,41 +693,35 @@ function handleClick(e: MouseEvent): void {
     case "print-format": {
       const raw = target.dataset["format"];
       const format = raw === "cards" ? "cards" : raw === "guide" ? "guide" : "roster";
-      store.setState((s) => ({
-        ...s,
-        ui: {
-          ...s.ui,
-          print: { format, trackers: s.ui.print?.trackers ?? false, rules: s.ui.print?.rules ?? true },
-        },
-      }));
+      patchPrint({ format });
+      break;
+    }
+    case "print-paper": {
+      const raw = target.dataset["paper"];
+      patchPrint({ paper: raw === "a4" ? "a4" : "letter" });
       break;
     }
     case "print-trackers": {
-      store.setState((s) => ({
-        ...s,
-        ui: {
-          ...s.ui,
-          print: {
-            format: s.ui.print?.format ?? "roster",
-            trackers: !(s.ui.print?.trackers ?? false),
-            rules: s.ui.print?.rules ?? true,
-          },
-        },
-      }));
+      patchPrint({ trackers: !(store.getState().ui.print ?? DEFAULT_PRINT).trackers });
       break;
     }
     case "print-rules": {
-      store.setState((s) => ({
-        ...s,
-        ui: {
-          ...s.ui,
-          print: {
-            format: s.ui.print?.format ?? "roster",
-            trackers: s.ui.print?.trackers ?? false,
-            rules: !(s.ui.print?.rules ?? true),
-          },
-        },
-      }));
+      patchPrint({ rules: !(store.getState().ui.print ?? DEFAULT_PRINT).rules });
+      break;
+    }
+    case "print-inksaver": {
+      patchPrint({ inkSaver: !(store.getState().ui.print ?? DEFAULT_PRINT).inkSaver });
+      break;
+    }
+    case "print-exclude-unit": {
+      const unit = target.dataset["unit"];
+      if (!unit) return;
+      const cur = (store.getState().ui.print ?? DEFAULT_PRINT).excluded ?? [];
+      patchPrint({ excluded: cur.includes(unit) ? cur.filter((u) => u !== unit) : [...cur, unit] });
+      break;
+    }
+    case "print-include-all": {
+      patchPrint({ excluded: [] });
       break;
     }
     case "copy-list-text": {

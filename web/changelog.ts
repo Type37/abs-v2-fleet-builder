@@ -9,6 +9,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.45",
+    date: "2026-07-18",
+    title: "Print setup finally shows you the actual pages",
+    items: [
+      "The preview is now laid out at the real printable width of the paper, with a dashed line and a label everywhere the page will actually break. What you see is what comes out of the printer.",
+      "It tells you the page count next to the Print button, and every option updates it straight away — turn the rules off and watch it drop from two pages to one, so you can see what a choice costs in paper before you commit.",
+      "Choose Letter or A4, and the whole preview relays out to match.",
+      "Ink saver, on by default: no coloured fills or bars, so the sheet looks the same whether or not your browser prints backgrounds, and it uses far less toner.",
+      "Leave individual units out of a printout with the small cross beside each one, without touching the fleet itself. A note tells you what's held back and puts it all back in one click.",
+      "Your print setup is remembered, so reprinting after an edit is one click.",
+    ],
+  },
+  {
     version: "0.8.44",
     date: "2026-07-18",
     title: "A damage mark of its own",

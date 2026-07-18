@@ -4,6 +4,7 @@ import {
   loadCustomFactions,
   loadLists,
   loadOnboarding,
+  loadPrintOpts,
   loadOutfits,
   newId,
   persistCustomFactions,
@@ -125,6 +126,34 @@ export interface LastRoll {
 // App state
 // ---------------------------------------------------------------------------
 
+/** Print setup options. Persisted (abs2.print.v1) so reprinting is one click. */
+export interface PrintOpts {
+  format: "roster" | "cards" | "guide";
+  trackers: boolean;
+  rules: boolean;
+  /** Paper the preview is laid out at, and what the page count is based on. */
+  paper: "letter" | "a4";
+  /** No coloured fills or bars: survives "Background graphics: off" and saves toner. */
+  inkSaver: boolean;
+  /** Unit ids left out of this printout. */
+  excluded: string[];
+}
+
+export const DEFAULT_PRINT: PrintOpts = {
+  format: "roster",
+  trackers: false,
+  rules: true,
+  paper: "letter",
+  inkSaver: true,
+  excluded: [],
+};
+
+/** Printable page geometry in CSS px at 96dpi, inside the @page 14mm margin. */
+export const PAPER: Record<"letter" | "a4", { w: number; h: number; label: string }> = {
+  letter: { w: 710, h: 950, label: "Letter" },
+  a4: { w: 688, h: 1017, label: "A4" },
+};
+
 export interface AppState {
   route: Route;
   lists: SavedList[];
@@ -162,10 +191,10 @@ export interface AppState {
       | { kind: "options" };
     /** In-progress first-visit coachmark tour, once the user has advanced past step 0. */
     tour?: { tourId: string; step: number };
-    /** Print-setup options for the print view (never persisted). `rules` prints
-     * the faction rule block; on by default so a first-time printer gets it,
-     * off for players who know their faction rule by heart. */
-    print?: { format: "roster" | "cards" | "guide"; trackers: boolean; rules: boolean };
+    /** Print-setup options. Persisted (abs2.print.v1) so reprinting after an
+     * edit is one click. `rules` prints the faction rule + commands reference;
+     * on by default so a first-time printer gets it. */
+    print?: PrintOpts;
     /** Ship-classes catalog view: undefined is the flat list, "chart" is a
      * bar-chart stat comparison. */
     catalogView?: "chart";
@@ -191,7 +220,7 @@ export function initialState(): AppState {
     outfits: loadOutfits(),
     onboarding,
     nextUnitSeq: 1,
-    ui: { showAllFactions: false, soloTab: "outfit" },
+    ui: { showAllFactions: false, soloTab: "outfit", print: loadPrintOpts(DEFAULT_PRINT) },
   };
 }
 
