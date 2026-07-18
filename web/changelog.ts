@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.38",
+    date: "2026-07-18",
+    title: "The sigil picker sorts and searches properly",
+    items: [
+      "Search the sigil library by name, and the folders now read A to Z with a count on each, with the loose-files General bucket last where it belongs.",
+      "Sigil names are cleaned up: the boilerplate in the source filenames is stripped and run-together names are split into words, so a sigil is listed as \"Arcus Tigers\" rather than \"HINF Emblem icon Arcus Tigers\". Searching actually finds things now.",
+    ],
+  },
+  {
     version: "0.8.37",
     date: "2026-07-18",
     title: "Solo catalogue matches the fleet builder, and the emblem picker grows up",

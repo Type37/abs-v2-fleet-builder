@@ -17,7 +17,7 @@ import {
   statChips,
   tacticalDiagram,
 } from "./icons.ts";
-import { ICON_CATEGORIES, categoryLabel, iconLibraryGrid, libraryUrl } from "./emblems.ts";
+import { ICON_CATEGORIES, ICON_COUNT_BY_CATEGORY, categoryLabel, iconLibraryGrid, libraryUrl } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
 import { FACTION_LORE } from "./faction-lore.ts";
 import type { AppState } from "./state.ts";
@@ -2535,9 +2535,13 @@ function emblemModal(state: AppState): string {
 
   // Folder chips (the emblem sub-folders), plus the filtered grid.
   const activeCat = m.libCat ?? "all";
+  const totalIcons = Object.values(ICON_COUNT_BY_CATEGORY).reduce((a, b) => a + b, 0);
   const folderChips = `<div class="em-folders">
-      <button class="em-folder ${activeCat === "all" ? "on" : ""}" data-action="emblem-lib-cat" data-cat="all">All</button>
-      ${ICON_CATEGORIES.map((c) => `<button class="em-folder ${activeCat === c ? "on" : ""}" data-action="emblem-lib-cat" data-cat="${escapeHtml(c)}">${escapeHtml(categoryLabel(c))}</button>`).join("")}
+      <button class="em-folder ${activeCat === "all" ? "on" : ""}" data-action="emblem-lib-cat" data-cat="all">All <span class="em-folder-n">${totalIcons}</span></button>
+      ${ICON_CATEGORIES.map(
+        (c) =>
+          `<button class="em-folder ${activeCat === c ? "on" : ""}" data-action="emblem-lib-cat" data-cat="${escapeHtml(c)}">${escapeHtml(categoryLabel(c))} <span class="em-folder-n">${ICON_COUNT_BY_CATEGORY[c] ?? 0}</span></button>`,
+      ).join("")}
     </div>`;
 
   const body =
@@ -2553,7 +2557,9 @@ function emblemModal(state: AppState): string {
                 : `<p class="muted" style="margin-top:14px">Tip: sigil recolouring works on the vector (SVG) marks. For any other sigil, set a background colour above.</p>`
             }
           </div>`
-        : `${folderChips}<div class="em-scroll">${iconLibraryGrid(cfg.libA, cfg.currentLib, activeCat)}</div>`;
+        : `<input id="emblem-lib-search" class="em-search" type="search" placeholder="Search sigils…" value="${escapeHtml(m.libQuery ?? "")}" data-action="emblem-lib-search" aria-label="Search sigils" />
+           ${folderChips}
+           <div class="em-scroll">${iconLibraryGrid(cfg.libA, cfg.currentLib, activeCat, m.libQuery)}</div>`;
 
   return `
   <div class="modal-root">

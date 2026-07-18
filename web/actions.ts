@@ -1454,6 +1454,15 @@ function handleChange(e: Event): void {
       });
       break;
     }
+    case "emblem-lib-search": {
+      // Live-filters the sigil grid as you type; the input carries an id so
+      // focus and caret survive the re-render.
+      const q = inputValue;
+      store.setState((s) =>
+        s.ui.modal?.kind === "emblem" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, libQuery: q } } } : s,
+      );
+      break;
+    }
     case "ship-show-custom": {
       // Custom-faction ships stay out of the compendium unless asked for.
       store.setState((s) => {
@@ -1674,7 +1683,8 @@ export function wireActions(root: HTMLElement): void {
   // routed on input; it carries an id, so focus and caret survive re-render.
   root.addEventListener("input", (e) => {
     const t = e.target as HTMLElement | null;
-    if (t?.dataset?.["action"] === "ship-search") handleChange(e);
+    const liveAction = t?.dataset?.["action"];
+    if (liveAction === "ship-search" || liveAction === "emblem-lib-search") handleChange(e);
   });
   // Escape closes whatever is on top. Bound to the document, not root, because
   // focus can legitimately sit outside #app (the skip link, the address bar
