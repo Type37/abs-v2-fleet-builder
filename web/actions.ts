@@ -339,25 +339,26 @@ function handleClick(e: MouseEvent): void {
       const cf = isCustom(list.fleet.factionId, state.customFactions)
         ? findFaction(list.fleet.factionId, state.customFactions)
         : undefined;
-      const url = shareUrl(list, cf);
-      // window.prompt() itself can throw in some embedded/mobile contexts, so
-      // it is wrapped: whatever happens, the user gets a toast either way.
-      const manualFallback = () => {
-        try {
-          prompt("Copy this link:", url);
-        } catch {
-          // No prompt available either; the toast below is the only feedback left.
+      void shareUrl(list, cf).then((url) => {
+        // window.prompt() itself can throw in some embedded/mobile contexts, so
+        // it is wrapped: whatever happens, the user gets a toast either way.
+        const manualFallback = () => {
+          try {
+            prompt("Copy this link:", url);
+          } catch {
+            // No prompt available either; the toast below is the only feedback left.
+          }
+          showToast("Copy the link from the box above.");
+        };
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard
+            .writeText(url)
+            .then(() => showToast("Share link copied to the clipboard."))
+            .catch(manualFallback);
+        } else {
+          manualFallback();
         }
-        showToast("Copy the link from the box above.");
-      };
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard
-          .writeText(url)
-          .then(() => showToast("Share link copied to the clipboard."))
-          .catch(manualFallback);
-      } else {
-        manualFallback();
-      }
+      });
       break;
     }
     case "set-emblem": {

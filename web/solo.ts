@@ -56,22 +56,32 @@ export function outfitCost(o: SavedOutfit): number {
 
 export function soloListView(state: AppState): string {
   const outfits = [...state.outfits].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  const rows = outfits
+  const cards = outfits
     .map((o) => {
       const cleared = o.debtK <= 0;
+      const paid = Math.max(0, STARTING_DEBT_K - Math.max(0, o.debtK));
+      const debtPct = Math.round((paid / STARTING_DEBT_K) * 100);
+      const gamesLeft = Math.max(0, DEBT_CLEAR_GAMES - o.gamesPlayed);
       return `
-      <tr>
-        <td class="cell-emblem"><span class="emblem-chip">${emblemMark(o.emblem, o.emblemImage ?? libraryUrl(o.emblemLib), 22)}</span></td>
-        <td class="cell-name"><a href="#/solo/${o.id}">${escapeHtml(o.name || "Unnamed outfit")}</a></td>
-        <td>${o.ships.length} ${o.ships.length === 1 ? "ship" : "ships"}</td>
-        <td class="cell-num">${cleared ? "Debt cleared" : ck(o.debtK) + " debt"}</td>
-        <td class="cell-num">Game ${o.gamesPlayed} of ${DEBT_CLEAR_GAMES}</td>
-        <td class="cell-date">${formatDate(o.updatedAt)}</td>
-        <td class="cell-actions">
-          <button class="ghost-btn" data-action="duplicate-outfit" data-id="${o.id}" title="Duplicate">${icon("duplicate", 16)}</button>
-          <button class="ghost-btn danger" data-action="delete-outfit" data-id="${o.id}" title="Delete">${icon("trash", 16)}</button>
-        </td>
-      </tr>`;
+      <article class="outfit-card">
+        <a class="outfit-card-main" href="#/solo/${o.id}">
+          <span class="outfit-card-emblem">${emblemMark(o.emblem, o.emblemImage ?? libraryUrl(o.emblemLib), 34)}</span>
+          <span class="outfit-card-id">
+            <span class="outfit-card-name">${escapeHtml(o.name || "Unnamed outfit")}</span>
+            <span class="outfit-card-meta">${o.ships.length} ${o.ships.length === 1 ? "ship" : "ships"} · updated ${formatDate(o.updatedAt)}</span>
+          </span>
+        </a>
+        <div class="outfit-card-debt ${cleared ? "is-clear" : ""}">
+          <div class="ocd-line"><span>${cleared ? "Debt cleared" : `${ck(o.debtK)} still owed`}</span><span>${cleared ? "🏆 you win" : `${gamesLeft} ${gamesLeft === 1 ? "game" : "games"} left`}</span></div>
+          <div class="ocd-bar"><span class="ocd-fill" style="width:${cleared ? 100 : debtPct}%"></span></div>
+          <div class="ocd-sub">${cleared ? `Cleared in ${o.gamesPlayed} of ${DEBT_CLEAR_GAMES} games` : `Paid ${ck(paid)} of ${ck(STARTING_DEBT_K)} · game ${o.gamesPlayed} of ${DEBT_CLEAR_GAMES}`}</div>
+        </div>
+        <div class="outfit-card-actions">
+          <a class="ghost-btn" href="#/solo/${o.id}">${icon("chevronRight", 15)} Continue</a>
+          <button class="ghost-btn" data-action="duplicate-outfit" data-id="${o.id}" title="Duplicate">${icon("duplicate", 15)}</button>
+          <button class="ghost-btn danger" data-action="delete-outfit" data-id="${o.id}" title="Delete">${icon("trash", 15)}</button>
+        </div>
+      </article>`;
     })
     .join("");
 
@@ -79,26 +89,26 @@ export function soloListView(state: AppState): string {
   <main class="home-main solo-main">
     <header class="solo-head">
       <h1 class="page-title">Junkspace</h1>
+      <p class="solo-tagline">A solitaire narrative campaign. Fly Jobs against an automated enemy, and clear ${ck(STARTING_DEBT_K)} of debt within ${DEBT_CLEAR_GAMES} games to win.</p>
     </header>
     <section class="commission-panel">
-      <h2 class="panel-title">Your outfits</h2>
-      <button class="cta-btn" data-action="new-outfit">${icon("plus", 18)} Start a new outfit</button>
+      <div class="solo-panel-head">
+        <h2 class="panel-title">Your outfits</h2>
+        <button class="cta-btn" data-action="new-outfit">${icon("plus", 18)} Start a new outfit</button>
+      </div>
       ${
         outfits.length === 0
-          ? '<p class="muted" style="margin-top:18px">No outfits yet. Start one above.</p>'
-          : `<div class="table-scroll" style="margin-top:18px"><table class="dock-table">
-              <thead><tr><th></th><th>Outfit</th><th>Ships</th><th>Debt</th><th>Progress</th><th>Updated</th><th></th></tr></thead>
-              <tbody>${rows}</tbody></table></div>`
+          ? `<div class="solo-empty">
+              <p>No outfits yet. An outfit is your crew of up to ${OUTFIT_MAX_SHIPS} ships, bought with ${ck(OUTFIT_BUDGET_K)} and saddled with ${ck(STARTING_DEBT_K)} of debt.</p>
+              <ol class="solo-primer">
+                <li><strong>Build your outfit.</strong> Up to ${OUTFIT_MAX_SHIPS} ships within ${ck(OUTFIT_BUDGET_K)}, each with a pilot class.</li>
+                <li><strong>Set up the board.</strong> A 3' by 3' table, Entry and Exit Jump Points, 8 face-down Blips, and three Jobs from one suit.</li>
+                <li><strong>Play the round.</strong> Command, Jump, Tactical, End. You run both sides; the roller decides what the Hostiles do.</li>
+                <li><strong>Pay your debts.</strong> Earnings from Jobs reduce your debt; surviving pilots earn Perks.</li>
+              </ol>
+            </div>`
+          : `<div class="outfit-cards">${cards}</div>`
       }
-    </section>
-    <section class="fleet-dock">
-      <h2 class="panel-title">How solo works</h2>
-      <ol class="solo-primer">
-        <li><strong>Build your outfit.</strong> Up to ${OUTFIT_MAX_SHIPS} ships within ${ck(OUTFIT_BUDGET_K)}, each with a pilot class.</li>
-        <li><strong>Set up the board.</strong> A 3' by 3' table, Entry and Exit Jump Points, 8 face-down Blip markers, and three Jobs dealt from one suit.</li>
-        <li><strong>Play the round.</strong> Command, Jump, Tactical, End. You run both sides: the roller decides what the Hostiles do.</li>
-        <li><strong>Pay your debts.</strong> Earnings from Jobs reduce your debt; surviving pilots earn Perks.</li>
-      </ol>
     </section>
   </main>`;
 }

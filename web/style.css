@@ -1405,6 +1405,26 @@ button { font-family: inherit; }
 .pilot-ability b { color: var(--ink); }
 .solo-primer { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--ink-2); }
 .solo-primer strong { color: var(--ink); }
+.solo-tagline { font-family: var(--serif); font-size: 16px; line-height: 1.55; color: var(--ink-2); max-width: 70ch; margin: 6px 0 0; }
+.solo-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.solo-empty { margin-top: 10px; display: flex; flex-direction: column; gap: 16px; max-width: 70ch; color: var(--ink-2); font-size: 14px; }
+/* Outfit cards: campaign status at a glance - a debt progress bar, games left. */
+.outfit-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.outfit-card { border: 1px solid var(--hair); background: var(--paper); display: flex; flex-direction: column; }
+.outfit-card-main { display: flex; align-items: center; gap: 12px; padding: 14px 16px 10px; text-decoration: none; color: inherit; }
+.outfit-card-main:hover .outfit-card-name { color: var(--blue); }
+.outfit-card-emblem { flex-shrink: 0; color: var(--blue); }
+.outfit-card-id { display: flex; flex-direction: column; min-width: 0; }
+.outfit-card-name { font-family: var(--display); font-weight: 800; font-size: 17px; color: var(--ink); }
+.outfit-card-meta { font-size: 12px; color: var(--ink-3); }
+.outfit-card-debt { padding: 0 16px 12px; }
+.ocd-line { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+.ocd-bar { height: 8px; background: var(--ground); border: 1px solid var(--hair-soft); overflow: hidden; }
+.ocd-fill { display: block; height: 100%; background: var(--red); }
+.outfit-card-debt.is-clear .ocd-fill { background: var(--go); }
+.ocd-sub { font-size: 11px; color: var(--ink-3); margin-top: 5px; }
+.outfit-card-actions { display: flex; gap: 6px; align-items: center; padding: 0 12px 12px; margin-top: auto; }
+.outfit-card-actions .ghost-btn:first-child { margin-right: auto; }
 
 .solo-tabs { max-width: var(--shell); margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); display: flex; gap: 0; border-bottom: 2px solid var(--hair); }
 .solo-tab { background: transparent; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-family: var(--sans); font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 14px 18px; cursor: pointer; color: var(--ink-3); }

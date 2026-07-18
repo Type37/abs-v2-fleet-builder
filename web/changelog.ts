@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.33",
+    date: "2026-07-17",
+    title: "Shorter share links and a solo menu that shows your campaign",
+    items: [
+      "Share links are now compressed, so they're much shorter — especially fleets that carry a custom faction. Old links still work.",
+      "The Solo landing page now shows each outfit as a card with a debt progress bar and how many games you have left to clear it, so you can see where every campaign stands at a glance.",
+    ],
+  },
+  {
     version: "0.8.32",
     date: "2026-07-17",
     title: "A print sheet that replaces the rulebook, and a clearer solo builder",

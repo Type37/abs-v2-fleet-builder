@@ -1,7 +1,7 @@
 import { parseRoute, store } from "./state.ts";
 import { render } from "./render.ts";
 import { wireActions } from "./actions.ts";
-import { decodeShare, sharePayloadFromHash } from "./share.ts";
+import { decodeShare, decodeSharePayload, sharePayloadFromHash, type DecodedShare } from "./share.ts";
 import { persistCustomFactions, persistLists } from "./storage.ts";
 import "./style.css";
 
@@ -129,12 +129,7 @@ function paint(): void {
 // A share link carries the whole list (and any custom faction) in the hash. Import
 // it once, drop it into the register, then rewrite the URL to the new list's
 // builder route so a refresh cannot import a second copy.
-function tryImportShare(): boolean {
-  const payload = sharePayloadFromHash(location.hash);
-  if (!payload) return false;
-  const decoded = decodeShare(payload);
-  if (!decoded) return false;
-
+function importDecodedShare(decoded: DecodedShare): void {
   store.setState((s) => {
     const lists = [...s.lists, decoded.list];
     const customFactions = decoded.customFaction
@@ -144,10 +139,29 @@ function tryImportShare(): boolean {
     if (decoded.customFaction) persistCustomFactions(customFactions);
     return { ...s, lists, customFactions, route: { view: "builder", listId: decoded.list.id } };
   });
-
   // Keep the address bar in step. This fires hashchange, which re-derives the
-  // same route below - harmless and idempotent.
+  // same route - harmless and idempotent.
   location.replace(`#/list/${decoded.list.id}`);
+}
+
+// Returns true if the hash held a share link. Compressed ("z=") links inflate
+// asynchronously and import a moment later (store.subscribe(paint) repaints);
+// plain/legacy links import synchronously.
+function tryImportShare(): boolean {
+  const payload = sharePayloadFromHash(location.hash);
+  if (!payload) return false;
+  if (payload.kind === "z") {
+    void decodeSharePayload(payload).then((decoded) => {
+      if (decoded) importDecodedShare(decoded);
+      else {
+        store.setState((s) => ({ ...s, route: parseRoute(location.hash) }));
+      }
+    });
+    return true;
+  }
+  const decoded = decodeShare(payload.data);
+  if (!decoded) return false;
+  importDecodedShare(decoded);
   return true;
 }
 
