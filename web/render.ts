@@ -20,7 +20,7 @@ import {
   statChips,
   tacticalDiagram,
 } from "./icons.ts";
-import { ICON_CATEGORIES, ICON_COUNT_BY_CATEGORY, categoryLabel, iconLibraryGrid, libraryUrl } from "./emblems.ts";
+import { ICON_CATEGORIES, ICON_COUNT_BY_CATEGORY, LIB_PAGE, categoryLabel, iconLibraryGrid, libraryUrl } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
 import { FACTION_LORE } from "./faction-lore.ts";
 import type { AppState } from "./state.ts";
@@ -1340,6 +1340,27 @@ function printView(state: AppState): string {
   // Units the player has dropped from this printout (still in the fleet).
   const printUnits = list.fleet.units.filter((u) => !excluded.has(u.id));
 
+  // HVP ride a unit, and they MOVE: the benefit applies only while an in-play
+  // unit carries the token, the token drops as free-floating salvage when the
+  // last ship of its unit dies, and an enemy Scan can take it. So a carrier
+  // printed as fixed text would be wrong by the second round. Every mode that
+  // fields personnel gets a write-in box on each unit; where the carrier is
+  // already chosen it is printed faintly as the starting position, with room to
+  // strike it out and write the new one.
+  const fieldsHvp = isUnity || list.fleet.hvp.length > 0;
+  const hvpCarrierCell = (u: FleetUnit): string => {
+    if (!fieldsHvp) return "";
+    const held = list.fleet.hvp
+      .filter((h) => h.assignedUnitId === u.id)
+      .map((h) => {
+        const def = hvpById(h.hvpId, faction);
+        return h.customName ? `${h.customName}, ${def?.name ?? h.hvpId}` : (def?.name ?? h.hvpId);
+      });
+    return `<td class="pr-hvp-slot">${
+      held.length ? `<span class="pr-hvp-start">${escapeHtml(held.join("; "))}</span>` : ""
+    }<span class="pr-writein"></span></td>`;
+  };
+
   // One continuous unit-row table, in the manner of Army Forge / Infinity Army
   // roster printouts: every unit is one scannable row with stat columns, and
   // per-unit annotations (species, carried personnel) fold into a quiet
@@ -1356,12 +1377,10 @@ function printView(state: AppState): string {
           const def = hvpById(h.hvpId, faction);
           return h.customName ? `${h.customName}, ${def?.name ?? h.hvpId}` : (def?.name ?? h.hvpId);
         });
-      const notes = [
-        u.species ? `Species: ${u.species}` : "",
-        carried.length ? `Carrying: ${carried.join("; ")}` : "",
-      ]
-        .filter(Boolean)
-        .join(". ");
+      // Carried personnel used to be repeated here as well as in the HVP
+      // column; the column is the one that can be amended mid-game, so this
+      // line carries only what the column does not.
+      const notes = u.species ? `Species: ${u.species}` : "";
       // Player-given ship names are cosmetic but they are how the player refers
       // to the ship at the table, so the sheet has to carry them. Blank slots in
       // a partially-named stack are dropped rather than printed as gaps.
@@ -1376,48 +1395,56 @@ function printView(state: AppState): string {
       const reqCell = isShipyard
         ? `<td class="pr-req">${Array.from({ length: u.count }, () => `<span class="pr-req-box"></span>`).join("")}</td>`
         : "";
+      // An unnamed unit takes its ship class as its display name, so printing
+      // the class underneath repeated it verbatim - "Hierophant Cathedral Ship"
+      // twice, once bold and once grey. The class line is only worth ink when it
+      // differs from the title. The count rides in the name ("Epistle-Class
+      // Gunship x2") rather than earning a column of its own.
+      const showClass = title !== ship.name || list.freePlay;
+      const countSuffix = u.count > 1 ? ` <span class="pr-unit-x">&times;${u.count}</span>` : "";
       return `
       <tr>
         <td class="pr-unit">
           <button class="pr-drop" data-action="print-exclude-unit" data-unit="${u.id}" title="Leave this unit out of the printout" aria-label="Leave ${escapeHtml(title)} out of the printout">${icon("close", 12)}</button>
-          <span class="pr-unit-name">${escapeHtml(title)}</span>
-          <span class="pr-unit-class">${escapeHtml(ship.name)}${list.freePlay ? `, ${escapeHtml(r.owner.name)}` : ""}</span>
+          <span class="pr-unit-name">${escapeHtml(title)}${countSuffix}</span>
+          ${showClass ? `<span class="pr-unit-class">${escapeHtml(ship.name)}${list.freePlay ? `, ${escapeHtml(r.owner.name)}` : ""}</span>` : ""}
           ${named.length ? `<span class="pr-unit-ships">${escapeHtml(named.join(" / "))}</span>` : ""}
           ${notes ? `<span class="pr-unit-notes">${escapeHtml(notes)}</span>` : ""}
         </td>
-        <td class="pr-num">${u.count}</td>
         <td class="pr-num">${ship.mass}</td>
         <td class="pr-num">${ship.thrust}"</td>
         <td class="pr-num">${ship.silhouette}</td>
         <td class="pr-num">${ship.shields}</td>
         <td class="pr-weap">${primarySlotText(ship)}</td>
         <td class="pr-weap">${auxSlotText(ship)}</td>
-        <td class="pr-num pr-cost">${credits(ship.cost)}</td>
         <td class="pr-num pr-cost">${credits(ship.cost * u.count)}</td>
         ${reqCell}
         ${trackCell}
-        ${isUnity ? `<td class="pr-hvp-slot">${Array.from({ length: u.count }, () => `<span class="pr-writein"></span>`).join("")}</td>` : ""}
+        ${hvpCarrierCell(u)}
       </tr>`;
     })
     .join("");
 
-  const rosterColCount = 9 + (isShipyard ? 1 : 0) + (opts.trackers ? 1 : 0) + (isUnity ? 1 : 0);
+  // Columns before Cost: Unit, Mass, Thrust, Sil, Shields, Primary, Auxiliary.
+  // "Ships" is gone - the count rides in the unit name - and "Cost each" and
+  // "Total" are one column, since per-ship cost is a list-building number that
+  // nobody consults once the fleet is on the table.
+  const leadCols = 7;
+  const tailCols = (isShipyard ? 1 : 0) + (opts.trackers ? 1 : 0) + (fieldsHvp ? 1 : 0);
   const unitBlocks = unitRows
     ? `
-    <div class="pr-scroll">
     <table class="print-roster">
       <thead>
         <tr>
-          <th>${isShipyard ? "Ship class" : "Unit"}</th><th>${isShipyard ? "In Shipyard" : "Ships"}</th><th>Mass</th><th>Thrust</th><th>Sil.</th><th>Shields</th>
-          <th>Primary weapons</th><th>Auxiliary weapons</th><th>Cost each</th><th>Total</th>${isShipyard ? "<th>Requisitioned</th>" : ""}${opts.trackers ? "<th>Hull tracker</th>" : ""}${isUnity ? "<th>HVP carried</th>" : ""}
+          <th class="pr-unit">${isShipyard ? "Ship class" : "Unit"}</th><th class="pr-num">Mass</th><th class="pr-num">Thrust</th><th class="pr-num">Sil.</th><th class="pr-num">Shields</th>
+          <th class="pr-weap">Primary weapons</th><th class="pr-weap">Auxiliary weapons</th><th class="pr-cost">Cost</th>${isShipyard ? '<th class="pr-req">Requisitioned</th>' : ""}${opts.trackers ? '<th class="pr-track">Hull tracker</th>' : ""}${fieldsHvp ? '<th class="pr-hvp-slot">HVP carried</th>' : ""}
         </tr>
       </thead>
       <tbody>${unitRows}</tbody>
       <tfoot>
-        <tr><td colspan="9" class="pr-total-label">Total</td><td class="pr-num pr-cost">${credits(total)}</td>${Array.from({ length: rosterColCount - 9 }, () => "<td></td>").join("")}</tr>
+        <tr><td colspan="${leadCols}" class="pr-total-label">Total</td><td class="pr-num pr-cost">${credits(total)}</td>${Array.from({ length: tailCols }, () => "<td></td>").join("")}</tr>
       </tfoot>
-    </table>
-    </div>`
+    </table>`
     : "";
 
   // Per-unit cards: a stat card each, several to a page, cut-and-keep at the
@@ -1447,9 +1474,12 @@ function printView(state: AppState): string {
           // Only name the ship class here when it isn't already the card title -
           // an unnamed unit takes its class name, so printing both read as
           // "Pegasus Recon Wing / 1x Pegasus Recon Wing".
+          // Mass is in the stat chips directly below, so naming it here printed
+          // it twice on every card.
           (() => {
-            const classLine = title === ship.name ? "" : `${escapeHtml(ship.name)} · `;
-            return `<p class="pc-sub">${u.count}× ${classLine}${massGlyph(ship.mass, 13)} Mass ${ship.mass}${u.species ? ` · ${escapeHtml(u.species)}` : ""}</p>`;
+            const classLine = title === ship.name ? "" : `${escapeHtml(ship.name)}`;
+            const bits = [`${u.count}×`, classLine, u.species ? escapeHtml(u.species) : ""].filter(Boolean);
+            return `<p class="pc-sub">${bits.join(" · ")}</p>`;
           })()
         }
         ${named.length ? `<p class="pc-ships">${escapeHtml(named.join(" / "))}</p>` : ""}
@@ -1473,14 +1503,30 @@ function printView(state: AppState): string {
       </section>`
     : "";
 
+  // How HVP actually work, which the sheet never said. Carried by a unit; the
+  // benefit applies only while an in-play unit carries the token (not from
+  // Reserves, the Shipyard, or an enemy that has taken it); when the last ship
+  // of the carrying unit dies the token becomes free-floating salvage, and
+  // either side collects it with a Scan within 3". That is the difference
+  // between a static roster line and something you keep amending mid-game.
+  const HVP_MECHANICS =
+    'Rides a Mass 1+ unit, and only counts while that unit is in play. If its last ship dies the token goes free-floating — either side collects it by Scanning within 3".';
+
   const hvpBlocks = list.fleet.hvp
     .map((sel) => {
       const def = hvpById(sel.hvpId, faction);
       if (!def) return "";
       const displayName = sel.customName ? `${sel.customName}, ${def.name}` : def.name;
+      // Name the starting carrier here as well as in the roster column: the
+      // column is where you amend it, this is where you read what it does.
+      const carrier = sel.assignedUnitId
+        ? (list.fleet.units.find((u) => u.id === sel.assignedUnitId)?.name ??
+           unitNames.get(sel.assignedUnitId) ??
+           "")
+        : "";
       return `
       <section class="print-hvp">
-        <h4>${escapeHtml(displayName)}</h4>
+        <h4>${escapeHtml(displayName)} <span class="print-hvp-slot">${carrier ? `starts on ${escapeHtml(carrier)}` : "carrier: _______________"}</span></h4>
         <p>${ruleText(def.rule)}</p>
       </section>`;
     })
@@ -1489,11 +1535,15 @@ function printView(state: AppState): string {
   // Age of Unity: every HVP the faction can field, so you can assign them to the
   // ship slots above once the missions are known. Faction HVP first, then generics.
   const availableHvp: Hvp[] = [...(faction?.hvp ?? []), ...GENERIC_HVP];
+  // No "carried by ______" line here. The roster above now has an HVP column
+  // per unit, which is where the assignment is actually written and amended, so
+  // a second blank on each of these twelve blocks was twelve lines of ink
+  // recording the same thing in a worse place.
   const availableHvpBlocks = availableHvp
     .map(
       (def) => `
       <section class="print-hvp">
-        <h4>${escapeHtml(def.name)} <span class="print-hvp-slot">carried by _______________</span></h4>
+        <h4>${escapeHtml(def.name)}</h4>
         <p>${ruleText(def.rule)}</p>
       </section>`,
     )
@@ -1609,16 +1659,29 @@ function printView(state: AppState): string {
         <div class="sheet-totals">
           <p class="sheet-total-line">${credits(total)}${list.mode === "hypergrowth" && list.unlimitedShipyards ? " · unlimited shipyard" : ` of ${credits(list.fleet.creditsLimit)}`}</p>
           <p class="sheet-count">${list.fleet.units.length} ${list.fleet.units.length === 1 ? "unit" : "units"}${printIssues === null ? "" : printIssues === 0 ? ` · <span class="sheet-legal">Legal</span>` : ` · <span class="sheet-illegal">${printIssues} to resolve</span>`}</p>
-          <p class="sheet-date">${formatDate(new Date().toISOString())}</p>
         </div>
       </header>
+
+      ${
+        // Initiative and CMD tokens are read at the top of EVERY round, which
+        // makes them the two most-consulted numbers on the sheet. They used to
+        // be a small italic line inside the faction-rule box, and worse, that
+        // box is behind the "Rules" toggle - so turning rules off hid the two
+        // things you cannot play a round without. They are their own banner now,
+        // always printed, set large enough to read across the table.
+        faction
+          ? `<section class="sheet-vitals">
+              <div class="sv-item"><span class="sv-label">Initiative</span><span class="sv-value">${escapeHtml(faction.initiative)}</span></div>
+              <div class="sv-item"><span class="sv-label">CMD tokens / round</span><span class="sv-value">${escapeHtml(faction.cmdTokens)}</span></div>
+            </section>`
+          : ""
+      }
 
       ${
         faction && opts.rules
           ? `<section class="print-rule">
               <h3>Faction rule: ${escapeHtml(faction.rule.name)}</h3>
               <p>${ruleText(faction.rule.text)}</p>
-              <p class="print-note">Initiative ${escapeHtml(faction.initiative)}. Command tokens each round: ${escapeHtml(faction.cmdTokens)}.</p>
             </section>`
           : ""
       }
@@ -1643,9 +1706,9 @@ function printView(state: AppState): string {
 
       ${
         isUnity
-          ? `<h2 class="sheet-section">Available High-Value Personnel</h2><p class="print-note">Assign these to the ship slots above once your missions are generated.</p>${availableHvpBlocks}`
+          ? `<h2 class="sheet-section">Available High-Value Personnel</h2><p class="print-note">Assign these to the HVP column above once your missions are generated. ${HVP_MECHANICS}</p>${availableHvpBlocks}`
           : hvpBlocks
-            ? `<h2 class="sheet-section">High-Value Personnel</h2>${hvpBlocks}`
+            ? `<h2 class="sheet-section">High-Value Personnel</h2><p class="print-note">${HVP_MECHANICS}</p>${hvpBlocks}`
             : ""
       }
 
@@ -1657,7 +1720,6 @@ function printView(state: AppState): string {
         const cells = roundNames.map(() => "<td></td>").join("");
         return `
       <p class="print-note">${list.mode === "management-training" ? "Management Training ends at the end of the third round; most credits wins." : "The game ends at the end of the fourth round."}</p>
-      <div class="pr-scroll">
       <table class="print-score">
         <thead><tr><th></th>${roundNames.map((n) => `<th>${n}</th>`).join("")}<th>Final</th></tr></thead>
         <tbody>
@@ -1665,8 +1727,7 @@ function printView(state: AppState): string {
           <tr><th>Opponent</th>${cells}<td></td></tr>
           <tr><th>Notes</th>${cells}<td></td></tr>
         </tbody>
-      </table>
-      </div>`;
+      </table>`;
       })()}`
       }
       ${list.fleet.notes ? `<section class="print-notes"><h3 class="sheet-section">Notes</h3><p>${escapeHtml(list.fleet.notes)}</p></section>` : ""}
@@ -2767,7 +2828,7 @@ function emblemModal(state: AppState): string {
       ? `<label class="em-drop"><span class="em-drop-cue">${icon("upload", 22)}<span>Click to upload your own image</span></span><input type="file" accept="image/*" data-action="${cfg.upA}" hidden /></label>`
       : `<input id="emblem-lib-search" class="em-search" type="search" placeholder="Search sigils — try skull, wings, money…" value="${escapeHtml(m.libQuery ?? "")}" data-action="emblem-lib-search" aria-label="Search sigils" />
          ${folderChips}
-         <div class="em-scroll">${iconLibraryGrid(cfg.libA, cfg.currentLib, activeCat, m.libQuery)}</div>
+         <div class="em-scroll">${iconLibraryGrid(cfg.libA, cfg.currentLib, activeCat, m.libQuery, m.libShown ?? LIB_PAGE)}</div>
          ${colourBlock}`;
 
   return `

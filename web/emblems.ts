@@ -3,6 +3,7 @@
 // categories; loose files sit under "General".
 
 import { escapeHtml } from "./format.ts";
+import { icon } from "./icons.ts";
 
 const urls = import.meta.glob("./emblems/**/*.{png,jpg,jpeg,svg,webp,PNG,JPG,JPEG,SVG}", {
   eager: true,
@@ -209,28 +210,57 @@ export function randomIconId(): string | undefined {
 /** One flat, sorted grid of every icon (no category headers), for embedding.
  * Each tile carries its origin folder as data-cat so styling can treat sets
  * differently (e.g. keep the colour on the "vg" insignia). */
-export function iconLibraryGrid(actLib: string, currentLib?: string, activeCat?: string, query?: string): string {
+/** Tiles rendered per page. Roughly three screens' worth at the modal's width. */
+export const LIB_PAGE = 72;
+
+export function iconLibraryGrid(
+  actLib: string,
+  currentLib?: string,
+  activeCat?: string,
+  query?: string,
+  shown: number = LIB_PAGE,
+): string {
   const q = (query ?? "").trim().toLowerCase();
   // Every word has to match somewhere, so "red skull" narrows rather than widens.
   const terms = q ? q.split(/\s+/) : [];
-  const items = ICON_LIBRARY.filter((i) => !activeCat || activeCat === "all" || i.category === activeCat)
-    .filter((i) => {
+  const matches = ICON_LIBRARY.filter((i) => !activeCat || activeCat === "all" || i.category === activeCat).filter(
+    (i) => {
       if (terms.length === 0) return true;
       const hay = HAYSTACK.get(i.id) ?? "";
       return terms.every((t) => hay.includes(t));
-    })
+    },
+  );
+  // Only the first `shown` are built. The rest arrive as the sentinel below
+  // scrolls into view (see main.ts), which keeps the modal instant to open and
+  // keeps the images near enough to the viewport that lazy loading fetches them.
+  const remaining = Math.max(0, matches.length - shown);
+  // The first rows load eagerly. `loading="lazy"` only fetches what is near the
+  // viewport, and the grid can legitimately open below the fold (a short window,
+  // or the colour rows pushing it down), in which case nothing loads at all and
+  // the picker shows an empty checkerboard until you scroll. These few are
+  // cheap - a thumbnail averages about 5KB - and they guarantee the picker
+  // always opens onto actual sigils.
+  const EAGER = 24;
+  const items = matches
+    .slice(0, shown)
     .map(
       // No title tooltip - the mouseover label was noise. alt stays for a11y.
       // Intrinsic width/height plus lazy/async decoding keep a 150-tile grid from
       // reflowing as images arrive; the CSS pairs this with content-visibility so
       // offscreen tiles cost nothing to lay out on each repaint.
-      (i) =>
-        `<button class="lib-icon ${currentLib === i.id ? "selected" : ""}" data-cat="${escapeHtml(i.category)}" data-action="${actLib}" data-lib="${escapeHtml(i.id)}"><img loading="lazy" decoding="async" width="64" height="64" src="${i.thumb}" alt="${escapeHtml(i.label)}" /></button>`,
+      (i, n) =>
+        `<button class="lib-icon ${currentLib === i.id ? "selected" : ""}" data-cat="${escapeHtml(i.category)}" data-action="${actLib}" data-lib="${escapeHtml(i.id)}"><img loading="${n < EAGER ? "eager" : "lazy"}" decoding="async" width="64" height="64" src="${i.thumb}" alt="${escapeHtml(i.label)}" /></button>`,
     )
     .join("");
-  return items
-    ? `<div class="lib-grid lib-grid-blob">${items}</div>`
-    : `<p class="muted">${q ? "No sigils match that search." : "No icons in this folder."}</p>`;
+  if (!items) return `<p class="muted">${q ? "No sigils match that search." : "No icons in this folder."}</p>`;
+  // A real button, not a bare sentinel. The scroll observer in main.ts loads the
+  // next page automatically when this comes into view, but an observer inside a
+  // short modal scroller is not something to bet the feature on - and a button
+  // says plainly that there is more, which a silent gap does not.
+  const more = remaining
+    ? `<button class="lib-more" data-lib-more data-action="emblem-lib-more">${icon("plus", 14)}<span class="lib-more-count">Show ${remaining} more</span></button>`
+    : "";
+  return `<div class="lib-grid lib-grid-blob">${items}</div>${more}`;
 }
 
 

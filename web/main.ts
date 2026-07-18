@@ -101,6 +101,7 @@ function paint(): void {
   if (manifest) manifest.scrollTop = manifestScroll;
 
   measureStickyHeader();
+  observeEmblemLibrary();
   animateFactionTitle();
   animateNewRosterRows();
   animateCountChanges();
@@ -508,6 +509,41 @@ function animateCountChanges(): void {
  * viewport and changes height when the credits limit control opens, so a
  * hard-coded offset would either overlap the header or leave a gap under it.
  */
+/**
+ * Grow the emblem library as its foot comes into view. The whole library is
+ * 250+ tiles; rendering it in one go took about a second and, because the grid
+ * extended far below the fold, `loading="lazy"` correctly fetched none of the
+ * images - so the picker opened slowly onto an empty checkerboard. A page at a
+ * time keeps opening instant and keeps the images close enough to load.
+ *
+ * The observer is rebuilt each paint because the sentinel is a fresh element
+ * whenever the page count changes; disconnecting the previous one avoids
+ * stacking observers across renders.
+ */
+let libMoreObserver: IntersectionObserver | null = null;
+function observeEmblemLibrary(): void {
+  libMoreObserver?.disconnect();
+  libMoreObserver = null;
+  const sentinel = document.querySelector("[data-lib-more]");
+  if (!sentinel) return;
+  const scroller = sentinel.closest<HTMLElement>(".em-body") ?? null;
+  libMoreObserver = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      libMoreObserver?.disconnect();
+      libMoreObserver = null;
+      store.setState((s) =>
+        s.ui.modal?.kind === "emblem"
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, libShown: (s.ui.modal.libShown ?? 72) + 72 } } }
+          : s,
+      );
+    },
+    // Start fetching before it is actually on screen, so scrolling stays smooth.
+    { root: scroller, rootMargin: "300px" },
+  );
+  libMoreObserver.observe(sentinel);
+}
+
 function measureStickyHeader(): void {
   const head = document.querySelector<HTMLElement>(".mf-head");
   if (!head) return;

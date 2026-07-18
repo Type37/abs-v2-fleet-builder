@@ -36,7 +36,7 @@ import {
 } from "./state.ts";
 import type { AppState, LastRoll, PrintOpts, ShipFilter } from "./state.ts";
 import { RANDOM_BEHAVIOUR, GLITCH_BLIP, type RollRow } from "../src/data/junkspace-solo.ts";
-import { randomIconId } from "./emblems.ts";
+import { LIB_PAGE, randomIconId } from "./emblems.ts";
 import { shareUrl } from "./share.ts";
 import { fleetToMarkdown } from "./export-text.ts";
 
@@ -415,10 +415,21 @@ function handleClick(e: MouseEvent): void {
       );
       break;
     }
+    case "emblem-lib-more": {
+      // Fired by the sentinel at the foot of the grid scrolling into view.
+      store.setState((s) =>
+        s.ui.modal?.kind === "emblem"
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, libShown: (s.ui.modal.libShown ?? LIB_PAGE) + LIB_PAGE } } }
+          : s,
+      );
+      break;
+    }
     case "emblem-lib-cat": {
       const cat = target.dataset["cat"];
       store.setState((s) =>
-        s.ui.modal?.kind === "emblem" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, libCat: cat } } } : s,
+        s.ui.modal?.kind === "emblem"
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, libCat: cat, libShown: LIB_PAGE } } }
+          : s,
       );
       break;
     }
@@ -1480,7 +1491,9 @@ function handleChange(e: Event): void {
       // focus and caret survive the re-render.
       const q = inputValue;
       store.setState((s) =>
-        s.ui.modal?.kind === "emblem" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, libQuery: q } } } : s,
+        s.ui.modal?.kind === "emblem"
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, libQuery: q, libShown: LIB_PAGE } } }
+          : s,
       );
       break;
     }

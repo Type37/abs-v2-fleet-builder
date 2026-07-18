@@ -1015,7 +1015,6 @@ button { font-family: inherit; }
 /* Print setup: options bar (screen only), per-unit cards, and trackers. */
 .print-opts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .print-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
-.pr-scroll { overflow-x: auto; }
 .print-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 12px; }
 .print-card { border: 1px solid var(--ink); padding: 10px 12px; break-inside: avoid; page-break-inside: avoid; }
 .pc-head { display: flex; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--hair); padding-bottom: 5px; margin-bottom: 5px; }
@@ -1036,11 +1035,11 @@ button { font-family: inherit; }
 .pc-track-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); min-width: 30px; }
 .pr-hp { display: inline-flex; flex-wrap: wrap; gap: 3px; }
 .pr-hp-box { width: 11px; height: 11px; border: 1px solid var(--ink-2); display: inline-block; }
-.print-track-strip { display: flex; gap: 24px; flex-wrap: wrap; margin: 14px 0; padding: 10px 0; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
+.print-track-strip { display: flex; gap: 24px; flex-wrap: wrap; margin: 7px 0; padding: 5px 0; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
 .pts-item { display: flex; align-items: center; gap: 10px; }
 .pts-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
 .pts-blank { display: inline-block; min-width: 120px; border-bottom: 1px solid var(--ink-2); height: 14px; }
-@media print { .print-cards { grid-template-columns: repeat(3, 1fr); } .pr-scroll { overflow: visible; } }
+@media print { .print-cards { grid-template-columns: repeat(3, 1fr); } }
 
 .print-notes { margin-top: 14px; }
 .print-notes p { font-family: var(--serif); font-size: 13px; line-height: 1.5; white-space: pre-wrap; color: var(--ink); }
@@ -1052,12 +1051,13 @@ button { font-family: inherit; }
 
 /* width:100% + min-width:0 because this is a direct flex child of #app: without
    them its automatic minimum size is the roster table's min-content, so a wide
-   table stretches the whole page instead of scrolling inside .pr-scroll. */
+   table would stretch the whole page. The table itself is now sized to fit the
+   sheet instead, since a printed page cannot scroll. */
 .print-page { max-width: 940px; margin: 0 auto; padding: 20px; width: 100%; min-width: 0; }
 .print-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
 
 .sheet { background: #fff; border: 1px solid var(--ink); padding: clamp(16px, 2.4vw, 26px); }
-.sheet-head { display: flex; align-items: center; gap: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--ink); }
+.sheet-head { display: flex; align-items: center; gap: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); }
 .sheet-emblem { color: var(--blue); flex-shrink: 0; }
 .sheet-title-block { flex: 1; }
 .sheet-title { font-family: var(--display); font-weight: 900; font-size: clamp(22px, 3.4vw, 32px); letter-spacing: -0.02em; text-transform: uppercase; line-height: 0.95; }
@@ -1067,24 +1067,30 @@ button { font-family: inherit; }
 .sheet-count { font-size: 11px; font-weight: 600; color: var(--ink-2); margin-top: 3px; }
 .sheet-legal { color: var(--go); font-weight: 800; }
 .sheet-illegal { color: var(--red-deep); font-weight: 800; }
-.sheet-date { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
 
 /* Section headings are ink-friendly: a bold underlined label, not a filled dark
    banner that eats toner on a home printer. */
-.sheet-section { font-family: var(--display); font-size: 13px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); background: none; padding: 0 0 3px; margin: 16px 0 8px; border-bottom: 2px solid var(--ink); }
-.print-rule { margin-top: 12px; border-left: 3px solid var(--blue); padding: 2px 0 2px 12px; }
+/* Initiative and CMD tokens, read at the top of every round. Large enough to
+   take in from across the table without picking the sheet up. */
+.sheet-vitals { display: flex; gap: 28px; flex-wrap: wrap; margin: 8px 0 2px; padding: 7px 0; border-bottom: 1px solid var(--hair); }
+.sv-item { display: flex; align-items: baseline; gap: 8px; }
+.sv-label { font-family: var(--narrow); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
+.sv-value { font-family: var(--display); font-weight: 900; font-size: 21px; line-height: 1; color: var(--blue); font-variant-numeric: tabular-nums; }
+.is-inksaver .sv-value { color: var(--ink); }
+.sheet-section { font-family: var(--display); font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); background: none; padding: 0 0 2px; margin: 10px 0 5px; border-bottom: 1px solid var(--ink); }
+.print-rule { margin-top: 7px; border-left: 2px solid var(--blue); padding: 1px 0 1px 9px; }
 .print-rule h3 { font-family: var(--display); font-size: 14px; margin-bottom: 3px; }
-.print-rule p { font-family: var(--serif); font-size: 13px; line-height: 1.4; }
+.print-rule p { font-family: var(--serif); font-size: 12px; line-height: 1.32; }
 
 /* Actions & commands reference: two dense columns, name + full effect text. */
-.print-ref-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
+.print-ref-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
 @media (max-width: 640px) { .print-ref-cols { grid-template-columns: 1fr; } }
 .print-ref-h { font-family: var(--display); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; margin: 0 0 6px; color: var(--ink); }
 .print-ref-sub { font-family: var(--sans); font-weight: 600; font-size: 9px; letter-spacing: 0.04em; color: var(--ink-3); }
 .print-ref-list { margin: 0; }
-.print-ref-list dt { font-family: var(--sans); font-weight: 800; font-size: 11.5px; color: var(--ink); margin-top: 5px; }
+.print-ref-list dt { font-family: var(--sans); font-weight: 800; font-size: 10.5px; color: var(--ink); margin-top: 3px; }
 .print-ref-list dt:first-child { margin-top: 0; }
-.print-ref-list dd { margin: 0 0 1px; font-family: var(--serif); font-size: 11.5px; line-height: 1.35; color: var(--ink-2); }
+.print-ref-list dd { margin: 0; font-family: var(--serif); font-size: 10.5px; line-height: 1.26; color: var(--ink-2); }
 .print-ref-cost { font-family: var(--sans); font-weight: 700; font-size: 9.5px; color: var(--blue); letter-spacing: 0.02em; }
 .print-ref-note { font-size: 10.5px; font-style: italic; color: var(--ink-2); margin: 8px 0 0; }
 /* What this fleet's own rules do to a command: a discount, or an alteration.
@@ -1094,27 +1100,40 @@ button { font-family: inherit; }
 .is-inksaver .print-ref-mod { color: var(--ink-2); }
 
 /* Roster as one continuous unit-row table (Army Forge / Infinity Army style). */
-.print-roster { width: 100%; border-collapse: collapse; }
+/* Fixed layout, because auto-layout spent the row on the wrong columns: a
+   single-digit Mass got 46px while the unit name got 66 and wrapped over four
+   lines. Widths are declared on both the th and the td (see render.ts), so the
+   name and weapons get the room and the numbers collapse to what they need. */
+.print-roster { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.print-roster th { white-space: normal; overflow-wrap: anywhere; }
+.pr-unit { width: 23%; }
 .print-roster thead th {
-  background: #fff; border-bottom: 2px solid var(--ink); text-align: left;
-  font-size: 9px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--ink-2); padding: 6px 8px; white-space: nowrap;
+  background: #fff; border-bottom: 1.5px solid var(--ink); text-align: left;
+  font-size: 8.5px; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase;
+  color: var(--ink-2); padding: 4px 5px;
+  /* Headers wrap rather than run past their column: with a fixed table layout,
+     nowrap let "AUXILIARY WEAPONS" bleed 5px into its neighbour. */
+  white-space: normal; overflow-wrap: anywhere;
 }
-.print-roster tbody td { border-bottom: 1px solid var(--hair-soft); padding: 4px 7px; vertical-align: top; font-size: 12px; }
+.print-roster tbody td { border-bottom: 1px solid var(--hair-soft); padding: 2px 5px; vertical-align: top; font-size: 11px; }
 .print-roster tbody tr { break-inside: avoid; }
-.pr-unit-name { display: block; font-family: var(--display); font-weight: 800; font-size: 14px; }
+.pr-unit-name { display: block; font-family: var(--display); font-weight: 800; font-size: 12.5px; line-height: 1.2; }
+.pr-unit-x { font-weight: 900; color: var(--blue); }
+.is-inksaver .pr-unit-x { color: var(--ink); }
 .pr-unit-class { display: block; font-size: 11px; font-weight: 600; color: var(--ink-2); }
 .pr-unit-ships { display: block; font-family: var(--serif); font-size: 11.5px; color: var(--ink); margin-top: 2px; }
 .pr-unit-notes { display: block; font-family: var(--serif); font-style: italic; font-size: 11.5px; color: var(--ink-2); margin-top: 2px; }
-.pr-num { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.pr-cost { color: var(--blue); }
-.pr-weap { font-family: var(--serif); font-size: 12px; line-height: 1.4; min-width: 120px; }
-.pr-track { min-width: 90px; }
+.pr-num { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; width: 40px; }
+.print-roster tbody .pr-num { white-space: nowrap; }
+.pr-cost { color: var(--blue); width: 58px; }
+.print-roster tbody .pr-cost { white-space: nowrap; }
+.pr-weap { font-family: var(--serif); font-size: 11px; line-height: 1.3; width: 17%; overflow-wrap: anywhere; }
+.pr-track { width: 78px; }
 .pr-track-ship { display: block; margin-bottom: 4px; }
 .pr-track-ship:last-child { margin-bottom: 0; }
-.pr-req { min-width: 70px; }
+.pr-req { width: 74px; }
 .pr-req-box { display: inline-block; width: 13px; height: 13px; border: 1px solid var(--ink-2); margin: 0 3px 3px 0; }
-.print-roster tfoot td { border-top: 2px solid var(--ink); padding: 8px; font-weight: 800; }
+.print-roster tfoot td { border-top: 1.5px solid var(--ink); padding: 4px 5px; font-weight: 800; }
 .pr-total-label { text-align: right; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
 
 .print-unit { margin-bottom: 18px; border: 1px solid var(--ink); break-inside: avoid; }
@@ -1130,13 +1149,16 @@ button { font-family: inherit; }
 .print-weapons td { font-family: var(--serif); font-size: 13px; }
 .print-note { font-size: 12px; color: var(--ink-2); padding: 6px 14px; font-style: italic; }
 
-.print-hvp { border-left: 3px solid var(--red); padding: 2px 0 2px 14px; margin-bottom: 10px; break-inside: avoid; }
-.print-hvp h4 { font-family: var(--display); font-size: 14px; margin-bottom: 2px; }
-.print-hvp p { font-family: var(--serif); font-size: 12.5px; line-height: 1.4; }
+.print-hvp { border-left: 2px solid var(--red); padding: 1px 0 1px 9px; margin-bottom: 5px; break-inside: avoid; }
+.print-hvp h4 { font-family: var(--display); font-size: 12.5px; margin-bottom: 1px; }
+.print-hvp p { font-family: var(--serif); font-size: 11.5px; line-height: 1.3; }
 .print-hvp-slot { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-3); text-transform: none; }
 /* Age of Unity: a blank line per ship to pencil in who carries an HVP. */
-.pr-hvp-slot { min-width: 96px; }
-.pr-writein { display: block; height: 15px; border-bottom: 1px solid var(--ink-3); margin-bottom: 4px; }
+.pr-hvp-slot { width: 13%; }
+/* Where the carrier started, so it can be struck through and rewritten when
+   the token changes hands mid-game. */
+.pr-hvp-start { display: block; font-size: 9.5px; color: var(--ink-3); line-height: 1.2; }
+.pr-writein { display: block; height: 13px; border-bottom: 1px solid var(--ink-3); margin-bottom: 3px; }
 .pr-writein:last-child { margin-bottom: 0; }
 
 /* Training-guide print sheets: dense, newspaper-style. */
@@ -2645,3 +2667,13 @@ button { font-family: inherit; }
 @media (max-width: 900px) {
   .roster-sheet .roster-unit { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "spec" "tools"; }
 }
+
+/* Foot of the emblem library: both the "there is more" cue and the sentinel the
+   scroll observer watches to render the next page of tiles. */
+.lib-more {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; margin-top: 10px; padding: 9px 12px; cursor: pointer;
+  border: 1px solid var(--hair); background: var(--paper); color: var(--ink-2);
+}
+.lib-more:hover { border-color: var(--blue); color: var(--blue); }
+.lib-more-count { font-family: var(--sans); font-size: 12px; font-weight: 700; }

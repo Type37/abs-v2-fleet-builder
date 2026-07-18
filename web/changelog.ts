@@ -9,6 +9,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.55",
+    date: "2026-07-18",
+    title: "The printed sheet, audited",
+    items: [
+      "Initiative and CMD tokens are now a banner at the top of the sheet, set large. They were a small italic line buried in the faction-rule box — and worse, that box is behind the Rules toggle, so turning rules off hid the two numbers you read at the start of every single round.",
+      "The date is gone. It told you nothing at the table.",
+      "Fewer pages. A five-unit fleet went from spilling well past two pages to 1.14. The table layout was the main culprit: a single-digit Mass column was getting 46 pixels while the unit name got 66 and wrapped over four lines, so rows were 103px tall. Now 48.",
+      "Nothing runs off the edge, and nothing is in a scrolling box any more — you cannot scroll a piece of paper.",
+      "Killed the duplications. A unit with no custom name printed its class twice (once bold, once grey). Mass was printed on every card and then again in the stat chips below it. \"Cost each\" and \"Total\" are one Cost column. Carried personnel was listed on the unit row and again in the HVP section. Age of Unity printed twelve \"carried by ____\" blanks duplicating the new HVP column.",
+      "Units read as \"Epistle-Class Gunship ×2\" instead of spending a whole column on the count.",
+      "HVP display now follows the actual rules. They ride a Mass 1+ unit, only count while that unit is in play, and drop as free-floating salvage for either side to Scan when the last ship dies — so the carrier is not a fixed fact. Every unit gets a write-in HVP box, the starting carrier is printed faintly beside it, and the sheet finally states how carrying works.",
+      "The emblem picker opens in 15ms instead of about a second, and opens onto actual sigils. It was building all 253 tiles at once into a grid so tall that the browser correctly refused to load any of the images — so you got a slow empty checkerboard. It now loads a page at a time.",
+    ],
+  },
+  {
     version: "0.8.54",
     date: "2026-07-18",
     title: "The budget stays on screen",

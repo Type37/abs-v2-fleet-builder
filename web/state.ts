@@ -187,6 +187,16 @@ export interface AppState {
           tab: "library" | "upload" | "colour";
           libCat?: string;
           libQuery?: string;
+          /**
+           * How many library tiles are currently rendered. The library holds 250+
+           * marks; building and laying out all of them at once took about a
+           * second and left every image unloaded, because with the whole grid
+           * off-screen `loading="lazy"` correctly declines to fetch any of it -
+           * so the picker opened slowly onto an empty grid. Tiles are added a
+           * page at a time as you scroll instead. Nothing is hidden; scrolling
+           * reaches all of it.
+           */
+          libShown?: number;
         }
       | { kind: "options" };
     /** In-progress first-visit coachmark tour, once the user has advanced past step 0. */
