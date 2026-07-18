@@ -96,6 +96,7 @@ function paint(): void {
   if (manifest) manifest.scrollTop = manifestScroll;
 
   animateFactionTitle();
+  animateNewRosterRows();
 
   for (const d of document.querySelectorAll<HTMLDetailsElement>("details[data-persist]")) {
     const key = d.dataset["persist"];
@@ -297,6 +298,40 @@ function animateStatGlyphs(): void {
       { duration: 300, delay: 140 + i * 70, easing: "cubic-bezier(.2,.9,.3,1.4)", fill: "backwards" },
     );
   });
+}
+
+// A ship added to a roster or outfit gets a short, subtle entrance so the change
+// registers. Rows are keyed by unit id; each render compares the current keys to
+// the last set and animates only the ones that are new - so nothing plays on an
+// unrelated re-render, and existing rows never re-animate when a view first opens
+// (the first sighting just seeds the set).
+let prevRosterKeys: Set<string> | null = null;
+function animateNewRosterRows(): void {
+  const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-roster-key]"));
+  if (rows.length === 0) {
+    prevRosterKeys = null; // roster left the page; a fresh one should not animate on open
+    return;
+  }
+  const current = new Set<string>();
+  for (const r of rows) {
+    const k = r.dataset["rosterKey"];
+    if (k) current.add(k);
+  }
+  const seen = prevRosterKeys;
+  prevRosterKeys = current;
+  if (seen === null) return; // first sight of this roster - seed only, no animation
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for (const r of rows) {
+    const k = r.dataset["rosterKey"];
+    if (!k || seen.has(k)) continue;
+    r.animate(
+      [
+        { opacity: 0, transform: "translateY(-8px)", boxShadow: "inset 3px 0 0 rgba(11,61,145,0.9)" },
+        { opacity: 1, transform: "translateY(0)", boxShadow: "inset 0 0 0 rgba(11,61,145,0)" },
+      ],
+      { duration: 320, easing: "cubic-bezier(.2,.8,.2,1)" },
+    );
+  }
 }
 
 function animateFactionTitle(): void {

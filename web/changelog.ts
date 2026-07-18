@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.23",
+    date: "2026-07-17",
+    title: "A real pilot-class picker, and ships that arrive with a flourish",
+    items: [
+      "In Solo, choosing a pilot is now a prominent three-way picker with the Gunner, Hauler, and Junker artwork instead of a plain dropdown, and the separate starting-perks reference box has been removed.",
+      "Adding a ship to a fleet or a Solo outfit now plays a short entrance on just the new row, so the addition registers at a glance.",
+    ],
+  },
+  {
     version: "0.8.22",
     date: "2026-07-17",
     title: "Dice on the value's line, and better title motion",

@@ -1312,6 +1312,24 @@ button { font-family: inherit; }
 .solo-head { grid-column: 1 / -1; }
 .solo-head .panel-note { max-width: 72ch; margin-bottom: 0; }
 .solo-main { align-items: start; }
+/* Pilot class: a prominent three-way icon picker, not a dropdown. The class
+   art is white (drawn for dark grounds), so each icon sits on a dark chip that
+   stays dark even when its option is selected, keeping the art legible. */
+.pilot-field { display: flex; flex-direction: column; gap: 6px; }
+.pilot-field-label { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.pilot-picker { display: flex; gap: 8px; }
+.pilot-opt {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding: 10px 6px; border: 1.5px solid var(--hair); background: var(--paper); cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, transform 0.06s ease;
+}
+.pilot-opt:hover { border-color: var(--blue); background: var(--blue-wash); }
+.pilot-opt:active { transform: translateY(1px); }
+.pilot-opt.on { border-color: var(--blue); background: var(--blue); }
+.pilot-ico { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: var(--ink); border-radius: 50%; }
+.pilot-ico img { width: 32px; height: 32px; object-fit: contain; display: block; }
+.pilot-name { font-family: var(--display); font-weight: 800; font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink); }
+.pilot-opt.on .pilot-name { color: #fff; }
 .solo-primer { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--ink-2); }
 .solo-primer strong { color: var(--ink); }
 

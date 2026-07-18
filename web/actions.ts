@@ -736,6 +736,15 @@ function handleClick(e: MouseEvent): void {
       }));
       break;
     }
+    case "outfit-pilot-class": {
+      const shipId = target.dataset["ship"];
+      const cls = target.dataset["class"] as PilotClass;
+      editOutfit((o) => ({
+        ...o,
+        ships: o.ships.map((s) => (s.id === shipId ? { ...s, pilotClass: cls } : s)),
+      }));
+      break;
+    }
     case "outfit-clear-emblem": {
       editOutfit((o) => ({ ...o, emblemImage: undefined }));
       break;
@@ -1250,14 +1259,6 @@ function handleChange(e: Event): void {
       editOutfit((o) => ({
         ...o,
         ships: o.ships.map((s) => (s.id === shipId ? { ...s, pilotName: inputValue } : s)),
-      }));
-      break;
-    }
-    case "outfit-pilot-class": {
-      const shipId = target.dataset["ship"];
-      editOutfit((o) => ({
-        ...o,
-        ships: o.ships.map((s) => (s.id === shipId ? { ...s, pilotClass: inputValue as PilotClass } : s)),
       }));
       break;
     }

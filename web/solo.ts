@@ -5,7 +5,6 @@
 import { PILOT_CLASSES, type PilotClass, type ShipClass } from "../src/types.ts";
 import {
   JUNKSPACE_SHIPS,
-  PILOT_PERKS,
   OUTFIT_BUDGET_K,
   OUTFIT_MAX_SHIPS,
   STARTING_DEBT_K,
@@ -27,6 +26,11 @@ import {
 import { auxSlotText, escapeHtml, formatDate, primarySlotText } from "./format.ts";
 import { emblem, emblemMark, icon, massGlyph, statChips } from "./icons.ts";
 import { iconLibraryControls, libraryUrl } from "./emblems.ts";
+import gunnerIcon from "./pilots/gunner.png";
+import haulerIcon from "./pilots/hauler.png";
+import junkerIcon from "./pilots/junker.png";
+
+const PILOT_ICON: Record<string, string> = { Gunner: gunnerIcon, Hauler: haulerIcon, Junker: junkerIcon };
 import type { AppState, SoloTab } from "./state.ts";
 import { activeOutfit } from "./state.ts";
 import type { SavedOutfit } from "./storage.ts";
@@ -132,20 +136,25 @@ function outfitTab(o: SavedOutfit): string {
   const shipRows = o.ships
     .map((s) => {
       const def = shipById.get(s.shipClassId);
-      const pilotOpts = PILOT_CLASSES.map(
-        (p) => `<option value="${p}" ${s.pilotClass === p ? "selected" : ""}>${p}</option>`,
+      const pilotPicker = PILOT_CLASSES.map(
+        (p) => `
+        <button class="pilot-opt ${s.pilotClass === p ? "on" : ""}" data-action="outfit-pilot-class" data-ship="${s.id}" data-class="${p}" aria-pressed="${s.pilotClass === p}" title="${p}">
+          <span class="pilot-ico"><img src="${PILOT_ICON[p]}" alt="" /></span>
+          <span class="pilot-name">${p}</span>
+        </button>`,
       ).join("");
       return `
-      <article class="roster-unit">
+      <article class="roster-unit" data-roster-key="${s.id}">
         <div class="roster-unit-head">
           <span class="roster-unit-glyph">${def ? massGlyph(def.mass, 22) : icon("warning", 20)}</span>
           <input class="unit-name-input" type="text" value="${escapeHtml(s.shipName ?? "")}" placeholder="${escapeHtml(def?.name ?? "Ship")}" data-action="outfit-ship-name" data-ship="${s.id}" />
           <span class="roster-unit-cost">${ck(def?.cost ?? 0)}</span>
         </div>
         <div class="roster-unit-tools">
-          <label class="inline-field">Pilot class
-            <select data-action="outfit-pilot-class" data-ship="${s.id}">${pilotOpts}</select>
-          </label>
+          <div class="pilot-field">
+            <span class="pilot-field-label">Pilot class</span>
+            <div class="pilot-picker" role="group" aria-label="Pilot class">${pilotPicker}</div>
+          </div>
           <label class="inline-field">Pilot name
             <input class="ship-name-input" type="text" value="${escapeHtml(s.pilotName ?? "")}" placeholder="Call sign" data-action="outfit-pilot-name" data-ship="${s.id}" />
           </label>
@@ -155,19 +164,11 @@ function outfitTab(o: SavedOutfit): string {
     })
     .join("");
 
-  const perkRef = PILOT_PERKS.map(
-    (p) => `<li><strong>${escapeHtml(p.class)}, ${escapeHtml(p.perkName)}:</strong> ${escapeHtml(p.text)}</li>`,
-  ).join("");
-
   return `
   <main class="workspace">
     <section class="catalog">
       <h3 class="catalog-title">Stock ship classes <span class="muted">costs in thousands of Juran credits</span></h3>
       <div class="catalog-list">${soloShipCatalog()}</div>
-      <article class="rule-card" style="margin-top:26px">
-        <h3 class="rule-card-title">Starting pilot perks</h3>
-        <ul class="rule-list">${perkRef}</ul>
-      </article>
     </section>
     <aside class="roster">
       <div class="roster-sheet">

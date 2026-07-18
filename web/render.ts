@@ -995,7 +995,7 @@ function builderView(state: AppState): string {
         : "";
       const subline = carried.length || (r && list.freePlay);
       return `
-      <div class="roster-unit ${r ? "" : "unresolved"}">
+      <div class="roster-unit ${r ? "" : "unresolved"}" data-roster-key="${u.id}">
         <span class="ru-id">
           <span class="roster-unit-glyph">${r ? massGlyph(r.ship.mass, 22) : icon("warning", 20)}</span>
           <span class="ru-main">
