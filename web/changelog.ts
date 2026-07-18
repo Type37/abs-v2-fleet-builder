@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.46",
+    date: "2026-07-18",
+    title: "Preview shows collapsed sections expanded, like the printer will",
+    items: [
+      "Anything that prints expanded now shows expanded in the preview too, so the page count can't under-report by hiding folded-away content.",
+    ],
+  },
+  {
     version: "0.8.45",
     date: "2026-07-18",
     title: "Print setup finally shows you the actual pages",

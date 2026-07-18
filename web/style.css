@@ -2486,6 +2486,12 @@ button { font-family: inherit; }
   font-family: var(--sans); font-size: 9px; font-weight: 800; letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--red); background: #fff; padding: 1px 5px;
 }
+/* The preview must show what PRINTS, not what the screen collapses. The guide
+   sheet is built from <details> that print expanded (see @media print), so the
+   preview expands them too - otherwise the page count under-reports. */
+.sheet details > *:not(summary) { display: block; }
+.sheet details > summary { list-style: none; }
+.sheet details > summary::-webkit-details-marker { display: none; }
 .print-go { display: flex; align-items: center; gap: 12px; }
 .print-pagecount {
   font-family: var(--sans); font-size: 12px; font-weight: 800; letter-spacing: 0.04em;
