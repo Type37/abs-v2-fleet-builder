@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.40",
+    date: "2026-07-18",
+    title: "Play Mode shows the commands you can use right now",
+    items: [
+      "Play Mode now lists the commands you can actually spend CMD tokens on in the phase you're in, with the cost and the full effect text, so you never go hunting through the rulebook mid-turn. Commands you can't currently afford are dimmed, and the Jump Phase only offers Requisition in the Shipyard modes where it exists.",
+    ],
+  },
+  {
     version: "0.8.39",
     date: "2026-07-18",
     title: "Bigger emblems everywhere, and a tidy-up under the hood",

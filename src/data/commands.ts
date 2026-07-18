@@ -11,6 +11,9 @@ export interface CoreAction {
   text: string;
 }
 
+/** Round phases, in order, matching the Play Mode phase track. */
+export const PHASE_COMMAND = { command: 0, jump: 1, tactical: 2, end: 3 } as const;
+
 export interface CoreCommand {
   name: string;
   /** CMD tokens to spend. */
@@ -18,6 +21,14 @@ export interface CoreCommand {
   text: string;
   /** Some commands only exist in certain modes (Requisition is Hypergrowth). */
   shipyardOnly?: boolean;
+  /**
+   * Which round phases this command can actually be spent in, by index into the
+   * Play Mode phase track (0 Command, 1 Jump, 2 Tactical, 3 End). Derived from
+   * each command's own timing wording in the Quick Reference - e.g. Requisition
+   * says "on your Jump In turn", Power to Engines "at the start of a unit's
+   * movement step". Used to show only what's usable right now during play.
+   */
+  phases: number[];
 }
 
 /** Action Step options (one per activation, no CMD cost). Quick Reference. */
@@ -32,11 +43,12 @@ export const CORE_ACTIONS: CoreAction[] = [
 
 /** Commands you spend CMD tokens on. Quick Reference. */
 export const CORE_COMMANDS: CoreCommand[] = [
-  { name: "All Hands", cost: 1, text: "After a unit's first action, take a second, different action with it." },
-  { name: "Executive Oversight", cost: 1, text: "Re-roll one attack die, initiative die, or saving throw." },
-  { name: "Power to Engines", cost: 1, text: "At the start of a unit's movement step, move twice this step (pivot and move both times)." },
-  { name: "Power to Weapons", cost: 1, text: "Before rolling to attack, subtract 1 from each attack die (min 1) for this Salvo. More crits; does not prevent duds." },
-  { name: "Power to Shields", cost: 1, text: "Before rolling saves (Shields 1+), add 1 to the unit's Shields for this Salvo." },
-  { name: "Red Alert", cost: 1, text: "A friendly ship without an Activated token that would be destroyed is not; it regains 1HP. At the end of its next activation it drops to 0HP (no second Red Alert), unless it jumped out." },
-  { name: "Requisition", cost: 1, shipyardOnly: true, text: "On your Jump In turn, form a new unit from Shipyard ships, pay their Credit cost, and jump them in as if from Reserves." },
+  { name: "All Hands", cost: 1, phases: [2], text: "After a unit's first action, take a second, different action with it." },
+  // Re-rolls an initiative die (Command Phase) or an attack/save (Tactical).
+  { name: "Executive Oversight", cost: 1, phases: [0, 2], text: "Re-roll one attack die, initiative die, or saving throw." },
+  { name: "Power to Engines", cost: 1, phases: [2], text: "At the start of a unit's movement step, move twice this step (pivot and move both times)." },
+  { name: "Power to Weapons", cost: 1, phases: [2], text: "Before rolling to attack, subtract 1 from each attack die (min 1) for this Salvo. More crits; does not prevent duds." },
+  { name: "Power to Shields", cost: 1, phases: [2], text: "Before rolling saves (Shields 1+), add 1 to the unit's Shields for this Salvo." },
+  { name: "Red Alert", cost: 1, phases: [2], text: "A friendly ship without an Activated token that would be destroyed is not; it regains 1HP. At the end of its next activation it drops to 0HP (no second Red Alert), unless it jumped out." },
+  { name: "Requisition", cost: 1, shipyardOnly: true, phases: [1], text: "On your Jump In turn, form a new unit from Shipyard ships, pay their Credit cost, and jump them in as if from Reserves." },
 ];

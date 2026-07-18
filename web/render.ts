@@ -1888,6 +1888,42 @@ const SCORING_NOTES: Partial<Record<GameMode, string[]>> = {
   ],
 };
 
+/**
+ * The commands you can actually spend CMD on *right now*: the core list filtered
+ * to the current phase (the single highest-value in-game feature across the
+ * trackers I looked at - you never scan a rulebook mid-turn to find what
+ * applies). Requisition only exists in the Shipyard modes. Faction rules and
+ * carried HVP can grant more or change the cost, so a standing note says so.
+ */
+function playCommandsPanel(list: SavedList, phase: number, cmdLeft: number): string {
+  const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
+  const usable = CORE_COMMANDS.filter((c) => (!c.shipyardOnly || isShipyard) && c.phases.includes(phase));
+  const affordable = (c: { cost: number }) => cmdLeft >= c.cost;
+  const body = usable.length
+    ? `<div class="pc-cmd-grid">${usable
+        .map(
+          (c) => `
+        <article class="pc-cmd ${affordable(c) ? "" : "is-short"}">
+          <header class="pc-cmd-head">
+            <h4 class="pc-cmd-name">${escapeHtml(c.name)}</h4>
+            <span class="pc-cmd-cost">${c.cost} CMD</span>
+          </header>
+          <p class="pc-cmd-text">${escapeHtml(c.text)}</p>
+        </article>`,
+        )
+        .join("")}</div>
+      <p class="pc-cmd-note">Your faction rule${list.fleet.hvp.length ? " and carried personnel" : ""} may grant more commands or change their cost.</p>`
+    : `<p class="pc-cmd-none">No commands are spent in this phase.</p>`;
+  return `
+    <section class="pc-cmds">
+      <div class="pc-cmds-head">
+        <h3 class="roster-section">Commands you can use now</h3>
+        <span class="pc-cmds-left ${cmdLeft <= 0 ? "is-out" : ""}">${cmdLeft} CMD left</span>
+      </div>
+      ${body}
+    </section>`;
+}
+
 function playView(state: AppState): string {
   const list = activeList(state);
   if (!list)
@@ -1971,6 +2007,8 @@ function playView(state: AppState): string {
           : ""
       }
     </div>
+
+    ${playCommandsPanel(list, play.phase, play.cmd)}
 
     <div class="solo-grid" style="margin-top:20px">
       <section class="solo-card solo-card-primary">
