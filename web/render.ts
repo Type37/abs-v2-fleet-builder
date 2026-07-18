@@ -1539,6 +1539,7 @@ function printView(state: AppState): string {
         const cells = roundNames.map(() => "<td></td>").join("");
         return `
       <p class="print-note">${list.mode === "management-training" ? "Management Training ends at the end of the third round; most credits wins." : "The game ends at the end of the fourth round."}</p>
+      <div class="pr-scroll">
       <table class="print-score">
         <thead><tr><th></th>${roundNames.map((n) => `<th>${n}</th>`).join("")}<th>Final</th></tr></thead>
         <tbody>
@@ -1546,7 +1547,8 @@ function printView(state: AppState): string {
           <tr><th>Opponent</th>${cells}<td></td></tr>
           <tr><th>Notes</th>${cells}<td></td></tr>
         </tbody>
-      </table>`;
+      </table>
+      </div>`;
       })()}`
       }
       ${list.fleet.notes ? `<section class="print-notes"><h3 class="sheet-section">Notes</h3><p>${escapeHtml(list.fleet.notes)}</p></section>` : ""}

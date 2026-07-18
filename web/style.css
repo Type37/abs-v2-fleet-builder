@@ -113,6 +113,11 @@ p { margin: 0; }
    shrink to content width and the whole page reads as narrow-and-centred. */
 #app { display: flex; flex-direction: column; min-height: 100vh; }
 #app > main { flex: 1 0 auto; width: 100%; }
+/* Every direct child is a flex item, so its automatic minimum size is its
+   min-content. Without this, one wide thing inside (a roster table, a tab bar)
+   stretches the whole page and the BODY scrolls sideways instead of that thing
+   scrolling in its own container. Belt and braces for the whole app. */
+#app > * { min-width: 0; max-width: 100%; }
 
 a { color: var(--blue); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -932,9 +937,12 @@ button { font-family: inherit; }
 .unit-name-input::placeholder { color: var(--placeholder); font-weight: 600; }
 .unit-name-input:focus { outline: none; border-bottom-color: var(--red); }
 .roster-unit-cost { font-family: var(--display); font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--blue); white-space: nowrap; }
-/* Solo roster: the ship's stats + weapons, so you can see what each pick does. */
+/* Solo roster: the ship's stats + weapons, so you can see what each pick does.
+   .roster-unit is a 4-column grid in the roster sheet, so these span the whole
+   row rather than being squeezed into an auto column (which overflowed). */
+.roster-unit-stats, .roster-unit-weap { grid-column: 1 / -1; min-width: 0; }
 .roster-unit-stats { margin-top: 8px; }
-.roster-unit-weap { font-family: var(--serif); font-size: 12px; line-height: 1.4; color: var(--ink-2); margin: 4px 0 0; }
+.roster-unit-weap { font-family: var(--serif); font-size: 12px; line-height: 1.4; color: var(--ink-2); margin: 4px 0 0; overflow-wrap: break-word; }
 .ru-arc { font-family: var(--sans); font-weight: 800; font-size: 9.5px; letter-spacing: 0.03em; margin-right: 4px; }
 .ru-arc-pri { color: var(--blue); }
 .ru-arc-aux { color: var(--ink-3); }
@@ -1024,7 +1032,10 @@ button { font-family: inherit; }
 
 /* ------------------------------------------------------------ print view */
 
-.print-page { max-width: 940px; margin: 0 auto; padding: 20px; }
+/* width:100% + min-width:0 because this is a direct flex child of #app: without
+   them its automatic minimum size is the roster table's min-content, so a wide
+   table stretches the whole page instead of scrolling inside .pr-scroll. */
+.print-page { max-width: 940px; margin: 0 auto; padding: 20px; width: 100%; min-width: 0; }
 .print-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
 
 .sheet { background: #fff; border: 1px solid var(--ink); padding: clamp(16px, 2.4vw, 26px); }

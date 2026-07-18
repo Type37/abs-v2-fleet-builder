@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.41",
+    date: "2026-07-18",
+    title: "Nothing scrolls sideways on a phone any more",
+    items: [
+      "Fixed pages sliding left and right on a narrow screen. The print sheet and the solo tab bar were stretching the whole page instead of scrolling on their own, so the print roster, the score table, and the outfit tabs now stay put and scroll within themselves. Checked every page at phone width.",
+      "Solo roster ships show their stats and weapons on their own full-width lines instead of being squashed into a column.",
+    ],
+  },
+  {
     version: "0.8.40",
     date: "2026-07-18",
     title: "Play Mode shows the commands you can use right now",
