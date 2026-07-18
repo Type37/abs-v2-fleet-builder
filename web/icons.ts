@@ -37,6 +37,10 @@ const PATHS: Record<string, string> = {
   compare: '<line x1="6" y1="4" x2="6" y2="20"/><line x1="18" y1="4" x2="18" y2="20"/><rect x="3" y="9" width="6" height="7"/><rect x="15" y="7" width="6" height="9"/>',
   image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8" fill="currentColor" stroke="none"/><path d="M4 18 9 12 13 16 16 13 20 18" fill="none"/>',
   die: '<rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.5" fill="currentColor" stroke="none"/>',
+  // Damage: a hull struck side-on, the near face sheared off. Stroke-only so it
+  // reads at small sizes and prints as line art. Always drawn in --damage red.
+  damage:
+    '<path fill="none" stroke="currentColor" stroke-width="2" d="m13 2l9 4v11l-9 5zm9 4l-9 5zM9 22V2zm0-10L3 5zm0 0H1zm0 0l-6 7z"/>',
   // ship-stat glyphs, drawn on the 24 grid to sit inline with numbers
   "stat-mass": '<path fill="currentColor" stroke="none" d="M12 2 21 7 21 17 12 22 3 17 3 7 Z"/>',
   "stat-thrust": '<path d="M3 7 10 12 3 17 Z" fill="currentColor" stroke="none"/><path d="M12 7 19 12 12 17 Z" fill="currentColor" stroke="none"/>',
@@ -78,6 +82,12 @@ export function icon(name: string, size = 18, cls = ""): string {
 export function emblem(name: string, size = 28, cls = ""): string {
   const body = EMBLEMS[name] ?? EMBLEMS["delta"];
   return `<svg class="emblem ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
+}
+
+/** The damage mark, always in --damage red. Decorative: damage figures keep
+ *  their own visible label or number beside them. */
+export function damageGlyph(size = 13): string {
+  return icon("damage", size, "dmg-glyph");
 }
 
 export function massGlyph(mass: number, size = 20): string {

@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.44",
+    date: "2026-07-18",
+    title: "A damage mark of its own",
+    items: [
+      "Damage now has its own symbol, a hull struck side-on, in a hot red that's deliberately not the same red as an over-budget warning. It marks the damage column on every weapon table.",
+    ],
+  },
+  {
     version: "0.8.43",
     date: "2026-07-18",
     title: "The printed sheet tells you if the list is legal",

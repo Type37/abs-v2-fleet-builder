@@ -34,6 +34,9 @@
   --blue-wash: #eaf0fb;
   --red: #fc3d21;
   --red-deep: #d32c12;
+  /* Damage is its own red, hotter than the NASA accent, so a damage figure is
+     never mistaken for the "over budget" / error red. */
+  --damage: #ff3131;
   --red-wash: #ffece7;
   /* Placeholders were set per-field at #c7cdd6 / #b4bcc8 / #aab2be - 1.6:1 to
      2.1:1 on white, well under the 4.5:1 body text needs. One token at 5.96:1
@@ -2446,3 +2449,7 @@ button { font-family: inherit; }
 .pc-cmd-text { font-family: var(--serif); font-size: 12.5px; line-height: 1.4; color: var(--ink-2); margin: 4px 0 0; }
 .pc-cmd-note { font-size: 11.5px; font-style: italic; color: var(--ink-3); margin: 10px 0 0; }
 .pc-cmd-none { font-size: 13px; color: var(--ink-3); margin: 0; }
+
+/* Damage mark: its own hot red, distinct from the error/over-budget red. */
+.dmg-glyph { color: var(--damage); vertical-align: -1px; }
+.wt-h .dmg-glyph { margin-right: 2px; }
