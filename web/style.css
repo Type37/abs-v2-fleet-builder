@@ -1133,9 +1133,14 @@ button { font-family: inherit; }
 .print-weapons td { font-family: var(--serif); font-size: 13px; }
 .print-note { font-size: 12px; color: var(--ink-2); padding: 6px 14px; font-style: italic; }
 
-.print-hvp { border-left: 3px solid var(--red); padding: 2px 0 2px 14px; margin-bottom: 14px; break-inside: avoid; }
-.print-hvp h4 { font-family: var(--display); font-size: 15px; margin-bottom: 3px; }
-.print-hvp p { font-family: var(--serif); font-size: 13.5px; line-height: 1.5; }
+.print-hvp { border-left: 3px solid var(--red); padding: 2px 0 2px 14px; margin-bottom: 10px; break-inside: avoid; }
+.print-hvp h4 { font-family: var(--display); font-size: 14px; margin-bottom: 2px; }
+.print-hvp p { font-family: var(--serif); font-size: 12.5px; line-height: 1.4; }
+.print-hvp-slot { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-3); text-transform: none; }
+/* Age of Unity: a blank line per ship to pencil in who carries an HVP. */
+.pr-hvp-slot { min-width: 96px; }
+.pr-writein { display: block; height: 15px; border-bottom: 1px solid var(--ink-3); margin-bottom: 4px; }
+.pr-writein:last-child { margin-bottom: 0; }
 
 /* Training-guide print sheets: dense, newspaper-style. */
 .ref-block { break-inside: avoid; margin-bottom: 18px; }
@@ -1807,10 +1812,18 @@ button { font-family: inherit; }
 .limit-switch > summary::-webkit-details-marker { display: none; }
 .limit-switch:hover > summary, .limit-switch[open] > summary { color: var(--blue); border-bottom-color: var(--blue); }
 .limit-switch-panel {
-  position: absolute; z-index: 20; top: calc(100% + 8px); left: 0;
-  background: var(--paper); border: 2px solid var(--hair); padding: 10px;
+  position: absolute; z-index: 20; top: calc(100% + 8px); left: 0; width: max-content; max-width: min(320px, 90vw);
+  background: var(--paper); border: 2px solid var(--hair); padding: 12px;
 }
 .limit-switch-panel .segment { border: 1px solid var(--hair); }
+.limit-switch-panel .nf-opts.is-disabled { opacity: 0.45; pointer-events: none; }
+/* Unlimited Shipyards toggle: a pill checkbox above the preset caps. */
+.nf-unlimited-toggle { display: flex; align-items: center; gap: 9px; cursor: pointer; margin-bottom: 12px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.nf-unlimited-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.nf-unlimited-box { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border: 1.5px solid var(--hair); color: transparent; flex-shrink: 0; }
+.nf-unlimited-toggle input:checked + .nf-unlimited-box { background: var(--blue); border-color: var(--blue); color: #fff; }
+.nf-unlimited-toggle input:focus-visible + .nf-unlimited-box { outline: 2px solid var(--red); outline-offset: 2px; }
+.nf-unlimited-hint { display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
 
 /* body: two flush regions, one quiet vertical rule between; no cards. The
    masthead's border is the one heavy divider on this page - everything below

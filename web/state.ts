@@ -147,6 +147,8 @@ export interface AppState {
     shipFilter?: ShipFilter;
     /** The Create-army panel is open on the Fleets page. */
     showCreate?: boolean;
+    /** Builder credits popover: the Custom amount field is revealed. */
+    limitCustomOpen?: boolean;
     /** An open modal dialog. */
     modal?:
       | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean; customOpen?: boolean }

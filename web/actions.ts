@@ -443,7 +443,17 @@ function handleClick(e: MouseEvent): void {
       const id = currentListId();
       const limit = Number(target.dataset["limit"]);
       if (!id || !Number.isFinite(limit)) return;
-      store.setState((s) => updateFleet(s, id, (f) => ({ ...f, creditsLimit: limit })));
+      store.setState((s) => ({ ...updateFleet(s, id, (f) => ({ ...f, creditsLimit: limit })), ui: { ...s.ui, limitCustomOpen: false } }));
+      break;
+    }
+    case "open-limit-custom": {
+      store.setState((s) => ({ ...s, ui: { ...s.ui, limitCustomOpen: true } }));
+      break;
+    }
+    case "toggle-unlimited-shipyards": {
+      const id = currentListId();
+      if (!id) return;
+      store.setState((s) => updateList(s, id, (l) => ({ ...l, unlimitedShipyards: !l.unlimitedShipyards })));
       break;
     }
     case "set-faction": {

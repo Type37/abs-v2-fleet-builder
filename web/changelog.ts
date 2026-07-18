@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.35",
+    date: "2026-07-18",
+    title: "Unlimited Shipyards, matching builder controls, and Age of Unity HVP on print",
+    items: [
+      "Hypergrowth now has an Unlimited Shipyards switch (off by default) in the credits popover: turn it on and the 300bn cap comes off entirely — the tally reads ∞ and nothing counts as over budget.",
+      "The builder's credits control now matches the New Fleet card: the same preset buttons and the same click-to-open Custom field.",
+      "Age of Unity prints for its deferred HVP: every ship gets an HVP write-in slot, and the sheet lists every High-Value Personnel available to the faction with a line to note who carries each once your missions are generated.",
+    ],
+  },
+  {
     version: "0.8.34",
     date: "2026-07-18",
     title: "One emblem picker everywhere: a Choose-emblem dialog with tabs",

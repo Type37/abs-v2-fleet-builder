@@ -35,6 +35,8 @@ export interface SavedList {
   emblemLib?: string;
   /** Optional tint for a vector (SVG) library mark: ink, blue, or red. */
   emblemColor?: "ink" | "blue" | "red";
+  /** Hypergrowth only: lift the credits cap on the Shipyard. Default false. */
+  unlimitedShipyards?: boolean;
   fleet: Fleet;
   play?: PlayState;
   createdAt: string;

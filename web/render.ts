@@ -807,6 +807,8 @@ function builderView(state: AppState): string {
   const customs = state.customFactions;
   const faction = findFaction(list.fleet.factionId, customs);
   const { total, remaining } = listTotals(list, customs);
+  // Hypergrowth Shipyard can run uncapped ("Unlimited Shipyards" toggle).
+  const unlimited = list.mode === "hypergrowth" && list.unlimitedShipyards === true;
   const era = MODE_ERA[list.mode];
   const catalogView = state.ui.catalogView;
   const chartStat = state.ui.catalogChartStat ?? "cost";
@@ -824,6 +826,8 @@ function builderView(state: AppState): string {
     if (list.mode === "hypergrowth" || list.mode === "management-training") {
       drop.add("UNIT_SIZE_EXCEEDED");
     }
+    // Unlimited Shipyards lifts the credits cap entirely.
+    if (unlimited) drop.add("OVER_BUDGET");
     // HVP is not chosen at build for the Shipyard modes (no HVP at all at build),
     // nor for Age of Unity, where HVP are deferred until the missions are known
     // and assigned in print/play. Only Armageddon requires HVP chosen pre-play.
@@ -1051,19 +1055,36 @@ function builderView(state: AppState): string {
   const emblemPicker = `<button class="emblem-current-btn" data-action="open-emblem-modal" data-target="list" title="Choose an emblem">${listEmblem(list, 34)}${icon("pencil", 12, "emblem-edit-cue")}</button>`;
 
   const limitIsPreset = [300, 400, 500].includes(list.fleet.creditsLimit);
+  const limitCustomOpen = state.ui.limitCustomOpen === true;
+  const isHyper = list.mode === "hypergrowth";
   // The cap lives inline as "/500" in the tally itself, not a standing row of
-  // buttons — click the cap to change it in a popover.
+  // buttons — click the cap to change it in a popover. The popover mirrors the
+  // New Fleet modal: the same nf-opt preset buttons and a click-to-open Custom.
   const limitControl = `<details class="limit-switch">
-      <summary class="mf-tally-cap">/${credits(list.fleet.creditsLimit)}</summary>
+      <summary class="mf-tally-cap">${unlimited ? "∞" : `/${credits(list.fleet.creditsLimit)}`}</summary>
       <div class="limit-switch-panel">
-        <div class="segment segment-limit" role="group" aria-label="Credits limit">
+        ${
+          isHyper
+            ? `<label class="nf-unlimited-toggle">
+                <input type="checkbox" data-action="toggle-unlimited-shipyards" ${unlimited ? "checked" : ""} />
+                <span class="nf-unlimited-box">${icon("check", 13)}</span>
+                <span>Unlimited Shipyards <span class="nf-unlimited-hint">no credit cap</span></span>
+              </label>`
+            : ""
+        }
+        <div class="nf-opts ${unlimited ? "is-disabled" : ""}">
           ${[300, 400, 500]
             .map(
               (n) =>
-                `<button class="${list.fleet.creditsLimit === n ? "selected" : ""}" data-action="set-limit" data-limit="${n}">${credits(n)}</button>`,
+                `<button class="nf-opt ${!unlimited && list.fleet.creditsLimit === n ? "on" : ""}" data-action="set-limit" data-limit="${n}" ${unlimited ? "disabled" : ""}>${credits(n)}</button>`,
             )
             .join("")}
-          <input class="limit-input ${limitIsPreset ? "" : "selected"}" type="number" min="1" step="10" value="${limitIsPreset ? "" : list.fleet.creditsLimit}" placeholder="Custom" data-action="set-limit-free" aria-label="Custom credits limit" />
+          ${
+            !unlimited && (!limitIsPreset || limitCustomOpen)
+              ? `<label class="nf-custom on">Custom
+              <input type="number" min="1" step="10" value="${!limitIsPreset ? list.fleet.creditsLimit : ""}" placeholder="¢bn" data-action="set-limit-free" autofocus /></label>`
+              : `<button type="button" class="nf-custom nf-custom-btn" data-action="open-limit-custom" ${unlimited ? "disabled" : ""}>Custom</button>`
+          }
         </div>
       </div>
     </details>`;
@@ -1104,7 +1125,7 @@ function builderView(state: AppState): string {
   ${topbar()}
   ${trainingGuide(list.mode, state.onboarding.visits <= 1)}
 
-  <main class="builder ${remaining < 0 ? "is-over" : ""}">
+  <main class="builder ${!unlimited && remaining < 0 ? "is-over" : ""}">
     <header class="mf-head">
       <div class="mf-topline">
         <span class="mf-emblem">${emblemPicker}</span>
@@ -1114,12 +1135,12 @@ function builderView(state: AppState): string {
         <span class="mf-budget">
           <span class="mf-tally">
             <span class="mf-tally-now">${credits(total)}</span>${limitControl}
-            <span class="mf-tally-free">${remaining < 0 ? `${credits(-remaining)} over` : `${credits(remaining)} free`}</span>
+            <span class="mf-tally-free">${unlimited ? "unlimited" : remaining < 0 ? `${credits(-remaining)} over` : `${credits(remaining)} free`}</span>
           </span>
         </span>
         ${moreMenu}
       </div>
-      <div class="mf-meter"><span class="mf-meter-fill" style="width:${list.fleet.creditsLimit > 0 ? Math.min(100, (total / list.fleet.creditsLimit) * 100) : 0}%"></span></div>
+      <div class="mf-meter"><span class="mf-meter-fill" style="width:${unlimited ? 0 : list.fleet.creditsLimit > 0 ? Math.min(100, (total / list.fleet.creditsLimit) * 100) : 0}%"></span></div>
     </header>
 
     <div class="mf-body">
@@ -1217,6 +1238,9 @@ function printView(state: AppState): string {
   // shopping catalogue of what's in the Shipyard, requisitioned piecemeal
   // over the game, not a list of units already committed to the fight.
   const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
+  // Age of Unity assigns HVP only after the missions are generated, so the sheet
+  // prints every available HVP plus a blank write-in slot on each ship.
+  const isUnity = list.mode === "age-of-unity";
 
   // A ship's silhouette is its starting HP; the tracker prints that many empty
   // boxes to tick off as damage lands.
@@ -1279,11 +1303,12 @@ function printView(state: AppState): string {
         <td class="pr-num pr-cost">${credits(ship.cost * u.count)}</td>
         ${reqCell}
         ${trackCell}
+        ${isUnity ? `<td class="pr-hvp-slot">${Array.from({ length: u.count }, () => `<span class="pr-writein"></span>`).join("")}</td>` : ""}
       </tr>`;
     })
     .join("");
 
-  const rosterColCount = 9 + (isShipyard ? 1 : 0) + (opts.trackers ? 1 : 0);
+  const rosterColCount = 9 + (isShipyard ? 1 : 0) + (opts.trackers ? 1 : 0) + (isUnity ? 1 : 0);
   const unitBlocks = unitRows
     ? `
     <div class="pr-scroll">
@@ -1291,7 +1316,7 @@ function printView(state: AppState): string {
       <thead>
         <tr>
           <th>${isShipyard ? "Ship class" : "Unit"}</th><th>${isShipyard ? "In Shipyard" : "Ships"}</th><th>Mass</th><th>Thrust</th><th>Sil.</th><th>Shields</th>
-          <th>Primary weapons</th><th>Auxiliary weapons</th><th>Cost each</th><th>Total</th>${isShipyard ? "<th>Requisitioned</th>" : ""}${opts.trackers ? "<th>Hull tracker</th>" : ""}
+          <th>Primary weapons</th><th>Auxiliary weapons</th><th>Cost each</th><th>Total</th>${isShipyard ? "<th>Requisitioned</th>" : ""}${opts.trackers ? "<th>Hull tracker</th>" : ""}${isUnity ? "<th>HVP carried</th>" : ""}
         </tr>
       </thead>
       <tbody>${unitRows}</tbody>
@@ -1362,6 +1387,19 @@ function printView(state: AppState): string {
     })
     .join("");
 
+  // Age of Unity: every HVP the faction can field, so you can assign them to the
+  // ship slots above once the missions are known. Faction HVP first, then generics.
+  const availableHvp: Hvp[] = [...(faction?.hvp ?? []), ...GENERIC_HVP];
+  const availableHvpBlocks = availableHvp
+    .map(
+      (def) => `
+      <section class="print-hvp">
+        <h4>${escapeHtml(def.name)} <span class="print-hvp-slot">carried by _______________</span></h4>
+        <p>${ruleText(def.rule)}</p>
+      </section>`,
+    )
+    .join("");
+
   // Actions and Commands reference: the full set every fleet can use, so the
   // sheet replaces the rulebook at the table. Requisition is Hypergrowth-only,
   // so it only appears for the Shipyard-shape modes. The faction rule and each
@@ -1416,7 +1454,7 @@ function printView(state: AppState): string {
           <p class="sheet-subtitle">${subtitle}</p>
         </div>
         <div class="sheet-totals">
-          <p class="sheet-total-line">${credits(total)} of ${credits(list.fleet.creditsLimit)}</p>
+          <p class="sheet-total-line">${credits(total)}${list.mode === "hypergrowth" && list.unlimitedShipyards ? " · unlimited shipyard" : ` of ${credits(list.fleet.creditsLimit)}`}</p>
           <p class="sheet-date">${formatDate(new Date().toISOString())}</p>
         </div>
       </header>
@@ -1449,7 +1487,13 @@ function printView(state: AppState): string {
           : `
       ${opts.rules ? commandsSection : ""}
 
-      ${hvpBlocks ? `<h2 class="sheet-section">High-Value Personnel</h2>${hvpBlocks}` : ""}
+      ${
+        isUnity
+          ? `<h2 class="sheet-section">Available High-Value Personnel</h2><p class="print-note">Assign these to the ship slots above once your missions are generated.</p>${availableHvpBlocks}`
+          : hvpBlocks
+            ? `<h2 class="sheet-section">High-Value Personnel</h2>${hvpBlocks}`
+            : ""
+      }
 
       <h2 class="sheet-section">Score record</h2>
       ${(() => {
