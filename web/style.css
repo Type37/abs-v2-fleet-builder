@@ -2251,3 +2251,108 @@ button { font-family: inherit; }
      the page edge, where the overflow would be silently guillotined. */
   .pr-weap { min-width: 0; max-width: 180px; white-space: normal; overflow-wrap: break-word; }
 }
+
+/* ---------------------------------------------------------------------------
+   Learn to Play: guided walkthrough
+   --------------------------------------------------------------------------- */
+.flip-x { transform: scaleX(-1); }
+.learn-main { max-width: 920px; margin: 0 auto; padding: clamp(20px, 3vw, 34px) clamp(16px, 4vw, 40px) 72px; }
+
+/* Progress dots along the top */
+.learn-progress { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 28px; }
+.learn-dot { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink-3); padding: 5px 4px; }
+.learn-dot-n { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1.5px solid var(--hair); font-family: var(--display); font-weight: 800; font-size: 12px; color: var(--ink-3); }
+.learn-dot-l { font-family: var(--sans); font-size: 12px; font-weight: 700; }
+.learn-dot.on .learn-dot-n { background: var(--blue); border-color: var(--blue); color: #fff; }
+.learn-dot.on .learn-dot-l { color: var(--ink); }
+.learn-dot.done .learn-dot-n { border-color: var(--blue); color: var(--blue); }
+.learn-dot:hover .learn-dot-l { color: var(--ink); }
+.learn-dot-sep { flex: 1 1 8px; height: 1px; background: var(--hair-soft); min-width: 8px; }
+
+.learn-eyebrow { font-family: var(--display); font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; color: var(--red); margin: 0 0 8px; }
+.learn-title { font-family: var(--display); font-weight: 900; font-size: clamp(28px, 4.4vw, 44px); line-height: 1.04; letter-spacing: -0.01em; margin: 0 0 14px; color: var(--ink); }
+.learn-lede { font-family: var(--serif); font-size: 17px; line-height: 1.6; color: var(--ink-2); max-width: 64ch; margin: 0 0 26px; }
+
+.learn-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.learn-card { border: 1px solid var(--hair); padding: 18px; background: var(--paper); }
+.learn-card h3 { font-family: var(--display); font-weight: 800; font-size: 15px; margin: 0 0 8px; color: var(--ink); }
+.learn-card p { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); margin: 0; }
+
+/* Fleet table */
+.lf-table-wrap { overflow-x: auto; border: 1px solid var(--hair); margin-bottom: 18px; }
+.lf-table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.lf-table thead th { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px; color: var(--ink-3); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--ink); background: var(--paper); }
+.lf-table td { padding: 9px 12px; border-bottom: 1px solid var(--hair-soft); vertical-align: top; }
+.lf-table tbody tr:last-child td { border-bottom: 0; }
+.lf-qty { color: var(--red); font-weight: 800; }
+.lf-ship { font-weight: 700; color: var(--ink); }
+.lf-weap { font-family: var(--serif); font-size: 12.5px; color: var(--ink-2); }
+.lf-arc { font-family: var(--sans); font-weight: 800; font-size: 10px; letter-spacing: 0.03em; }
+.lf-arc-pri { color: var(--blue); }
+.lf-arc-aux { color: var(--ink-3); }
+.learn-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--ink-2); }
+.learn-legend b { color: var(--ink); }
+
+/* Round phases */
+.learn-phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 20px; }
+.learn-phase { border: 1px solid var(--hair); border-top: 3px solid var(--blue); padding: 14px 16px; }
+.learn-phase .lp-n { font-family: var(--display); font-weight: 900; font-size: 13px; color: var(--blue); }
+.learn-phase b { display: block; font-family: var(--display); font-weight: 800; font-size: 15px; margin: 2px 0 5px; color: var(--ink); }
+.learn-phase span:last-child { font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+
+/* Split: diagram + victory points */
+.learn-split { display: grid; grid-template-columns: minmax(240px, 1fr) 1fr; gap: 28px; align-items: center; }
+@media (max-width: 720px) { .learn-split { grid-template-columns: 1fr; } }
+.learn-diagram { color: var(--ink); }
+.learn-diagram .tut-diagram { width: 100%; height: auto; }
+.learn-vp { margin: 0; padding-left: 18px; }
+.learn-vp li { margin-bottom: 12px; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.learn-vp b { color: var(--ink); }
+
+/* Launch */
+.learn-screen-launch { text-align: center; padding: 20px 0; }
+.learn-screen-launch .learn-lede { margin-left: auto; margin-right: auto; }
+.learn-launch-btn { display: inline-flex; align-items: center; gap: 10px; padding: 18px 34px; background: var(--blue); color: #fff; border: 2px solid var(--blue); cursor: pointer; font-family: var(--display); font-weight: 800; font-size: 19px; text-transform: uppercase; letter-spacing: 0.04em; }
+.learn-launch-btn:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
+.learn-fineprint { font-size: 12.5px; color: var(--ink-3); margin: 14px 0 0; }
+
+/* Nav */
+.learn-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--hair); }
+.learn-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; text-decoration: none; font-family: var(--display); font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.03em; border: 1.5px solid var(--ink); color: var(--ink); }
+.learn-btn-next { background: var(--ink); color: #fff; margin-left: auto; }
+.learn-btn:hover { border-color: var(--blue); }
+.learn-btn-next:hover { background: var(--blue); border-color: var(--blue); }
+
+/* Looping activation demo */
+.learn-demo { display: block; width: 100%; max-width: 460px; height: auto; margin: 4px 0 8px; }
+.learn-demo .ld-track { stroke: var(--ink-3); stroke-width: 2; opacity: 0.5; }
+.learn-demo .ld-target { fill: none; stroke: var(--ink); stroke-width: 2; }
+.learn-demo .ld-ship { fill: var(--blue); }
+.learn-demo .ld-cone { fill: var(--red); opacity: 0; transform-origin: 0 0; }
+.learn-demo .ld-label { fill: var(--ink-3); font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.03em; }
+.learn-demo .ld-unit { transform: translate(46px, 75px); animation: ld-move 4.2s cubic-bezier(.4,0,.2,1) infinite; }
+.learn-demo .ld-cone { animation: ld-fire 4.2s ease-in-out infinite; }
+.learn-demo .ld-target { animation: ld-hit 4.2s ease-in-out infinite; }
+@keyframes ld-move {
+  0% { transform: translate(46px, 75px); }
+  32% { transform: translate(150px, 75px); }
+  92% { transform: translate(150px, 75px); }
+  100% { transform: translate(46px, 75px); }
+}
+@keyframes ld-fire {
+  0%, 36% { opacity: 0; }
+  46% { opacity: 0.5; }
+  76% { opacity: 0.5; }
+  86%, 100% { opacity: 0; }
+}
+@keyframes ld-hit {
+  0%, 44% { stroke: var(--ink); stroke-width: 2; }
+  50% { stroke: var(--red); stroke-width: 4; }
+  76% { stroke: var(--red); stroke-width: 4; }
+  86%, 100% { stroke: var(--ink); stroke-width: 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .learn-demo .ld-unit { transform: translate(150px, 75px); animation: none; }
+  .learn-demo .ld-cone { opacity: 0.5; animation: none; }
+  .learn-demo .ld-target { stroke: var(--red); animation: none; }
+}

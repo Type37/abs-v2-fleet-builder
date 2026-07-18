@@ -54,6 +54,7 @@ export type Route =
   | { view: "solo-outfit"; outfitId: string }
   | { view: "ships" }
   | { view: "play"; listId: string }
+  | { view: "learn"; step: number }
   | { view: "changelog" };
 
 export function parseRoute(hash: string): Route {
@@ -66,6 +67,10 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === "solo") return parts[1] ? { view: "solo-outfit", outfitId: parts[1] } : { view: "solo" };
   if (parts[0] === "ships") return { view: "ships" };
   if (parts[0] === "play" && parts[1]) return { view: "play", listId: parts[1] };
+  if (parts[0] === "learn") {
+    const step = parts[1] ? Math.max(0, Math.min(4, parseInt(parts[1], 10) || 0)) : 0;
+    return { view: "learn", step };
+  }
   if (parts[0] === "changelog") return { view: "changelog" };
   return { view: "home" };
 }
@@ -90,6 +95,8 @@ export function routeHash(route: Route): string {
       return "#/ships";
     case "play":
       return `#/play/${route.listId}`;
+    case "learn":
+      return route.step > 0 ? `#/learn/${route.step}` : "#/learn";
     case "changelog":
       return "#/changelog";
   }

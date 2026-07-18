@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.31",
+    date: "2026-07-17",
+    title: "Learn to Play is a real guided walkthrough now",
+    items: [
+      "Learn to Play from the home menu now opens a five-step walkthrough instead of dropping you in the builder. It sets the scene (it's a two-player game), hands you the ready-made Training Fleet with its stats, walks the four-round structure with a looping move-then-shoot animation, shows the table and how you score, then loads the fleet straight into Play Mode.",
+    ],
+  },
+  {
     version: "0.8.30",
     date: "2026-07-17",
     title: "Per-mode HVP, a reworked emblem picker, and a tighter builder header",

@@ -942,6 +942,22 @@ function handleClick(e: MouseEvent): void {
       location.hash = routeHash({ view: "builder", listId: list.id });
       break;
     }
+    case "learn-launch": {
+      // End of the Learn to Play walkthrough: load the ready-made Combat
+      // Simulator fleet and drop straight into Play Mode (not the builder).
+      const list = createTrainingList("combat-simulator");
+      const faction = findFaction(list.fleet.factionId, state.customFactions);
+      const played = { ...list, play: freshPlayState(faction) };
+      store.setState((s) => {
+        const lists = [...s.lists, played];
+        persistLists(lists.filter((l) => l.mode !== "combat-simulator" && l.mode !== "management-training"));
+        const onboarding = { ...s.onboarding, tutorialsDismissed: true };
+        persistOnboarding(onboarding);
+        return { ...s, lists, onboarding, ui: { ...s.ui, modal: undefined } };
+      });
+      location.hash = routeHash({ view: "play", listId: played.id });
+      break;
+    }
 
     // ---- Play mode ----------------------------------------------------------
     case "play-phase":

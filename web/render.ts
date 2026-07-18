@@ -3,6 +3,7 @@ import { ALLIANCE_SPECIES, DAMAGE_BY_DIE, MODE_BUILDER_SHAPE } from "../src/type
 import { validateFleet, type ValidationIssue } from "../src/validation.ts";
 import { GENERIC_HVP } from "../src/data/index.ts";
 import { JUNKSPACE_SHIPS } from "../src/data/junkspace.ts";
+import { TRAINING_FLEET } from "../src/data/training-fleet.ts";
 import { allFactions, factionsByEra, findFaction, makeCatalog, ERA_ORDER } from "./catalog.ts";
 import { auxSlotText, credits, escapeHtml, formatDate, primarySlotText, ruleText } from "./format.ts";
 import {
@@ -408,7 +409,7 @@ function homeView(state: AppState): string {
         ${row("01", "#/fleets", "Fleets", "Build, save, print, and share army lists for any faction and era.")}
         ${row("02", "#/solo", "Solo Play", "Solitaire narrative campaign. Now with Debt!")}
         ${row("03", "#/ships", "Ship Compendium", "Every ship in the game in one filterable, sortable table.")}
-        ${row("04", "#/fleets", "Learn to Play", "A guided tutorial battle with a ready-made Training Fleet: setup, every phase, and scoring, walked through step by step.", "new-training", 'data-mode="combat-simulator"')}
+        ${row("04", "#/learn", "Learn to Play", "A guided walkthrough with a ready-made Training Fleet: the mission, the round structure, then straight into a live game.")}
         ${row("05", "#/foundry", "Custom Rules", "Design your own factions, ship classes, and personnel.")}
       </nav>
     </div>
@@ -2215,6 +2216,163 @@ function optionsModal(state: AppState): string {
   </div>`;
 }
 
+// ---------------------------------------------------------------------------
+// Learn to Play: a short guided explainer that hands you a ready-made fleet,
+// walks the round structure with a looping demo, then drops you into Play Mode.
+// ---------------------------------------------------------------------------
+
+const LEARN_STEPS = ["Mission", "Your fleet", "The round", "The table", "Battle"];
+
+function learnCounts(): Map<string, number> {
+  // Combat Simulator fleet composition (Basic Training p.60).
+  return new Map([
+    ["heavy-cruiser", 1],
+    ["frigate", 1],
+    ["corvette", 3],
+    ["gunship", 3],
+    ["light-utility-ship", 3],
+    ["fighter-wing", 3],
+    ["bomber-wing", 3],
+  ]);
+}
+
+function learnFleetTable(): string {
+  const counts = learnCounts();
+  const order = ["heavy-cruiser", "frigate", "corvette", "gunship", "light-utility-ship", "fighter-wing", "bomber-wing"];
+  const byId = new Map(TRAINING_FLEET.ships.map((s) => [s.id, s]));
+  const rows = order
+    .map((id) => {
+      const s = byId.get(id);
+      if (!s) return "";
+      const weap = (arc: "PRI" | "AUX", ws: Weapon[]) =>
+        ws.map((w) => `<span class="lf-arc lf-arc-${arc.toLowerCase()}">${arc}</span> ${escapeHtml(w.name)} ${w.count}${w.die}`).join("<br>");
+      const cells = [
+        [...s.primary.length ? [weap("PRI", s.primary)] : []],
+        [...s.auxiliary.length ? [weap("AUX", s.auxiliary)] : []],
+      ]
+        .flat()
+        .join("<br>");
+      return `<tr>
+        <td class="lf-qty">${counts.get(id) ?? 1}</td>
+        <td class="lf-ship">${escapeHtml(s.name)}</td>
+        <td>${s.mass}</td><td>${s.thrust}"</td><td>${s.silhouette}</td><td>${s.shields}</td>
+        <td class="lf-weap">${cells || (s.utilityBays ? "Utility bays" : "&mdash;")}</td>
+      </tr>`;
+    })
+    .join("");
+  return `<div class="lf-table-wrap"><table class="lf-table">
+    <thead><tr><th>Qty</th><th>Ship</th><th>Mass</th><th>Thrust</th><th>Sil</th><th>Shields</th><th>Weapons</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// A short, endlessly looping SVG: a ship advances, then its firing cone sweeps
+// out and a target flashes. Pure CSS keyframes (see .learn-demo in style.css),
+// so it plays on its own timeline and honours reduced-motion.
+function learnActivationDemo(): string {
+  return `
+  <svg class="learn-demo" viewBox="0 0 320 150" role="img" aria-label="A ship moves forward, then fires its weapons at a target within its firing arc">
+    <line class="ld-track" x1="46" y1="75" x2="150" y2="75" stroke-dasharray="4 4"/>
+    <circle class="ld-target" cx="250" cy="75" r="11"/>
+    <g class="ld-unit">
+      <path class="ld-cone" d="M0 0 L104 -38 A110 110 0 0 1 104 38 Z"/>
+      <path class="ld-ship" d="M12 0 L-9 9 L-3 0 L-9 -9 Z"/>
+    </g>
+    <text x="46" y="128" class="ld-label">1 &middot; MOVE up to Thrust</text>
+    <text x="196" y="128" class="ld-label">2 &middot; SHOOT within arc</text>
+  </svg>`;
+}
+
+function learnView(state: AppState): string {
+  const step = state.route.view === "learn" ? state.route.step : 0;
+  const progress = LEARN_STEPS.map(
+    (label, i) =>
+      `<a class="learn-dot ${i === step ? "on" : ""} ${i < step ? "done" : ""}" href="#/learn${i > 0 ? "/" + i : ""}" aria-label="${escapeHtml(label)}"><span class="learn-dot-n">${i + 1}</span><span class="learn-dot-l">${escapeHtml(label)}</span></a>`,
+  ).join('<span class="learn-dot-sep" aria-hidden="true"></span>');
+
+  const screens = [
+    // 0 - Mission brief
+    `<div class="learn-screen">
+      <p class="learn-eyebrow">Learn to Play</p>
+      <h1 class="learn-title">Your first battle</h1>
+      <p class="learn-lede">A Billion Suns is a two-player game of fleets fighting over objectives. This tutorial walks you through one small skirmish so you learn the basics: activating your ships, moving, and shooting.</p>
+      <div class="learn-cards">
+        <div class="learn-card"><h3>Grab an opponent</h3><p>It plays two-sided. Bring a friend with a second fleet, or run both sides yourself to learn the flow.</p></div>
+        <div class="learn-card"><h3>No list-building yet</h3><p>You get a ready-made Training Fleet. Nothing to buy, nothing to pick &mdash; just learn the game.</p></div>
+        <div class="learn-card"><h3>Four short rounds</h3><p>The whole game is four rounds. We'll walk the structure, then drop you into a live tracker.</p></div>
+      </div>
+    </div>`,
+    // 1 - Your fleet
+    `<div class="learn-screen">
+      <p class="learn-eyebrow">Step 2 &middot; Your fleet</p>
+      <h1 class="learn-title">The Training Fleet</h1>
+      <p class="learn-lede">This is your ready-made fleet for the tutorial &mdash; real ships with real stats. You'll read a ship by four numbers and its weapons.</p>
+      ${learnFleetTable()}
+      <div class="learn-legend">
+        <span><b>Mass</b> how big &amp; how many it can carry</span>
+        <span><b>Thrust</b> how far it moves, in inches</span>
+        <span><b>Sil</b> its hit die and its starting HP</span>
+        <span><b>Shields</b> damage soaked each hit</span>
+        <span><span class="lf-arc lf-arc-pri">PRI</span> narrow 45&deg; cone ahead</span>
+        <span><span class="lf-arc lf-arc-aux">AUX</span> full 180&deg; front arc</span>
+      </div>
+    </div>`,
+    // 2 - The round
+    `<div class="learn-screen">
+      <p class="learn-eyebrow">Step 3 &middot; How a round works</p>
+      <h1 class="learn-title">Move, then shoot</h1>
+      <p class="learn-lede">Each of the four rounds runs through the same phases. The heart of it is activating a battlegroup: move each ship up to its Thrust, then fire any weapons whose arc covers a target.</p>
+      ${learnActivationDemo()}
+      <div class="learn-phases">
+        <div class="learn-phase"><span class="lp-n">1</span><b>Command</b><span>Gain command tokens to spend on special orders.</span></div>
+        <div class="learn-phase"><span class="lp-n">2</span><b>Jump</b><span>Jump reserve ships into play at your jump points.</span></div>
+        <div class="learn-phase"><span class="lp-n">3</span><b>Battle</b><span>Take turns activating battlegroups: move, then shoot.</span></div>
+        <div class="learn-phase"><span class="lp-n">4</span><b>End</b><span>Score objectives, then start the next round.</span></div>
+      </div>
+    </div>`,
+    // 3 - The table
+    `<div class="learn-screen">
+      <p class="learn-eyebrow">Step 4 &middot; The table &amp; winning</p>
+      <h1 class="learn-title">Hold the objectives</h1>
+      <p class="learn-lede">Set up a roughly 4&times;3 foot table. Each player gets three jump points along their own edge, with a central objective in the middle.</p>
+      <div class="learn-split">
+        <div class="learn-diagram">${tacticalDiagram("deployment")}</div>
+        <ul class="learn-vp">
+          <li><b>Blockade</b> an objective by having the most Combined Mass within 6" of it.</li>
+          <li>Each End Phase: <b>+2VP</b> per enemy flank jump point you blockade, <b>+5VP</b> for their central jump point, <b>+3VP</b> for the central objective.</li>
+          <li>The game ends after <b>Round 4</b>. Most victory points wins.</li>
+        </ul>
+      </div>
+    </div>`,
+    // 4 - Launch
+    `<div class="learn-screen learn-screen-launch">
+      <p class="learn-eyebrow">Step 5 &middot; Into battle</p>
+      <h1 class="learn-title">You're ready</h1>
+      <p class="learn-lede">We'll load the Training Fleet into Play Mode &mdash; a round-by-round tracker that walks each phase as a checklist, keeps your command tokens and victory points, and reminds you of the rules as you go.</p>
+      <button class="learn-launch-btn" data-action="learn-launch">${icon("flag", 20)} Start the battle</button>
+      <p class="learn-fineprint">This drops you straight into Play Mode with the ready-made fleet. You can leave any time.</p>
+    </div>`,
+  ];
+
+  const atEnd = step >= LEARN_STEPS.length - 1;
+  const backHref = step > 0 ? `#/learn${step - 1 > 0 ? "/" + (step - 1) : ""}` : "#/";
+  const backLabel = step > 0 ? `${icon("chevronRight", 16, "flip-x")} Back` : `${icon("home", 16)} Home`;
+  const nav = `
+    <div class="learn-nav">
+      <a class="learn-btn learn-btn-back" href="${backHref}">${backLabel}</a>
+      ${atEnd ? "" : `<a class="learn-btn learn-btn-next" href="#/learn/${step + 1}">Next ${icon("chevronRight", 16)}</a>`}
+    </div>`;
+
+  return `
+  ${topbar()}
+  <main class="learn-main">
+    <nav class="learn-progress" aria-label="Tutorial progress">${progress}</nav>
+    ${screens[step] ?? screens[0]}
+    ${nav}
+  </main>
+  ${footer()}`;
+}
+
 export function render(state: AppState): string {
   const body = (() => {
     switch (state.route.view) {
@@ -2236,6 +2394,8 @@ export function render(state: AppState): string {
         return shipsView(state);
       case "play":
         return playView(state);
+      case "learn":
+        return learnView(state);
       case "changelog":
         return changelogView();
     }
