@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.50",
+    date: "2026-07-18",
+    title: "Solo reads like the rest of the app",
+    items: [
+      "The solo outfit sheet drops its solid blue banner and boxed border for the same flat, ruled look the fleet builder uses. It was the loudest thing on the page and made solo feel like a different app from the builder sitting next to it.",
+      "Cleared out the styles left behind by the roster and print-card rework.",
+    ],
+  },
+  {
     version: "0.8.49",
     date: "2026-07-18",
     title: "Rows use the space they're given",

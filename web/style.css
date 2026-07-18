@@ -666,7 +666,6 @@ button { font-family: inherit; }
 .emblem-img { object-fit: cover; display: block; }
 /* Emblem art renders in full colour, in the picker and everywhere it lands. */
 .emblem-img, .lib-icon img { filter: none; }
-.roster-emblem .emblem-img, .sheet-emblem .emblem-img { border: 1px solid rgba(255, 255, 255, 0.5); }
 /* Per-ship-class art upload in the Foundry ship editor. */
 .cf-shipimg-row { display: flex; align-items: center; gap: 10px; margin-top: 5px; flex-wrap: wrap; }
 /* A proper click-to-upload tile: the whole dashed box is the button. */
@@ -930,11 +929,14 @@ button { font-family: inherit; }
 /* Roster lives on the left and stays visible: pinned to the top, capped to the
    viewport, and scrolling inside itself rather than dragging the page with it. */
 .roster { order: -1; position: sticky; top: 12px; max-height: calc(100vh - 24px); display: flex; flex-direction: column; }
-.roster-sheet { border: 2px solid var(--hair); background: var(--paper); overflow-y: auto; }
-.roster-head { display: flex; align-items: center; gap: 14px; padding: 18px 20px; background: var(--blue); color: #fff; }
-.roster-emblem { color: #fff; }
-.roster-title { font-family: var(--display); font-weight: 800; font-size: 21px; letter-spacing: -0.01em; line-height: 1.1; }
-.roster-subtitle { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #bcd0f2; margin-top: 3px; }
+/* Flat like the fleet builder's manifest: a ruled document, not a card with a
+   filled banner. The solid blue header was the loudest thing on the page and
+   made solo read as a different app from the fleet builder beside it. */
+.roster-sheet { border: none; background: none; overflow-y: auto; }
+.roster-head { display: flex; align-items: center; gap: 14px; padding: 0 0 10px; background: none; color: var(--ink); border-bottom: 2px solid var(--ink); margin-bottom: 4px; }
+.roster-emblem { color: var(--blue); }
+.roster-title { font-family: var(--display); font-weight: 800; font-size: 21px; letter-spacing: -0.01em; line-height: 1.1; color: var(--ink); }
+.roster-subtitle { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-top: 3px; }
 .roster-section { position: relative; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--ink); margin: 0; padding: 12px 20px 8px 34px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--hair-soft); text-transform: uppercase; }
 .roster-section::before { content: ""; position: absolute; left: 20px; top: 15px; width: 8px; height: 8px; background: var(--color-accent); }
 .roster-section .muted { font-variant-numeric: tabular-nums; }
@@ -950,12 +952,7 @@ button { font-family: inherit; }
 /* Solo roster: the ship's stats + weapons, so you can see what each pick does.
    .roster-unit is a 4-column grid in the roster sheet, so these span the whole
    row rather than being squeezed into an auto column (which overflowed). */
-.roster-unit-stats, .roster-unit-weap { grid-column: 1 / -1; min-width: 0; }
-.roster-unit-stats { margin-top: 8px; }
-.roster-unit-weap { font-family: var(--serif); font-size: 12px; line-height: 1.4; color: var(--ink-2); margin: 4px 0 0; overflow-wrap: break-word; }
-.ru-arc { font-family: var(--sans); font-weight: 800; font-size: 9.5px; letter-spacing: 0.03em; margin-right: 4px; }
-.ru-arc-pri { color: var(--blue); }
-.ru-arc-aux { color: var(--ink-3); }
+.roster-unit-stats { margin-bottom: 6px; }
 .roster-unit-sub { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px; }
 .roster-unit-class { font-size: 12px; font-weight: 600; color: var(--ink-2); }
 .roster-unit-class .muted { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -1012,12 +1009,8 @@ button { font-family: inherit; }
 .pc-cost { font-weight: 700; font-variant-numeric: tabular-nums; }
 .pc-sub { font-size: 11px; color: var(--ink-2); margin-bottom: 6px; }
 .pc-sub .mass-glyph { vertical-align: -2px; }
+.pc-stats-chips { margin: 4px 0 6px; }
 .pc-ships { font-family: var(--serif); font-size: 11.5px; color: var(--ink); margin-bottom: 6px; }
-.pc-stats { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
-.pc-stats th { font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); text-align: left; padding: 2px 6px 2px 0; font-weight: 800; }
-.pc-stats td { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 2px 12px 2px 0; }
-.pc-weap { font-size: 11.5px; line-height: 1.35; color: var(--ink-2); margin-top: 2px; }
-.pc-wlabel { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); display: inline-block; margin-right: 4px; }
 /* Small, always-there firing-arc glyph beside the Primary/Auxiliary label -
    a permanent reminder of the fixed 45/180 degree geometry, not a stat that
    varies per ship. */
