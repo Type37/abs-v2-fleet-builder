@@ -101,6 +101,8 @@ export interface ShipFilter {
   mass: string;
   q: string;
   sort: string;
+  /** Whether custom-faction ships are included. Off by default. */
+  showCustom?: boolean;
 }
 
 export type SoloTab = "outfit" | "play" | "campaign" | "reference";
@@ -139,7 +141,9 @@ export interface AppState {
     /** The Create-army panel is open on the Fleets page. */
     showCreate?: boolean;
     /** An open modal dialog. */
-    modal?: { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean };
+    modal?:
+      | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean }
+      | { kind: "options" };
     /** In-progress first-visit coachmark tour, once the user has advanced past step 0. */
     tour?: { tourId: string; step: number };
     /** Print-setup options for the print view (never persisted). `rules` prints

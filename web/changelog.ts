@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.21",
+    date: "2026-07-17",
+    title: "Options menu with backups, and custom ships in the compendium",
+    items: [
+      "A new Options button in the top bar opens a dialog for your data: export a backup of every fleet, outfit, and custom faction to a file, import one back (to move between devices), or clear everything. It also gathers the about-and-links in one place.",
+      "The Ship Compendium can now include your custom-faction ships with a Show custom ships checkbox, off by default, so the official ships stand alone until you ask for the rest.",
+    ],
+  },
+  {
     version: "0.8.20",
     date: "2026-07-17",
     title: "Clearer custom-rules editor and a footer that sits at the bottom",

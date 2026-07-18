@@ -319,6 +319,7 @@ function topbar(): string {
       <a href="#/ships">${icon("compare", 16)} Compendium</a>
       <a href="#/solo">${icon("book", 16)} Solo</a>
       <a href="#/foundry">${icon("wrench", 16)} Custom Rules</a>
+      <button class="topnav-btn" data-action="open-options" title="Options">${icon("settings", 16)} Options</button>
     </nav>
   </header>`;
 }
@@ -1926,6 +1927,7 @@ interface CompRow {
   auxiliary: string;
   cost: number;
   costLabel: string;
+  isCustom: boolean;
 }
 
 function shipsView(state: AppState): string {
@@ -1933,7 +1935,7 @@ function shipsView(state: AppState): string {
   const f = state.ui.shipFilter ?? { era: "", faction: "", mass: "", q: "", sort: "faction" };
 
   const rows: CompRow[] = [];
-  for (const fac of allFactions(customs)) {
+  const pushFaction = (fac: Faction, isCustom: boolean): void => {
     for (const s of fac.ships) {
       rows.push({
         name: s.name,
@@ -1948,9 +1950,15 @@ function shipsView(state: AppState): string {
         auxiliary: s.auxiliaryFitting ? escapeHtml(s.auxiliaryFitting) : auxSlotText(s),
         cost: s.cost,
         costLabel: credits(s.cost),
+        isCustom,
       });
     }
-  }
+  };
+  // Official ships from the built-in factions (allFactions([]) is built-ins
+  // only), then every custom faction the user has - including hidden seeds like
+  // the Covenant, which "Show custom" is exactly the way to surface here.
+  for (const fac of allFactions([])) pushFaction(fac, false);
+  for (const fac of customs) pushFaction(fac, true);
   for (const s of JUNKSPACE_SHIPS) {
     rows.push({
       name: s.name,
@@ -1965,12 +1973,15 @@ function shipsView(state: AppState): string {
       auxiliary: s.auxiliaryFitting ? escapeHtml(s.auxiliaryFitting) : auxSlotText(s),
       cost: s.cost,
       costLabel: `&cent;${s.cost}k`,
+      isCustom: false,
     });
   }
 
+  const customCount = rows.filter((r) => r.isCustom).length;
   const q = f.q.trim().toLowerCase();
   let shown = rows.filter(
     (r) =>
+      (f.showCustom || !r.isCustom) &&
       (!f.era || r.era === f.era) &&
       (!f.faction || r.factionKey === f.faction) &&
       (!f.mass || String(r.mass) === f.mass) &&
@@ -2090,12 +2101,23 @@ function shipsView(state: AppState): string {
     </div>
 
     <div class="comp-sortbar">
-      <label class="comp-groupcheck ${grouped ? "on" : ""}">
-        <input type="checkbox" data-action="ship-group-faction" ${grouped ? "checked" : ""} />
-        <span class="comp-groupcheck-box">${icon("check", 14)}</span>
-        <span class="comp-groupcheck-label">Sort by faction</span>
-      </label>
-      <p class="comp-count">${shown.length} of ${rows.length} ships</p>
+      <div class="comp-toggles">
+        <label class="comp-groupcheck ${grouped ? "on" : ""}">
+          <input type="checkbox" data-action="ship-group-faction" ${grouped ? "checked" : ""} />
+          <span class="comp-groupcheck-box">${icon("check", 14)}</span>
+          <span class="comp-groupcheck-label">Sort by faction</span>
+        </label>
+        ${
+          customCount > 0
+            ? `<label class="comp-groupcheck ${f.showCustom ? "on" : ""}">
+                <input type="checkbox" data-action="ship-show-custom" ${f.showCustom ? "checked" : ""} />
+                <span class="comp-groupcheck-box">${icon("check", 14)}</span>
+                <span class="comp-groupcheck-label">Show custom ships</span>
+              </label>`
+            : ""
+        }
+      </div>
+      <p class="comp-count">${shown.length} of ${f.showCustom ? rows.length : rows.length - customCount} ships</p>
     </div>
     <div class="table-scroll comp-scroll">
       <table class="comp-table ${grouped ? "grouped" : ""}">
@@ -2140,6 +2162,46 @@ function tourPopover(state: AppState): string {
   </div>`;
 }
 
+// App-wide Options dialog: back up / restore / wipe the browser-stored data,
+// plus the about-and-links that also live in the footer. Rendered from the root
+// so it is reachable on every view.
+function optionsModal(state: AppState): string {
+  const m = state.ui.modal;
+  if (!m || m.kind !== "options") return "";
+  const v = CHANGELOG[0]?.version ?? "";
+  return `
+  <div class="modal-root">
+    <div class="modal-backdrop" data-action="close-modal"></div>
+    <div class="modal-panel opt-modal" role="dialog" aria-modal="true" aria-label="Options">
+      <header class="modal-header">
+        <h2 class="modal-title">Options</h2>
+        <button class="modal-close" data-action="close-modal" aria-label="Close">${icon("close", 18)}</button>
+      </header>
+      <div class="modal-body opt-body">
+        <section class="opt-section">
+          <h3 class="opt-h">Your data</h3>
+          <p class="opt-note">Everything you build is saved in this browser only. Back it up to a file, move it to another device, or start over.</p>
+          <div class="opt-actions">
+            <button class="bar-btn" data-action="export-data">${icon("download", 15)} Export a backup</button>
+            <label class="bar-btn file-btn">${icon("upload", 15)} Import a backup
+              <input type="file" accept="application/json,.json" data-action="import-data" hidden /></label>
+            <button class="bar-btn danger" data-action="clear-data">${icon("trash", 15)} Clear all data</button>
+          </div>
+        </section>
+        <section class="opt-section">
+          <h3 class="opt-h">About</h3>
+          <ul class="opt-links">
+            <li><a href="#/changelog" data-action="close-modal">${icon("scroll", 15)} What's new (v${escapeHtml(v)})</a></li>
+            <li><a href="https://planetsmashergames.com/a-billion-suns/" target="_blank" rel="noopener">${icon("book", 15)} Get the rulebook</a></li>
+            <li><a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">${icon("scroll", 15)} Quick Reference (PDF)</a></li>
+            <li><a href="mailto:warlore1@outlook.com">${icon("link", 15)} Send feedback</a></li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>`;
+}
+
 export function render(state: AppState): string {
   const body = (() => {
     switch (state.route.view) {
@@ -2165,5 +2227,5 @@ export function render(state: AppState): string {
         return changelogView();
     }
   })();
-  return `${body}${tourPopover(state)}`;
+  return `${body}${optionsModal(state)}${tourPopover(state)}`;
 }

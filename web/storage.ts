@@ -158,3 +158,52 @@ export function loadOnboarding(): Onboarding {
 export function persistOnboarding(o: Onboarding): void {
   write(ONBOARDING_KEY, o);
 }
+
+// --- Whole-app data export / import / clear (the Options dialog) -------------
+// Everything the app stores lives under the "abs2." prefix, so a backup is just
+// every such key, and a restore or wipe is the same set. Robust to new keys.
+
+function absKeys(): string[] {
+  const keys: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("abs2.")) keys.push(k);
+  }
+  return keys;
+}
+
+/** A JSON snapshot of every saved fleet, outfit, custom faction, and setting. */
+export function exportAllData(): string {
+  const data: Record<string, unknown> = {};
+  for (const k of absKeys()) {
+    const raw = localStorage.getItem(k);
+    if (raw == null) continue;
+    try {
+      data[k] = JSON.parse(raw);
+    } catch {
+      data[k] = raw;
+    }
+  }
+  return JSON.stringify({ app: "abs-v2-builder", version: 1, exportedAt: new Date().toISOString(), data }, null, 2);
+}
+
+/** Restore a snapshot produced by exportAllData. Returns false if unrecognised. */
+export function importAllData(json: string): boolean {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    return false;
+  }
+  const data = (parsed as { data?: unknown } | null)?.data;
+  if (!data || typeof data !== "object") return false;
+  for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+    if (k.startsWith("abs2.")) write(k, v);
+  }
+  return true;
+}
+
+/** Remove every saved fleet, outfit, custom faction, and setting. */
+export function clearAllData(): void {
+  for (const k of absKeys()) localStorage.removeItem(k);
+}

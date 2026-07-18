@@ -310,13 +310,14 @@ button { font-family: inherit; }
   transform: translateX(0); pointer-events: none;
   transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1), width 0.2s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.16s ease;
 }
-.topnav a {
+.topnav a, .topnav-btn {
   position: relative; z-index: 1;
   display: inline-flex; align-items: center; gap: 7px; color: #fff;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   padding: 9px 14px; border: 1px solid transparent; transition: color 0.16s ease;
 }
-.topnav a:hover { color: #fff; text-decoration: none; }
+.topnav-btn { background: none; cursor: pointer; }
+.topnav a:hover, .topnav-btn:hover { color: #fff; text-decoration: none; }
 /* The sliding nav highlight, the CTA shine sweep, the index rows that slide on
    hover, the switcher thumb, the meter fills - all of it is decoration, and a
    reader who has asked the OS for less motion should get none of it. Colour and
@@ -1239,6 +1240,7 @@ button { font-family: inherit; }
 /* The sort bar: the obvious grouping control sits with the count, right above
    the table. */
 .comp-sortbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 14px 0 8px; }
+.comp-toggles { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 /* A big, obvious checkbox toggle. The native box is hidden; a bordered square
    holds a check that only shows when on, and the whole pill fills blue when
    checked so its state reads at a glance. */
@@ -1925,6 +1927,14 @@ button { font-family: inherit; }
   position: relative; z-index: 1; width: min(560px, 100%); max-height: 90vh; overflow-y: auto;
   background: var(--paper); border: 2px solid var(--color-line);
 }
+.opt-modal { width: min(460px, 100%); }
+.opt-body { gap: 24px; }
+.opt-section { display: flex; flex-direction: column; gap: 10px; }
+.opt-h { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--hair-soft); padding-bottom: 6px; }
+.opt-note { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+.opt-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.opt-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.opt-links a { display: inline-flex; align-items: center; gap: 9px; padding: 8px 4px; color: var(--blue); font-weight: 600; font-size: 14px; }
 .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; background: var(--color-action); color: #fff; }
 .modal-title { font-family: var(--sans); font-weight: 600; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
 .modal-close { background: transparent; border: 1px solid #3a5aa0; color: #fff; cursor: pointer; display: inline-flex; padding: 6px; }

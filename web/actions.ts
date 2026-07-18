@@ -3,7 +3,16 @@ import { maxUnitSize } from "../src/validation.ts";
 import { announce } from "./announce.ts";
 import { findFaction, isCustom } from "./catalog.ts";
 import { resolveShip } from "./render.ts";
-import { newId, persistCustomFactions, persistLists, persistOnboarding, persistOutfits } from "./storage.ts";
+import {
+  clearAllData,
+  exportAllData,
+  importAllData,
+  newId,
+  persistCustomFactions,
+  persistLists,
+  persistOnboarding,
+  persistOutfits,
+} from "./storage.ts";
 import type { SavedOutfit } from "./storage.ts";
 import {
   createList,
@@ -446,6 +455,31 @@ function handleClick(e: MouseEvent): void {
     }
     case "close-modal": {
       store.setState((s) => ({ ...s, ui: { ...s.ui, modal: undefined } }));
+      break;
+    }
+    case "open-options": {
+      store.setState((s) => ({ ...s, ui: { ...s.ui, modal: { kind: "options" } } }));
+      break;
+    }
+    case "export-data": {
+      // A self-initiated backup of the user's own browser-stored data.
+      const blob = new Blob([exportAllData()], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "a-billion-suns-backup.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast("Backup downloaded.");
+      break;
+    }
+    case "clear-data": {
+      if (!window.confirm("Delete every saved fleet, outfit, and custom faction from this browser? This cannot be undone.")) return;
+      clearAllData();
+      location.hash = "#/";
+      location.reload();
       break;
     }
     case "tour-next": {
@@ -1267,6 +1301,30 @@ function handleChange(e: Event): void {
         const sort = target.checked ? "faction" : "name";
         return { ...s, ui: { ...s.ui, shipFilter: { ...current, sort } } };
       });
+      break;
+    }
+    case "ship-show-custom": {
+      // Custom-faction ships stay out of the compendium unless asked for.
+      store.setState((s) => {
+        const current = s.ui.shipFilter ?? { ...EMPTY_SHIP_FILTER };
+        return { ...s, ui: { ...s.ui, shipFilter: { ...current, showCustom: target.checked } } };
+      });
+      break;
+    }
+    case "import-data": {
+      const file = target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (importAllData(String(reader.result ?? ""))) {
+          location.hash = "#/";
+          location.reload();
+        } else {
+          showToast("That file was not a recognised backup.");
+        }
+      };
+      reader.onerror = () => showToast("Could not read that file.");
+      reader.readAsText(file);
       break;
     }
 
