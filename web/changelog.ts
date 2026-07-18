@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.42",
+    date: "2026-07-18",
+    title: "Cleaner page breaks when you actually print",
+    items: [
+      "On paper, an action or command is never split from its own rules text across a page break, and a section heading is never left stranded at the bottom of a page.",
+    ],
+  },
+  {
     version: "0.8.41",
     date: "2026-07-18",
     title: "Nothing scrolls sideways on a phone any more",

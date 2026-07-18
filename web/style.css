@@ -2239,6 +2239,12 @@ button { font-family: inherit; }
   .sheet { border: none; padding: 0; }
   .sheet-section { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .print-unit, .print-hvp, .print-rule { break-inside: avoid; }
+  /* An action/command must never be split from its own effect text across a
+     page break, and a section heading must not be stranded at a page foot. */
+  .print-ref-list dt { break-inside: avoid; break-after: avoid; }
+  .print-ref-list dd { break-inside: avoid; }
+  .print-ref-h { break-after: avoid; }
+  .sheet-section { break-after: avoid; }
   a { color: var(--ink); }
   /* The blue rule bar and the red HVP bar are how those blocks are told apart
      from body text on paper, and the tactical diagrams are meaningless in
