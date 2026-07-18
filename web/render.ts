@@ -810,8 +810,8 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
       </div>
       <div class="ship-row-details">
         ${statChips(ship, true)}
+        ${weaponsTable(ship)}
       </div>
-      ${weaponsTable(ship)}
     </div>
     <span class="add-cue">${icon("plus", 15)}<span>Add</span></span>
   </article>`;
@@ -1570,7 +1570,7 @@ function printView(state: AppState): string {
 
   return `
   ${topbar()}
-  <div class="print-page ${opts.inkSaver ? "is-inksaver" : ""}">
+  <main class="print-page ${opts.inkSaver ? "is-inksaver" : ""}">
     <div class="print-toolbar">
       <a class="bar-btn" href="#/list/${list.id}">${icon("chevronRight", 15, "flip-x")} Back to the builder</a>
       <div class="print-opts">
@@ -1672,7 +1672,7 @@ function printView(state: AppState): string {
       ${list.fleet.notes ? `<section class="print-notes"><h3 class="sheet-section">Notes</h3><p>${escapeHtml(list.fleet.notes)}</p></section>` : ""}
     </article>
     </div>
-  </div>`;
+  </main>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -2747,18 +2747,19 @@ function emblemModal(state: AppState): string {
       ).join("")}
     </div>`;
 
-  // Colour controls, shown beneath the grid so the sigil and its colours are on
-  // screen together. Tinting is an SVG-only trick, so for a raster mark we say
-  // so plainly and offer the background instead of hiding the row.
+  // Colour controls sit under the grid so the sigil and its colours are on screen
+  // together. Two labelled rows, no explanatory prose: a paragraph apologising
+  // that tinting needs a vector mark is noise every time you open the picker,
+  // and it is obvious enough from the row being greyed out.
   const colourBlock = `<div class="em-colour">
-      <p class="em-colour-note">Background <span class="em-colour-sub">shown behind the sigil — good for all-white marks</span></p>
-      <div class="em-swatches">${bgSwatch("", "", "None")}${bgSwatch("ink", "background:var(--ink)", "Ink")}${bgSwatch("blue", "background:var(--blue)", "Blue")}${bgSwatch("red", "background:var(--red)", "Red")}${bgSwatch("steel", "background:#5b6472", "Steel")}${bgSwatch("sand", "background:#caa96a", "Sand")}</div>
-      ${
-        isSvg
-          ? `<p class="em-colour-note">Sigil tint <span class="em-colour-sub">vector marks only</span></p>
-             <div class="em-swatches">${tintSwatch("", "tint-none", "Original")}${tintSwatch("ink", "tint-ink", "Ink")}${tintSwatch("blue", "tint-blue", "Blue")}${tintSwatch("red", "tint-red", "Red")}</div>`
-          : `<p class="em-colour-note">Sigil tint <span class="em-colour-sub">this mark is an image, so only vector sigils can be tinted — use a background above</span></p>`
-      }
+      <div class="em-colour-row">
+        <span class="em-colour-label">Background</span>
+        <div class="em-swatches">${bgSwatch("", "", "None")}${bgSwatch("ink", "background:var(--ink)", "Ink")}${bgSwatch("blue", "background:var(--blue)", "Blue")}${bgSwatch("red", "background:var(--red)", "Red")}${bgSwatch("steel", "background:#5b6472", "Steel")}${bgSwatch("sand", "background:#caa96a", "Sand")}</div>
+      </div>
+      <div class="em-colour-row ${isSvg ? "" : "is-off"}">
+        <span class="em-colour-label">Tint${isSvg ? "" : ` <span class="em-colour-why">vector only</span>`}</span>
+        <div class="em-swatches">${tintSwatch("", "tint-none", "Original")}${tintSwatch("ink", "tint-ink", "Ink")}${tintSwatch("blue", "tint-blue", "Blue")}${tintSwatch("red", "tint-red", "Red")}</div>
+      </div>
     </div>`;
 
   const body =

@@ -9,6 +9,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.53",
+    date: "2026-07-18",
+    title: "Nothing jumps, nothing flickers",
+    items: [
+      "The page now updates in place instead of being rebuilt from scratch on every click. Rebuilding meant the button under your cursor was destroyed and replaced mid-press, so it lost its hover state and every animation in the panel restarted — that was the flicker. 187 elements in the roster panel were restarting a transition on every press.",
+      "Pressing + or − no longer shifts the row. The stepper, cost and bin used to slide 13.7 pixels sideways whenever the number changed width; they now hold their place.",
+      "Ship stats are always a 2×2 block: Mass and Thrust over Silhouette and Shields.",
+      "The catalogue and the roster now lay a ship out the same way, with stats beside the weapons table rather than stacked above it. That was both the inconsistency between the two panels and the dead space in the middle of every catalogue row — the table went from 273 to 587 pixels wide at desktop size.",
+      "Scrolling a long roster no longer takes the unit count or the Play/Print buttons away with it; both stay pinned.",
+      "The emblem picker's footer no longer sits on top of the colour controls, and the colour section lost its apologetic paragraph — it is two labelled rows now.",
+      "Typing is faster too: filtering the Compendium went from about 15ms a keystroke to 2.",
+    ],
+  },
+  {
     version: "0.8.52",
     date: "2026-07-18",
     title: "The sheet reads your rules for you",

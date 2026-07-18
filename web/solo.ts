@@ -136,8 +136,7 @@ function soloShipCatalog(): string {
           <h4 class="ship-name">${escapeHtml(s.name)}</h4>
           <span class="ship-cost">${ck(s.cost)}</span>
         </div>
-        <div class="ship-row-details">${statChips(s, true)}</div>
-        ${weaponsTable(s)}
+        <div class="ship-row-details">${statChips(s, true)}${weaponsTable(s)}</div>
       </div>
       <span class="add-cue">${icon("plus", 15)}<span>Add</span></span>
     </article>`,

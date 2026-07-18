@@ -527,10 +527,12 @@ function handleClick(e: MouseEvent): void {
       const faction = findFaction(list.fleet.factionId, state.customFactions);
       const addedName = resolveShip(shipId, faction, state.customFactions)?.ship.name ?? "Unit";
       const held = stocking ? (list.fleet.units.find((u) => u.shipClassId === shipId)?.count ?? 0) + 1 : 1;
-      // Toast BEFORE the mutation. showToast is its own setState, and every
-      // setState repaints by replacing innerHTML - which destroys any animation
-      // the mutation's paint just started. Toasting first leaves the mutation's
-      // paint last, so the roster's add animation survives long enough to play.
+      // Toast before the mutation, so the mutation's paint is the last one.
+      // This was load-bearing when a repaint replaced innerHTML wholesale and
+      // destroyed the animation the previous paint had just started. Rendering
+      // now morphs in place (web/morph.ts) and leaves running animations alone,
+      // so the order is no longer required - but toasting first still reads as
+      // "announce, then change", and reordering it buys nothing.
       showToast(stocking ? `${addedName} ×${held} in the Shipyard` : `Added ${addedName}`);
       store.setState((s) =>
         updateFleet(s, id, (f) => {

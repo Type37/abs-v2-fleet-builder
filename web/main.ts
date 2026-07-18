@@ -1,5 +1,6 @@
 import { parseRoute, store } from "./state.ts";
 import { render } from "./render.ts";
+import { morphInto } from "./morph.ts";
 import { wireActions } from "./actions.ts";
 import { decodeShare, decodeSharePayload, sharePayloadFromHash, type DecodedShare } from "./share.ts";
 import { persistCustomFactions, persistLists } from "./storage.ts";
@@ -62,10 +63,10 @@ function paint(): void {
   const caret = active instanceof HTMLInputElement ? active.selectionStart : null;
 
   // The builder's roster panel scrolls independently (position: sticky,
-  // overflow-y: auto) and is fully destroyed and recreated by innerHTML
-  // replacement below, which resets scrollTop to 0. Nothing may move on a
-  // click that isn't the point of the click, so its scroll position is
-  // carried across the re-render like focus and caret are.
+  // overflow-y: auto). Morphing preserves the element, and with it the scroll
+  // position, so this is now a fallback for the case where the panel genuinely
+  // is replaced (switching into the builder from another view). Nothing may
+  // move on a click that isn't the point of the click.
   const manifestScroll = document.querySelector(".mf-manifest")?.scrollTop ?? 0;
 
   // A <details> the player opened is a decision, and re-rendering must not undo
@@ -83,7 +84,11 @@ function paint(): void {
     (d.open ? openPanels : closedPanels).add(key);
   }
 
-  root.innerHTML = render(store.getState());
+  // Update in place rather than reassigning innerHTML: see web/morph.ts. The
+  // save/restore hooks around this call are kept as a safety net for the cases
+  // morphing genuinely does replace a node (a changed tag, a keyless list that
+  // reordered), but on an ordinary click they now have nothing to restore.
+  morphInto(root, render(store.getState()));
   // Every view builds its own <main>; tagging the first one here rather than in
   // eighteen templates keeps the skip link's target correct on all of them.
   const mainEl = root.querySelector("main");
