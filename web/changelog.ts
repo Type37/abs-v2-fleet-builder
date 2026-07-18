@@ -9,6 +9,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.58",
+    date: "2026-07-18",
+    title: "Initiative and CMD match the faction screen",
+    items: [
+      "Initiative and CMD tokens on the printed sheet now look the way they do on the faction select screen: a quiet label over a big figure with the actual dice and command tokens beside it, rather than a bare number.",
+      "Removed the Revert button from the emblem picker. Pickers do not have undo buttons.",
+      "Removed the damage symbol from the weapons table. The column just says Damage.",
+      "Removed the Notes section from the fleet builder, the printed sheet and the text export.",
+      "Symbols line up with the words next to them. An inline symbol sits on the text baseline by default, which leaves it riding low against the type it labels; they are centred on the line instead.",
+    ],
+  },
+  {
     version: "0.8.57",
     date: "2026-07-18",
     title: "The emblem picker, properly audited",

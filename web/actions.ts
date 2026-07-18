@@ -415,25 +415,7 @@ function handleClick(e: MouseEvent): void {
     case "open-emblem-modal": {
       const tgt = target.dataset["target"];
       const emblemTarget = tgt === "faction" || tgt === "outfit" ? tgt : "list";
-      store.setState((s) => {
-        // Snapshot what the emblem is right now, so Revert has something to
-        // restore after Random or a misclick.
-        const src =
-          emblemTarget === "faction"
-            ? s.customFactions.find((f) => f.id === currentFoundryId())
-            : emblemTarget === "outfit"
-              ? s.outfits.find((o) => o.id === currentOutfitId())
-              : s.lists.find((l) => l.id === currentListId());
-        const initial = src
-          ? {
-              ...(src.emblemImage ? { emblemImage: src.emblemImage } : {}),
-              ...(src.emblemLib ? { emblemLib: src.emblemLib } : {}),
-              ...(src.emblemColor ? { emblemColor: src.emblemColor } : {}),
-              ...(src.emblemBg ? { emblemBg: src.emblemBg } : {}),
-            }
-          : {};
-        return { ...s, ui: { ...s.ui, modal: { kind: "emblem", target: emblemTarget, tab: "library", initial } } };
-      });
+      store.setState((s) => ({ ...s, ui: { ...s.ui, modal: { kind: "emblem", target: emblemTarget, tab: "library" } } }));
       break;
     }
     case "emblem-modal-tab": {
@@ -442,31 +424,6 @@ function handleClick(e: MouseEvent): void {
       store.setState((s) =>
         s.ui.modal?.kind === "emblem" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, tab } } } : s,
       );
-      break;
-    }
-    case "emblem-revert": {
-      // Put back exactly what was there when the picker opened.
-      store.setState((s) => {
-        if (s.ui.modal?.kind !== "emblem") return s;
-        const init = s.ui.modal.initial ?? {};
-        const fields = {
-          emblemImage: init.emblemImage,
-          emblemLib: init.emblemLib,
-          emblemColor: init.emblemColor as "ink" | "blue" | "red" | undefined,
-          emblemBg: init.emblemBg as "ink" | "blue" | "red" | "steel" | "sand" | undefined,
-        };
-        if (s.ui.modal.target === "faction") {
-          const fid = currentFoundryId();
-          if (fid) editFaction(fid, (f) => ({ ...f, ...fields }));
-          return s;
-        }
-        if (s.ui.modal.target === "outfit") {
-          editOutfit((o) => ({ ...o, ...fields }));
-          return s;
-        }
-        const id = currentListId();
-        return id ? updateList(s, id, (l) => ({ ...l, ...fields })) : s;
-      });
       break;
     }
     case "emblem-upload-pick": {
@@ -1445,11 +1402,6 @@ function handleChange(e: Event): void {
     case "fleet-name": {
       if (!listId) return;
       store.setState((s) => updateFleet(s, listId, (f) => ({ ...f, name: inputValue })));
-      break;
-    }
-    case "fleet-notes": {
-      if (!listId) return;
-      store.setState((s) => updateFleet(s, listId, (f) => ({ ...f, notes: inputValue })));
       break;
     }
     case "set-limit-free": {

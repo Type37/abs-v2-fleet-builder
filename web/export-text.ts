@@ -67,11 +67,6 @@ export function fleetToMarkdown(list: SavedList, customs: Faction[]): string {
     }
   }
 
-  if (list.fleet.notes?.trim()) {
-    lines.push("");
-    lines.push("## Notes");
-    lines.push(list.fleet.notes.trim());
-  }
 
   return lines.join("\n");
 }

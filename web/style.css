@@ -911,7 +911,6 @@ button { font-family: inherit; }
 .wt-arc { color: var(--blue); display: flex; align-items: center; gap: 4px; }
 /* Word first, then the wedge: the label is what you read, the glyph confirms it. */
 .wt-arc-abbr { font-size: 10px; font-weight: 800; letter-spacing: 0.03em; color: var(--ink-2); order: -1; }
-.wt-h .dmg-glyph { margin-left: 2px; margin-right: 0; }
 .wt-name { font-size: 12.5px; font-weight: 600; color: var(--ink); }
 .wt-num { font-size: 12px; font-weight: 700; color: var(--ink); text-align: right; white-space: nowrap; }
 .wt-h.wt-num { font-weight: 700; }
@@ -1079,13 +1078,17 @@ button { font-family: inherit; }
 
 /* Section headings are ink-friendly: a bold underlined label, not a filled dark
    banner that eats toner on a home printer. */
-/* Initiative and CMD tokens, read at the top of every round. Large enough to
-   take in from across the table without picking the sheet up. */
-.sheet-vitals { display: flex; gap: 28px; flex-wrap: wrap; margin: 8px 0 2px; padding: 7px 0; border-bottom: 1px solid var(--hair); }
-.sv-item { display: flex; align-items: baseline; gap: 8px; }
-.sv-label { font-family: var(--narrow); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
-.sv-value { font-family: var(--display); font-weight: 900; font-size: 21px; line-height: 1; color: var(--blue); font-variant-numeric: tabular-nums; }
-.is-inksaver .sv-value { color: var(--ink); }
+/* Initiative and CMD tokens, in the same shape the faction-select screen uses
+   (.nfd-stat): a quiet label over a big figure with the actual dice / command
+   tokens beside it. Read at the top of every round, so it is the one thing on
+   the sheet worth setting large. */
+.sheet-vitals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 4px; }
+.sv-item { display: flex; flex-direction: column; gap: 5px; padding: 8px 11px; border: 1px solid var(--hair); background: var(--blue-wash); }
+.sv-label { font-family: var(--sans); font-size: 9px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); }
+.sv-figure { display: flex; align-items: center; gap: 9px; min-height: 20px; }
+.sv-value { font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sv-figure .dice-row { gap: 3px; }
+.is-inksaver .sv-item { background: none; }
 .sheet-section { font-family: var(--display); font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); background: none; padding: 0 0 2px; margin: 10px 0 5px; border-bottom: 1px solid var(--ink); }
 .print-rule { margin-top: 7px; border-left: 2px solid var(--blue); padding: 1px 0 1px 9px; }
 .print-rule h3 { font-family: var(--display); font-size: 14px; margin-bottom: 3px; }
@@ -2573,11 +2576,9 @@ button { font-family: inherit; }
 .pc-cmd-none { font-size: 13px; color: var(--ink-3); margin: 0; }
 
 /* Damage mark: its own hot red, distinct from the error/over-budget red. */
-.dmg-glyph { color: var(--damage); vertical-align: -1px; }
 /* The credits mark sits immediately before its figure, so it needs the same
    optical baseline as the digits and a hair of air after it. */
 .credits-glyph { vertical-align: -1px; margin-right: 2px; flex: none; }
-.wt-h .dmg-glyph { margin-right: 2px; }
 
 /* ---------------------------------------------------------------------------
    Print setup: the sheet is laid out at the true printable width for the chosen
@@ -2703,3 +2704,30 @@ button { font-family: inherit; }
 }
 .lib-more:hover { border-color: var(--blue); color: var(--blue); }
 .lib-more-count { font-family: var(--sans); font-size: 12px; font-weight: 700; }
+
+
+/* Symbol alignment. An inline SVG sits on the text baseline by default, which
+   leaves it riding low next to the word it labels - the descender space below
+   the baseline is empty, so the glyph looks dropped. Centring it against the
+   line box instead lines its optical middle up with the type's x-height. */
+.icon, .mass-glyph, .credits-glyph, .dice-ico, .cmd-ico {
+  vertical-align: middle;
+  position: relative;
+  top: -0.06em;
+}
+/* Buttons and chips already centre their contents with flexbox, so the nudge
+   above would double up on them. */
+button .icon,
+a .icon,
+.stat-chip .icon,
+.stat-chip .stat-ico,
+.sv-figure .icon,
+.dice-row .icon,
+.dice-row .dice-ico,
+.dice-row .cmd-ico {
+  top: 0;
+}
+/* Anything laid out as a flex row aligns its icon by the box, not the baseline. */
+.stat-chip, .sv-figure, .dice-row, .mf-rule-meta, .pts-item, .wt-arc {
+  align-items: center;
+}

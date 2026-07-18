@@ -15,7 +15,6 @@ import {
   emblemMark,
   icon,
   initiativeDice,
-  damageGlyph,
   massGlyph,
   statChips,
   tacticalDiagram,
@@ -780,7 +779,7 @@ export function weaponsTable(ship: ShipClass): string {
       <span class="wt-name" role="cell">${escapeHtml(w.name)}</span>
       <span class="wt-num wt-rng" role="cell"><span class="wt-inline-lbl">Range </span>${w.rangeMin}-${w.rangeMax}"</span>
       <span class="wt-num wt-atk" role="cell"><span class="wt-inline-lbl">Attack </span>${w.count}${w.die}</span>
-      <span class="wt-num wt-dmg" role="cell"><span class="wt-inline-lbl">${damageGlyph(12)} Damage </span>${DAMAGE_BY_DIE[w.die]}</span>
+      <span class="wt-num wt-dmg" role="cell"><span class="wt-inline-lbl">Damage </span>${DAMAGE_BY_DIE[w.die]}</span>
     </div>`;
   };
   const rows = [...ship.primary.map((w) => row(w, "primary")), ...ship.auxiliary.map((w) => row(w, "aux"))];
@@ -798,7 +797,7 @@ export function weaponsTable(ship: ShipClass): string {
     : "";
   return `<div class="weap-table" role="table" aria-label="Weapons">
     <div class="wt-row wt-headrow" role="row">
-      <span class="wt-arc wt-h" role="columnheader">Arc</span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">Dmg ${damageGlyph(12)}</span>
+      <span class="wt-arc wt-h" role="columnheader">Arc</span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">Damage</span>
     </div>
     ${rows.join("")}${noteRow}
   </div>`;
@@ -1248,10 +1247,6 @@ function builderView(state: AppState): string {
           ${unitRows || '<p class="mf-empty">No ships yet. Add them from the catalogue on the right.</p>'}
         </div>
 
-        <details class="mf-notes" data-persist="notes" ${list.fleet.notes ? "open" : ""}>
-          <summary>Notes${list.fleet.notes ? ` <span class="mf-h-count">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
-          <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
-        </details>
 
         <div class="mf-finish">
           <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
@@ -1682,8 +1677,14 @@ function printView(state: AppState): string {
         // always printed, set large enough to read across the table.
         faction
           ? `<section class="sheet-vitals">
-              <div class="sv-item"><span class="sv-label">Initiative</span><span class="sv-value">${escapeHtml(faction.initiative)}</span></div>
-              <div class="sv-item"><span class="sv-label">CMD tokens / round</span><span class="sv-value">${escapeHtml(faction.cmdTokens)}</span></div>
+              <div class="sv-item">
+                <span class="sv-label">Initiative</span>
+                <span class="sv-figure"><span class="sv-value">${escapeHtml(faction.initiative)}</span>${diceRow(faction.initiative, 18)}</span>
+              </div>
+              <div class="sv-item">
+                <span class="sv-label">CMD / round</span>
+                <span class="sv-figure"><span class="sv-value">${escapeHtml(faction.cmdTokens)}</span>${commandRow(faction.cmdTokens, 18)}</span>
+              </div>
             </section>`
           : ""
       }
@@ -1741,7 +1742,6 @@ function printView(state: AppState): string {
       </table>`;
       })()}`
       }
-      ${list.fleet.notes ? `<section class="print-notes"><h3 class="sheet-section">Notes</h3><p>${escapeHtml(list.fleet.notes)}</p></section>` : ""}
     </article>
     </div>
   </main>`;
@@ -2876,7 +2876,6 @@ function emblemModal(state: AppState): string {
       ${colourBlock}
       <div class="em-foot">
         <button class="bar-btn" data-action="${cfg.rndA}">${icon("shuffle", 15)} Random</button>
-        <button class="bar-btn" data-action="emblem-revert" title="Put back the emblem you had when you opened this">${icon("undo", 15)} Revert</button>
         ${cfg.hasImage ? `<button class="bar-btn danger" data-action="${cfg.clrA}">${icon("close", 15)} Remove</button>` : ""}
         <button class="cta-btn em-done" data-action="close-modal">${icon("check", 16)} Done</button>
       </div>
