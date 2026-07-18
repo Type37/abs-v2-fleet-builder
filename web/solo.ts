@@ -25,7 +25,7 @@ import {
 } from "../src/data/junkspace-solo.ts";
 import { auxSlotText, escapeHtml, formatDate, primarySlotText } from "./format.ts";
 import { emblem, emblemMark, icon, massGlyph, statChips } from "./icons.ts";
-import { iconLibraryControls, libraryUrl } from "./emblems.ts";
+import { emblemPickerUI, libraryUrl } from "./emblems.ts";
 import gunnerIcon from "./pilots/gunner.png";
 import haulerIcon from "./pilots/hauler.png";
 import junkerIcon from "./pilots/junker.png";
@@ -72,11 +72,9 @@ export function soloListView(state: AppState): string {
   <main class="home-main solo-main">
     <header class="solo-head">
       <h1 class="page-title">Junkspace</h1>
-      <p class="flavor-lede">The Unhuman War has shattered the galaxy. In the ruins of the Jura system you lead a rag-tag outfit of scavengers, in debt to a dangerous local gangster, flying Jobs against an automated enemy to clear what you owe. A full solo game: build your outfit, run the roller for the Hostiles, and track the campaign.</p>
     </header>
     <section class="commission-panel">
       <h2 class="panel-title">Your outfits</h2>
-      <p class="panel-note">Each outfit starts ${ck(STARTING_DEBT_K)} in debt. Clear it within ${DEBT_CLEAR_GAMES} games to win.</p>
       <button class="cta-btn" data-action="new-outfit">${icon("plus", 18)} Start a new outfit</button>
       ${
         outfits.length === 0
@@ -411,11 +409,13 @@ export function soloOutfitView(state: AppState): string {
 
 function outfitEmblemPicker(o: SavedOutfit): string {
   const img = o.emblemImage ?? libraryUrl(o.emblemLib);
-  return `
-    <label class="emblem-choice emblem-upload ${o.emblemImage ? "selected" : ""}" title="Upload your own image">
-      ${icon("upload", 18)}
-      <input type="file" accept="image/*" data-action="outfit-emblem-upload" hidden />
-    </label>
-    ${iconLibraryControls("outfit-set-lib", "outfit-random-emblem", o.emblemLib)}
-    ${img ? `<span class="emblem-choice emblem-current selected">${emblemMark(o.emblem, img, 24)}</span><button class="emblem-choice" data-action="outfit-clear-emblem" title="Remove image">${icon("close", 16)}</button>` : ""}`;
+  return emblemPickerUI({
+    previewHtml: emblemMark(o.emblem, img, 44),
+    uploadAction: "outfit-emblem-upload",
+    libAction: "outfit-set-lib",
+    randomAction: "outfit-random-emblem",
+    clearAction: "outfit-clear-emblem",
+    hasImage: Boolean(img),
+    currentLib: o.emblemLib,
+  });
 }

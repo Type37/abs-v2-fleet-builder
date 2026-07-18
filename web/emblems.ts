@@ -79,3 +79,42 @@ export function iconLibraryControls(actLib: string, actRandom: string, currentLi
       <div class="lib-body">${cats || '<p class="muted">No icons in the library yet.</p>'}</div>
     </details>`;
 }
+
+/**
+ * The full emblem picker: a large current-emblem preview beside clearly-labelled
+ * actions - Upload, Library (opens the grid), Random, and Remove. Every action
+ * pairs an icon with a word, so "upload your own" versus "choose from the
+ * library" reads at a glance instead of a cramped row of identical squares.
+ * `previewHtml` is the caller's rendered current emblem (or a placeholder).
+ */
+export function emblemPickerUI(opts: {
+  previewHtml: string;
+  uploadAction: string;
+  libAction: string;
+  randomAction: string;
+  clearAction: string;
+  hasImage: boolean;
+  currentLib?: string;
+}): string {
+  const grid = iconLibraryGrid(opts.libAction, opts.currentLib);
+  return `
+    <div class="emblem-pick">
+      <span class="emblem-pick-preview ${opts.hasImage ? "has-img" : ""}">${opts.previewHtml}</span>
+      <div class="emblem-pick-actions">
+        <label class="ep-btn" title="Upload your own image">${icon("upload", 16)}<span>Upload</span>
+          <input type="file" accept="image/*" data-action="${opts.uploadAction}" hidden /></label>
+        <details class="ep-lib">
+          <summary class="ep-btn" title="Choose from the icon library">${icon("grid", 16)}<span>Library</span></summary>
+          <div class="ep-lib-panel">
+            <div class="ep-lib-head">
+              <span class="ep-lib-title">Emblem library</span>
+              <button type="button" class="ep-lib-close" data-action="close-popover" aria-label="Close">${icon("close", 16)}</button>
+            </div>
+            <div class="ep-lib-scroll">${grid || '<p class="muted">No icons in the library yet.</p>'}</div>
+          </div>
+        </details>
+        <button type="button" class="ep-btn" data-action="${opts.randomAction}" title="Pick a random icon">${icon("shuffle", 16)}<span>Random</span></button>
+        ${opts.hasImage ? `<button type="button" class="ep-btn danger" data-action="${opts.clearAction}" title="Remove the emblem">${icon("close", 16)}<span>Remove</span></button>` : ""}
+      </div>
+    </div>`;
+}

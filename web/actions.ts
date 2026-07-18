@@ -1,5 +1,6 @@
 import type { Faction, GameMode, Mass, PilotClass, Weapon } from "../src/types.ts";
 import { maxUnitSize } from "../src/validation.ts";
+import { w } from "../src/data/_helpers.ts";
 import { announce } from "./announce.ts";
 import { findFaction, isCustom } from "./catalog.ts";
 import { resolveShip } from "./render.ts";
@@ -276,6 +277,11 @@ function handleClick(e: MouseEvent): void {
   const state = store.getState();
 
   switch (action) {
+    case "close-popover": {
+      // Visible X inside a popover: close the nearest open <details> around it.
+      target.closest<HTMLDetailsElement>("details[open]")?.removeAttribute("open");
+      break;
+    }
     case "new-list": {
       const mode = (target.dataset["mode"] ?? "armageddon") as GameMode;
       const factionId = target.dataset["faction"] ?? "vyke";
@@ -423,7 +429,6 @@ function handleClick(e: MouseEvent): void {
       const limit = Number(target.dataset["limit"]);
       if (!id || !Number.isFinite(limit)) return;
       store.setState((s) => updateFleet(s, id, (f) => ({ ...f, creditsLimit: limit })));
-      showToast(limit <= 300 ? "Smaller game" : "Larger game");
       break;
     }
     case "set-faction": {
@@ -832,7 +837,15 @@ function handleClick(e: MouseEvent): void {
       const era = target.dataset["era"] as "Hypergrowth" | "Age of Unity" | "Armageddon";
       store.setState((s) =>
         s.ui.modal?.kind === "new-fleet"
-          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, era, factionId: undefined } } }
+          ? {
+              ...s,
+              ui: {
+                ...s.ui,
+                // Hypergrowth is a 300bn Shipyard by default (or unlimited), so
+                // snap the cap to 300 when switching to it.
+                modal: { ...s.ui.modal, era, factionId: undefined, limit: era === "Hypergrowth" ? 300 : s.ui.modal.limit, customOpen: false },
+              },
+            }
           : s,
       );
       break;
@@ -844,7 +857,6 @@ function handleClick(e: MouseEvent): void {
           ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, limit, customOpen: false } } }
           : s,
       );
-      showToast(limit <= 300 ? "Smaller game" : "Larger game");
       break;
     }
     case "nf-size-custom-open": {
@@ -1049,6 +1061,50 @@ function handleClick(e: MouseEvent): void {
         ships: [],
         hvp: [],
       };
+      store.setState((s) => {
+        const customFactions = [...s.customFactions, faction];
+        persistCustomFactions(customFactions);
+        return { ...s, customFactions };
+      });
+      location.hash = routeHash({ view: "foundry", factionId: faction.id });
+      break;
+    }
+    case "new-faction-template": {
+      // Themed starter factions you rename and edit - a friendlier entry than a
+      // blank sheet for "I want an enemy pirate fleet" or "my own solo outfit".
+      const kind = target.dataset["template"];
+      const mkFaction = (): Faction => {
+        if (kind === "pirate") {
+          return {
+            id: newId("cf"),
+            name: "Pirate Raiders",
+            era: "Armageddon",
+            initiative: "3D6",
+            cmdTokens: "5",
+            rule: { name: "Scavengers", text: "Raiders who fight dirty and run fast. Rename this faction and edit its rule, ships, and personnel to taste." },
+            ships: [
+              { id: "raider", name: "Raider", mass: 1, thrust: 8, silhouette: 4, shields: 1, primary: [w("Scrap Cannons", 3, "D6", 0, 6)], auxiliary: [], utilityBays: false, cost: 10 },
+              { id: "marauder", name: "Marauder", mass: 2, thrust: 6, silhouette: 5, shields: 2, primary: [w("Boarding Guns", 2, "D8", 0, 9)], auxiliary: [w("Scrap Cannons", 2, "D6", 0, 6)], utilityBays: false, cost: 16 },
+              { id: "corsair", name: "Corsair Flagship", mass: 3, thrust: 6, silhouette: 8, shields: 4, primary: [w("Salvaged Railguns", 2, "D12", 9, 18)], auxiliary: [w("Point Defence", 4, "D6", 0, 6)], utilityBays: false, cost: 48 },
+            ],
+            hvp: [],
+          };
+        }
+        return {
+          id: newId("cf"),
+          name: "My Fleet",
+          era: "Armageddon",
+          initiative: "3D6",
+          cmdTokens: "5",
+          rule: { name: "House rule", text: "Your own fleet. Rename it and edit its rule, ships, and personnel however you like." },
+          ships: [
+            { id: "scout", name: "Scout", mass: 1, thrust: 8, silhouette: 4, shields: 1, primary: [w("Light Blasters", 2, "D6", 0, 6)], auxiliary: [], utilityBays: false, cost: 10 },
+            { id: "cruiser", name: "Cruiser", mass: 2, thrust: 6, silhouette: 6, shields: 3, primary: [w("Railguns", 2, "D8", 9, 18)], auxiliary: [w("Blasters", 2, "D6", 0, 6)], utilityBays: false, cost: 22 },
+          ],
+          hvp: [],
+        };
+      };
+      const faction = mkFaction();
       store.setState((s) => {
         const customFactions = [...s.customFactions, faction];
         persistCustomFactions(customFactions);

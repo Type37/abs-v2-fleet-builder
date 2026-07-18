@@ -9,6 +9,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.30",
+    date: "2026-07-17",
+    title: "Per-mode HVP, a reworked emblem picker, and a tighter builder header",
+    items: [
+      "HVP now follows the mode. Hypergrowth is a Shipyard and shows no HVP at build. Age of Unity treats HVP as optional at build and tells you they're assigned after the missions are generated. Only Armageddon still requires them chosen up front. No more spurious 'must select HVP' error on the modes that defer them.",
+      "The emblem picker is reworked everywhere it's used (Custom Rules, solo outfits): a large preview beside clearly labelled Upload, Library, Random, and Remove actions. The library now opens in a panel you can close with an X.",
+      "The builder header is a single line now: name, faction, era badge, and budget all on one row, and the whole builder is no longer stretched too wide.",
+      "Custom Rules can start from a template you rename and edit: an Enemy Pirate Fleet or a Solo Fleet.",
+      "Removed the 'Smaller game / Larger game' toast when changing the credits limit.",
+    ],
+  },
+  {
     version: "0.8.29",
     date: "2026-07-17",
     title: "Steadier Armageddon slam, tighter red underline",

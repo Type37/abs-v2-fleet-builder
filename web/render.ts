@@ -15,7 +15,7 @@ import {
   statChips,
   tacticalDiagram,
 } from "./icons.ts";
-import { iconLibraryControls, iconLibraryGrid, libraryUrl } from "./emblems.ts";
+import { emblemPickerUI, iconLibraryGrid, libraryUrl } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
 import { FACTION_LORE } from "./faction-lore.ts";
 import type { AppState } from "./state.ts";
@@ -318,7 +318,6 @@ function topbar(): string {
       <a href="#/fleets">${icon("flag", 16)} Fleets</a>
       <a href="#/solo">${icon("book", 16)} Solo</a>
       <a href="#/ships">${icon("compare", 16)} Compendium</a>
-      <button class="topnav-btn" data-action="new-training" data-mode="combat-simulator" title="Learn to Play">${icon("die", 16)} Learn to Play</button>
       <a href="#/foundry">${icon("wrench", 16)} Custom Rules</a>
       <button class="topnav-btn" data-action="open-options" title="Options">${icon("sliders", 16)} Options</button>
     </nav>
@@ -823,7 +822,16 @@ function builderView(state: AppState): string {
     if (list.mode === "hypergrowth" || list.mode === "management-training") {
       drop.add("UNIT_SIZE_EXCEEDED");
     }
-    if (list.mode === "management-training") drop.add("HVP_COUNT");
+    // HVP is not chosen at build for the Shipyard modes (no HVP at all at build),
+    // nor for Age of Unity, where HVP are deferred until the missions are known
+    // and assigned in print/play. Only Armageddon requires HVP chosen pre-play.
+    if (
+      list.mode === "management-training" ||
+      list.mode === "hypergrowth" ||
+      list.mode === "age-of-unity"
+    ) {
+      drop.add("HVP_COUNT");
+    }
     // Combat Simulator does not let you pick personnel: the scenario issues
     // three Seasoned Captains (p.63, transcribed in the guide above). One of
     // each is a fleet-BUILDING rule, and this fleet was not built - so the
@@ -1119,20 +1127,18 @@ function builderView(state: AppState): string {
 
   <main class="builder ${remaining < 0 ? "is-over" : ""}">
     <header class="mf-head">
-      <div class="mf-idrow">
+      <div class="mf-topline">
         <span class="mf-emblem">${emblemPicker}</span>
         <input class="mf-name" type="text" value="${escapeHtml(list.fleet.name ?? "")}" placeholder="Untitled fleet" data-action="fleet-name" />
-        ${era ? `<span class="mf-era-badge" title="Era you are building for">${escapeHtml(era)}</span>` : ""}
-        ${moreMenu}
-      </div>
-      <div class="mf-metarow">
         <span class="mf-fac">${factionControl}</span>
+        ${era ? `<span class="mf-era-badge" title="Era you are building for">${escapeHtml(era)}</span>` : ""}
         <span class="mf-budget">
           <span class="mf-tally">
             <span class="mf-tally-now">${credits(total)}</span>${limitControl}
             <span class="mf-tally-free">${remaining < 0 ? `${credits(-remaining)} over` : `${credits(remaining)} free`}</span>
           </span>
         </span>
+        ${moreMenu}
       </div>
       <div class="mf-meter"><span class="mf-meter-fill" style="width:${list.fleet.creditsLimit > 0 ? Math.min(100, (total / list.fleet.creditsLimit) * 100) : 0}%"></span></div>
     </header>
@@ -1198,8 +1204,16 @@ function builderView(state: AppState): string {
             ? `${catalogChartPicker(chartStat)}${catalogChart(faction, chartStat)}`
             : `<div class="mf-list">${catalogHtml || '<p class="mf-empty">Pick a faction to see its ships.</p>'}</div>`
         }
-        <h3 class="mf-h">High-Value Personnel <span class="mf-h-count">${hvpCount}</span></h3>
-        <div class="mf-list personnel-grid">${personnelCatalog}</div>
+        ${
+          // Hypergrowth is a Shipyard: no HVP are chosen at build. Age of Unity
+          // defers HVP until the missions are known, so they are optional here
+          // and assigned later. Armageddon requires them pre-play.
+          list.mode === "hypergrowth"
+            ? ""
+            : `<h3 class="mf-h">High-Value Personnel <span class="mf-h-count">${hvpCount}</span></h3>
+        ${list.mode === "age-of-unity" ? '<p class="mf-hvp-note">Optional now. In Age of Unity you assign HVP after the missions are generated.</p>' : ""}
+        <div class="mf-list personnel-grid">${personnelCatalog}</div>`
+        }
       </section>
     </div>
   </main>
@@ -1503,6 +1517,18 @@ function foundryListView(state: AppState): string {
             <span class="faction-plaque-name">${icon("plus", 15)} Start from a blank sheet</span>
             <span class="faction-plaque-rule">No ships, no rule, no personnel yet</span>
           </button>
+          <p class="cf-new-heading">Or start from a template you can rename and change</p>
+          <div class="faction-plaques">
+            <button class="faction-plaque" data-action="new-faction-template" data-template="pirate">
+              <span class="faction-plaque-name">${icon("flag", 15)} Enemy Pirate Fleet</span>
+              <span class="faction-plaque-rule">A scrappy raider fleet to fight against</span>
+            </button>
+            <button class="faction-plaque" data-action="new-faction-template" data-template="solo">
+              <span class="faction-plaque-name">${icon("book", 15)} Solo Fleet</span>
+              <span class="faction-plaque-rule">A starter outfit of your own to build out</span>
+            </button>
+          </div>
+          <p class="cf-new-heading">Or clone an existing faction</p>
           <div class="faction-plaques">${startPlaques}</div>
         </div>
       </details>
@@ -1635,13 +1661,15 @@ function foundryEditView(state: AppState, factionId: string): string {
         <label class="field-block wide">Faction name
           <input type="text" value="${escapeHtml(f.name)}" data-action="cf-field" data-field="name" /></label>
         <div class="field-block wide">Emblem
-          <div class="cf-emblem-row">
-            <span class="cf-emblem-preview">${emblemMark("delta", f.emblemImage ?? libraryUrl(f.emblemLib), 40)}</span>
-            <label class="bar-btn file-btn">${icon("upload", 14)} Upload
-              <input type="file" accept="image/*" data-action="cf-emblem-upload" hidden /></label>
-            <div class="emblem-picker">${iconLibraryControls("cf-set-lib", "cf-random-emblem", f.emblemLib)}</div>
-            ${f.emblemImage || f.emblemLib ? `<button class="ghost-btn danger" data-action="cf-clear-emblem" title="Remove">${icon("close", 14)}</button>` : ""}
-          </div>
+          ${emblemPickerUI({
+            previewHtml: emblemMark("delta", f.emblemImage ?? libraryUrl(f.emblemLib), 44),
+            uploadAction: "cf-emblem-upload",
+            libAction: "cf-set-lib",
+            randomAction: "cf-random-emblem",
+            clearAction: "cf-clear-emblem",
+            hasImage: Boolean(f.emblemImage || f.emblemLib),
+            currentLib: f.emblemLib,
+          })}
         </div>
         <label class="field-block">Era
           <select data-action="cf-field" data-field="era">
