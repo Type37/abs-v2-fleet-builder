@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.56",
+    date: "2026-07-18",
+    title: "Buttons that say what they do",
+    items: [
+      "Buttons that were an icon and nothing else now carry their word: Duplicate, Share and Delete on fleet cards, Download and Delete in Custom Rules, and Skip and Next on the first-visit coachmark. Their meaning was in a hover tooltip, which does not exist on a touchscreen.",
+      "Fixed the weapon editor on narrow screens. Its column headings (Weapon, Attack, Range) are the only labels those fields have, and they were hidden once the row stacked — leaving a bare \"1 x D6\" and \"0 - 6 in\" with nothing to say what they were. Inline labels appear in the stacked layout instead.",
+      "The eight Play Mode counter buttons (round, CMD, victory points) had no name of any kind, so a screen reader read them as just \"button\". They now say which counter they raise or lower.",
+    ],
+  },
+  {
     version: "0.8.55",
     date: "2026-07-18",
     title: "The printed sheet, audited",

@@ -515,9 +515,9 @@ function fleetsView(state: AppState): string {
         <div class="fleet-card-foot">
           <span class="fleet-card-date">Updated ${formatDate(l.updatedAt)}</span>
           <span class="fleet-card-actions">
-            <button class="ghost-btn" data-action="duplicate-list" data-id="${l.id}" title="Duplicate this fleet">${icon("duplicate", 16)}</button>
-            <button class="ghost-btn" data-action="share-list" data-id="${l.id}" title="Copy a share link">${icon("link", 16)}</button>
-            <button class="ghost-btn danger" data-action="delete-list" data-id="${l.id}" title="Delete this fleet">${icon("trash", 16)}</button>
+            <button class="ghost-btn" data-action="duplicate-list" data-id="${l.id}" title="Duplicate this fleet">${icon("duplicate", 16)} Duplicate</button>
+            <button class="ghost-btn" data-action="share-list" data-id="${l.id}" title="Copy a share link">${icon("link", 16)} Share</button>
+            <button class="ghost-btn danger" data-action="delete-list" data-id="${l.id}" title="Delete this fleet">${icon("trash", 16)} Delete</button>
           </span>
         </div>
       </article>`;
@@ -1752,8 +1752,8 @@ function foundryListView(state: AppState): string {
         <td class="cell-actions">
           <button class="ghost-btn" data-action="clone-faction" data-source="${f.id}" title="Duplicate this faction">${icon("duplicate", 16)} Duplicate</button>
           <button class="ghost-btn" data-action="copy-faction" data-id="${f.id}" title="Copy as JSON to share">${icon("scroll", 16)} Copy</button>
-          <button class="ghost-btn" data-action="export-faction" data-id="${f.id}" title="Download as a file">${icon("download", 16)}</button>
-          <button class="ghost-btn danger" data-action="delete-faction" data-id="${f.id}" title="Delete">${icon("trash", 16)}</button>
+          <button class="ghost-btn" data-action="export-faction" data-id="${f.id}" title="Download as a file">${icon("download", 16)} Download</button>
+          <button class="ghost-btn danger" data-action="delete-faction" data-id="${f.id}" title="Delete">${icon("trash", 16)} Delete</button>
         </td>
       </tr>`,
     )
@@ -1827,6 +1827,7 @@ function weaponEditor(shipIndex: number, slot: "primary" | "auxiliary", weapons:
       <div class="weapon-edit-row">
         <input class="we-name" type="text" value="${escapeHtml(w.name)}" placeholder="Weapon name" ${cell(wi, "name", "")} />
         <span class="we-group" title="Attack: number of dice and die type">
+          <span class="we-inline-lbl">Attack</span>
           <input class="we-num" type="number" min="1" value="${w.count}" aria-label="Number of dice" ${cell(wi, "count", "")} />
           <span class="we-x">&times;</span>
           <select class="we-die" aria-label="Die type" ${cell(wi, "die", "")}>
@@ -1834,6 +1835,7 @@ function weaponEditor(shipIndex: number, slot: "primary" | "auxiliary", weapons:
           </select>
         </span>
         <span class="we-group we-range" title="Range in inches, minimum to maximum">
+          <span class="we-inline-lbl">Range</span>
           <input class="we-num" type="number" min="0" value="${w.rangeMin}" aria-label="Minimum range in inches" ${cell(wi, "rangeMin", "")} />
           <span class="we-dash">&ndash;</span>
           <input class="we-num" type="number" min="0" value="${w.rangeMax}" aria-label="Maximum range in inches" ${cell(wi, "rangeMax", "")} />
@@ -2192,9 +2194,9 @@ function playView(state: AppState): string {
     <div class="play-counter">
       <span class="control-label">${label}</span>
       <div class="round-control">
-        <button class="stepper-btn" data-action="${action}" data-delta="${-step}">${icon("minus", 16)}</button>
+        <button class="stepper-btn" data-action="${action}" data-delta="${-step}" aria-label="Decrease ${escapeHtml(label)}" title="Decrease ${escapeHtml(label)}">${icon("minus", 16)}</button>
         <span class="round-value">${value}</span>
-        <button class="stepper-btn" data-action="${action}" data-delta="${step}">${icon("plus", 16)}</button>
+        <button class="stepper-btn" data-action="${action}" data-delta="${step}" aria-label="Increase ${escapeHtml(label)}" title="Increase ${escapeHtml(label)}">${icon("plus", 16)}</button>
       </div>
     </div>`;
 
@@ -2507,12 +2509,12 @@ function tourPopover(state: AppState): string {
     <div class="tour-pop-arrow"></div>
     <div class="tour-head">
       <h4 class="tour-title">${escapeHtml(s.title)}</h4>
-      <button class="tour-close" data-action="tour-dismiss" data-tour="${tour.id}" aria-label="Close">${icon("close", 16)}</button>
+      <button class="tour-close" data-action="tour-dismiss" data-tour="${tour.id}">${icon("close", 15)} Skip</button>
     </div>
     <p class="tour-body">${escapeHtml(s.body)}</p>
     <div class="tour-foot">
       <span class="tour-dots">${dots}</span>
-      <button class="tour-next" data-action="tour-next" data-tour="${tour.id}" data-step="${step}" data-len="${tour.steps.length}" aria-label="${isLast ? "Done" : "Next"}">${icon(isLast ? "check" : "chevronRight", 16)}</button>
+      <button class="tour-next" data-action="tour-next" data-tour="${tour.id}" data-step="${step}" data-len="${tour.steps.length}">${icon(isLast ? "check" : "chevronRight", 15)} ${isLast ? "Done" : "Next"}</button>
     </div>
   </div>`;
 }

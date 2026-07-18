@@ -540,7 +540,7 @@ button { font-family: inherit; }
 .fleet-card-cost { font-family: var(--display); font-weight: 800; font-size: 17px; color: var(--ink); font-variant-numeric: tabular-nums; }
 .fleet-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px 8px 16px; border-top: 1px solid var(--hair-soft); margin-top: auto; }
 .fleet-card-date { font-family: var(--sans); font-size: 11px; font-weight: 600; color: var(--ink-3); }
-.fleet-card-actions { display: inline-flex; gap: 2px; }
+.fleet-card-actions { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 
 .fleets-empty { margin-top: 26px; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 3vw, 26px); color: var(--ink); line-height: 1.25; }
 .fleets-empty-sub { font-family: var(--sans); font-size: 13.5px; font-weight: 500; color: var(--ink-2); }
@@ -616,7 +616,7 @@ button { font-family: inherit; }
 .cell-name a { font-family: var(--display); font-weight: 700; font-size: 15px; }
 .cell-num { font-variant-numeric: tabular-nums; font-weight: 700; }
 .cell-date { color: var(--ink-3); white-space: nowrap; font-size: 12px; }
-.cell-actions { text-align: right; white-space: nowrap; }
+.cell-actions { text-align: right; }
 .cell-actions .ghost-btn { padding: 6px 8px; }
 
 /* ---------------------------------------------------------- commission band */
@@ -1235,7 +1235,21 @@ button { font-family: inherit; }
 .we-unit { font-size: 12px; font-weight: 600; color: var(--ink-3); }
 .cf-hvp { display: grid; grid-template-columns: auto 220px 1fr auto; gap: 8px; align-items: start; margin-bottom: 10px; }
 .cf-hvp-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; margin-top: 8px; border: 1.5px solid var(--blue); color: var(--blue); font-family: var(--display); font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
-@media (max-width: 720px) { .weapon-edit-row, .weapon-edit-head, .cf-hvp { grid-template-columns: 1fr; } .weapon-edit-head { display: none; } }
+/* Inline labels for the weapon editor, shown only in the stacked layout. The
+   column headers ARE the only visible labels for these fields, so hiding them
+   when the row stacks left a sighted user with an unlabelled "[1] x [D6]" and
+   "[0] - [6] in" - the aria-labels covered screen readers and nobody else.
+   Same swap the weapons table already uses (.wt-inline-lbl). */
+.we-inline-lbl { display: none; }
+@media (max-width: 720px) {
+  .weapon-edit-row, .weapon-edit-head, .cf-hvp { grid-template-columns: 1fr; }
+  .weapon-edit-head { display: none; }
+  .we-inline-lbl {
+    display: inline-block; min-width: 52px;
+    font-family: var(--narrow); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-3);
+  }
+}
 
 /* ------------------------------------------------------------ changelog */
 
@@ -2303,7 +2317,7 @@ button { font-family: inherit; }
 }
 .tour-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 0; }
 .tour-title { font-family: var(--display); font-weight: 800; font-size: 15px; letter-spacing: -0.01em; color: var(--color-ink); }
-.tour-close { background: transparent; border: none; color: var(--ink-3); cursor: pointer; display: inline-flex; padding: 4px; margin: -4px; }
+.tour-close { background: transparent; border: none; color: var(--ink-3); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 6px; margin: -4px; font-family: var(--sans); font-size: 12px; font-weight: 700; }
 .tour-close:hover { color: var(--color-ink); }
 .tour-body { font-family: var(--sans); font-size: 13px; line-height: 1.45; color: var(--ink-2); padding: 8px 14px 14px; }
 .tour-foot { display: flex; align-items: center; justify-content: space-between; padding: 0 14px 14px; }
@@ -2311,9 +2325,10 @@ button { font-family: inherit; }
 .tour-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--hair-soft); }
 .tour-dot.on { background: var(--color-action); }
 .tour-next {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 28px; padding: 0 11px;
   background: transparent; border: 1px solid var(--hair); color: var(--color-ink); cursor: pointer;
+  font-family: var(--sans); font-size: 12px; font-weight: 700;
 }
 .tour-next:hover { border-color: var(--color-action); color: var(--color-action); }
 
