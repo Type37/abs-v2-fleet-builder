@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.26",
+    date: "2026-07-17",
+    title: "Two-column builder: your fleet on the left, the catalogue on the right",
+    items: [
+      "The builder is back to a straightforward two-column layout. Your fleet sits on the left and follows you down the page; the full ship-class catalogue is on the right. Click a ship on the right and it drops into your fleet on the left, where you set its count and carried personnel.",
+    ],
+  },
+  {
     version: "0.8.25",
     date: "2026-07-17",
     title: "A properly centred Mass symbol, distinct era buttons, tighter slam",

@@ -871,22 +871,6 @@ function builderView(state: AppState): string {
     catalogHtml = faction.ships.map((s) => catalogShipRow(s, faction, false, ownedCount(s.id))).join("");
   }
 
-  // Merged view: catalog filtered to ship classes not yet in fleet.
-  const ownedClassIds = new Set(list.fleet.units.map((u) => u.shipClassId));
-  let unownedCatalogHtml = "";
-  let unownedCount = 0;
-  if (list.freePlay) {
-    // Free Play keeps its faction grouping (and so its full class list) rather
-    // than filtering: a class already in the fleet may legitimately be taken
-    // again from another faction's section.
-    unownedCatalogHtml = catalogHtml;
-    unownedCount = allFactions(customs).reduce((n, f) => n + f.ships.length, 0);
-  } else if (faction) {
-    const unowned = faction.ships.filter((s) => !ownedClassIds.has(s.id));
-    unownedCount = unowned.length;
-    unownedCatalogHtml = unowned.map((s) => catalogShipRow(s, faction, false, 0)).join("");
-  }
-
   // Personnel catalog. Turning one on is the whole interaction: the card you
   // just clicked becomes its own complete record, holding the carried-by
   // assignment and a rename field right there. Nothing lives in a second
@@ -1125,7 +1109,7 @@ function builderView(state: AppState): string {
   ${topbar()}
   ${trainingGuide(list.mode, state.onboarding.visits <= 1)}
 
-  <main class="builder mf-preview-merged ${remaining < 0 ? "is-over" : ""}">
+  <main class="builder ${remaining < 0 ? "is-over" : ""}">
     <header class="mf-head">
       <div class="mf-headline">
         <span class="mf-emblem">${emblemPicker}</span>
@@ -1147,6 +1131,7 @@ function builderView(state: AppState): string {
 
     <div class="mf-body">
       <section class="mf-manifest">
+        <h3 class="mf-h">Your fleet <span class="mf-h-count">${list.fleet.units.length} ${unitWord}</span></h3>
         ${
           // A legal fleet says nothing worth a standing line: silence is the
           // confirmation, and the line is only spent when there is something to
@@ -1159,8 +1144,21 @@ function builderView(state: AppState): string {
                   <summary class="yard-status is-fail">${icon("warning", 12)} ${issues.length} to resolve</summary>
                   <ul class="yard-status-panel issue-list">${issues.map(issueLine).join("")}</ul>
                 </details>`
-              : ""
+              : `<p class="yard-status is-ok">${icon("check", 12)} Legal</p>`
         }
+        <div class="mf-list">
+          ${unitRows || '<p class="mf-empty">No ships yet. Add them from the catalogue on the right.</p>'}
+        </div>
+
+        <details class="mf-notes" data-persist="notes" ${list.fleet.notes ? "open" : ""}>
+          <summary>Notes${list.fleet.notes ? ` <span class="mf-h-count">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
+          <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
+        </details>
+
+        <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
+      </section>
+
+      <section class="mf-yard">
         ${
           faction && !list.freePlay
             ? `<div class="mf-rule">
@@ -1170,7 +1168,7 @@ function builderView(state: AppState): string {
               </div>`
             : ""
         }
-        <h3 class="mf-h">Ships <span class="mf-h-count">${list.fleet.units.length} ${unitWord}</span>${
+        <h3 class="mf-h">Ship classes${
           faction && !list.freePlay
             ? switcher(
                 "Ship classes view",
@@ -1187,37 +1185,12 @@ function builderView(state: AppState): string {
         ${
           catalogView === "chart" && faction && !list.freePlay
             ? `${catalogChartPicker(chartStat)}${catalogChart(faction, chartStat)}`
-            : `<div class="mf-list">
-                ${unitRows}
-                ${
-                  // An empty fleet needs the catalog open - it is the only thing
-                  // to do. Once units are aboard the catalog is a wall of rows
-                  // between the roster and everything below it, so it folds away
-                  // behind its own title until asked for.
-                  !unownedCatalogHtml
-                    ? list.fleet.units.length === 0
-                      ? '<p class="mf-empty">Pick a faction and add ships below.</p>'
-                      : ""
-                    : list.fleet.units.length === 0
-                      ? unownedCatalogHtml
-                      : `<details class="mf-addships" data-persist="addships">
-                          <summary class="mf-sub-h">${icon("plus", 14)} Add ships <span class="mf-h-count">${unownedCount} ${unownedCount === 1 ? "class" : "classes"}</span></summary>
-                          ${unownedCatalogHtml}
-                        </details>`
-                }
-              </div>`
+            : `<div class="mf-list">${catalogHtml || '<p class="mf-empty">Pick a faction to see its ships.</p>'}</div>`
         }
         <h3 class="mf-h">High-Value Personnel <span class="mf-h-count">${hvpCount}</span></h3>
         <div class="mf-list personnel-grid">${personnelCatalog}</div>
-
-        <details class="mf-notes" data-persist="notes" ${list.fleet.notes ? "open" : ""}>
-          <summary>Notes${list.fleet.notes ? ` <span class="mf-h-count">${list.fleet.notes.trim().length} chars</span>` : ""}</summary>
-          <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
-        </details>
       </section>
     </div>
-
-    <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
   </main>
   ${toast(state)}
   ${footer()}`;
