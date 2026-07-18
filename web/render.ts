@@ -17,7 +17,7 @@ import {
   statChips,
   tacticalDiagram,
 } from "./icons.ts";
-import { iconLibraryGrid, libraryUrl } from "./emblems.ts";
+import { ICON_CATEGORIES, categoryLabel, iconLibraryGrid, libraryUrl } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
 import { FACTION_LORE } from "./faction-lore.ts";
 import type { AppState } from "./state.ts";
@@ -293,19 +293,48 @@ export function listTotals(list: SavedList, customs: Faction[]): { total: number
 // ---------------------------------------------------------------------------
 
 const EMBLEM_TINT: Record<string, string> = { ink: "var(--ink)", blue: "var(--blue)", red: "var(--red)" };
+export const EMBLEM_BG: Record<string, string> = {
+  ink: "var(--ink)",
+  blue: "var(--blue)",
+  red: "var(--red)",
+  steel: "#5b6472",
+  sand: "#caa96a",
+};
 
-// Render a list's emblem. A vector (SVG) library mark with a chosen tint is
-// painted as a solid colour via CSS mask; everything else (uploads, raster
-// marks, built-in glyphs) falls back to the shared emblemMark.
-function listEmblem(l: SavedList, size: number, cls = ""): string {
-  if (!l.emblemImage && l.emblemLib && /\.svg$/i.test(l.emblemLib) && l.emblemColor) {
-    const url = libraryUrl(l.emblemLib);
+interface EmblemFields {
+  emblem?: string;
+  emblemImage?: string;
+  emblemLib?: string;
+  emblemColor?: string;
+  emblemBg?: string;
+}
+
+// The bare sigil: a tinted vector (SVG + chosen colour, painted via CSS mask),
+// or the shared emblemMark for uploads / raster marks / built-in glyphs.
+function renderSigil(e: EmblemFields, size: number, cls = ""): string {
+  if (!e.emblemImage && e.emblemLib && /\.svg$/i.test(e.emblemLib) && e.emblemColor) {
+    const url = libraryUrl(e.emblemLib);
     if (url) {
-      const color = EMBLEM_TINT[l.emblemColor] ?? "var(--ink)";
+      const color = EMBLEM_TINT[e.emblemColor] ?? "var(--ink)";
       return `<span class="emblem emblem-tint ${cls}" style="width:${size}px;height:${size}px;background-color:${color};-webkit-mask-image:url('${url}');mask-image:url('${url}');" role="img" aria-hidden="true"></span>`;
     }
   }
-  return emblemMark(l.emblem, l.emblemImage ?? libraryUrl(l.emblemLib), size, cls);
+  return emblemMark(e.emblem ?? "delta", e.emblemImage ?? libraryUrl(e.emblemLib), size, cls);
+}
+
+// Full emblem: the sigil, optionally on a coloured background tile (so an
+// all-white sigil is visible, and any mark can be given a colour ground).
+export function emblemView(e: EmblemFields, size: number, cls = ""): string {
+  const bg = e.emblemBg ? EMBLEM_BG[e.emblemBg] : undefined;
+  if (bg) {
+    const inSize = Math.round(size * 0.72);
+    return `<span class="emblem-bgbox ${cls}" style="width:${size}px;height:${size}px;background:${bg};">${renderSigil(e, inSize)}</span>`;
+  }
+  return renderSigil(e, size, cls);
+}
+
+function listEmblem(l: SavedList, size: number, cls = ""): string {
+  return emblemView(l, size, cls);
 }
 
 // The sliding highlight that marks the current page is aria-hidden decoration.
@@ -692,7 +721,7 @@ function switcher(
 // dice, range and damage. Built with CSS grid (not a <table>) so column
 // widths are fixed by the grid template instead of an HTML table's auto
 // layout, which stretches short columns apart with huge, uneven gaps.
-function weaponsTable(ship: ShipClass): string {
+export function weaponsTable(ship: ShipClass): string {
   // Each weapon is wrapped in its own role="row". Previously the cells were
   // direct children of the role="table" with no row between them, which is
   // invalid ARIA - cells without an owning row get dropped or flattened, so the
@@ -1055,7 +1084,7 @@ function builderView(state: AppState): string {
 
   // One button showing the current mark; the whole picker lives in a popover so
   // it stops eating a row in the setup band.
-  const emblemPicker = `<button class="emblem-current-btn" data-action="open-emblem-modal" data-target="list" title="Choose an emblem">${listEmblem(list, 34)}${icon("pencil", 12, "emblem-edit-cue")}</button>`;
+  const emblemPicker = `<button class="emblem-current-btn" data-action="open-emblem-modal" data-target="list" title="Choose an emblem">${listEmblem(list, 46)}${icon("pencil", 12, "emblem-edit-cue")}</button>`;
 
   const limitIsPreset = [300, 400, 500].includes(list.fleet.creditsLimit);
   const limitCustomOpen = state.ui.limitCustomOpen === true;
@@ -1720,7 +1749,7 @@ function foundryEditView(state: AppState, factionId: string): string {
           <input type="text" value="${escapeHtml(f.name)}" data-action="cf-field" data-field="name" /></label>
         <div class="field-block wide">Emblem
           <button class="emblem-choose-btn" data-action="open-emblem-modal" data-target="faction">
-            <span class="emblem-choose-preview">${emblemMark("delta", f.emblemImage ?? libraryUrl(f.emblemLib), 40)}</span>
+            <span class="emblem-choose-preview">${emblemView({ emblem: "delta", ...f }, 40)}</span>
             <span class="emblem-choose-label">${icon("image", 15)} Choose emblem</span>
           </button>
         </div>
@@ -2435,89 +2464,103 @@ function emblemModal(state: AppState): string {
   if (!m || m.kind !== "emblem") return "";
 
   interface Cfg {
-    preview: string;
+    fields: EmblemFields;
     currentLib?: string;
     hasImage: boolean;
     libA: string;
     upA: string;
     rndA: string;
     clrA: string;
-    colour: boolean;
     currentColor?: string;
+    currentBg?: string;
   }
   let cfg: Cfg | undefined;
   if (m.target === "list") {
     const l = activeList(state);
     if (l)
       cfg = {
-        preview: listEmblem(l, 64),
+        fields: l,
         currentLib: l.emblemLib,
         hasImage: Boolean(l.emblemImage || l.emblemLib),
         libA: "set-emblem-lib",
         upA: "emblem-upload",
         rndA: "random-emblem",
         clrA: "clear-emblem-image",
-        colour: true,
         currentColor: l.emblemColor,
+        currentBg: l.emblemBg,
       };
   } else if (m.target === "faction") {
     const fid = state.route.view === "foundry" ? state.route.factionId : undefined;
     const f = fid ? state.customFactions.find((x) => x.id === fid) : undefined;
     if (f)
       cfg = {
-        preview: emblemMark("delta", f.emblemImage ?? libraryUrl(f.emblemLib), 64),
+        fields: { emblem: "delta", ...f },
         currentLib: f.emblemLib,
         hasImage: Boolean(f.emblemImage || f.emblemLib),
         libA: "cf-set-lib",
         upA: "cf-emblem-upload",
         rndA: "cf-random-emblem",
         clrA: "cf-clear-emblem",
-        colour: false,
+        currentColor: f.emblemColor,
+        currentBg: f.emblemBg,
       };
   } else {
     const o = activeOutfit(state);
     if (o)
       cfg = {
-        preview: emblemMark(o.emblem, o.emblemImage ?? libraryUrl(o.emblemLib), 64),
+        fields: o,
         currentLib: o.emblemLib,
         hasImage: Boolean(o.emblemImage || o.emblemLib),
         libA: "outfit-set-lib",
         upA: "outfit-emblem-upload",
         rndA: "outfit-random-emblem",
         clrA: "outfit-clear-emblem",
-        colour: false,
+        currentColor: o.emblemColor,
+        currentBg: o.emblemBg,
       };
   }
   if (!cfg) return "";
 
-  const tabDefs: Array<[string, string]> = [["library", "Library"], ["upload", "Upload"]];
-  if (cfg.colour) tabDefs.push(["colour", "Colour"]);
+  const tabDefs: Array<[string, string]> = [["library", "Library"], ["upload", "Upload"], ["colour", "Colour"]];
   const tab = tabDefs.some(([id]) => id === m.tab) ? m.tab : "library";
   const tabBtns = tabDefs
     .map(([id, label]) => `<button class="em-tab ${tab === id ? "on" : ""}" data-action="emblem-modal-tab" data-tab="${id}">${escapeHtml(label)}</button>`)
     .join("");
 
   const isSvg = cfg.currentLib ? /\.svg$/i.test(cfg.currentLib) : false;
-  const colourSwatch = (val: string, cls: string, label: string) =>
-    `<button class="tint-swatch ${cls} ${(cfg!.currentColor ?? "") === val ? "selected" : ""}" data-action="set-emblem-color" data-color="${val}" title="${label}" aria-label="${label}">${val === "" ? icon("close", 12) : ""}</button>`;
+  const tintSwatch = (val: string, cls: string, label: string) =>
+    `<button class="tint-swatch ${cls} ${(cfg!.currentColor ?? "") === val ? "selected" : ""}" data-action="emblem-set-color" data-color="${val}" aria-label="${label}">${val === "" ? icon("close", 12) : ""}</button>`;
+  const bgSwatch = (val: string, style: string, label: string) =>
+    `<button class="bg-swatch ${(cfg!.currentBg ?? "") === val ? "selected" : ""}" data-action="emblem-set-bg" data-bg="${val}" aria-label="${label}" style="${style}">${val === "" ? icon("close", 12) : ""}</button>`;
+
+  // Folder chips (the emblem sub-folders), plus the filtered grid.
+  const activeCat = m.libCat ?? "all";
+  const folderChips = `<div class="em-folders">
+      <button class="em-folder ${activeCat === "all" ? "on" : ""}" data-action="emblem-lib-cat" data-cat="all">All</button>
+      ${ICON_CATEGORIES.map((c) => `<button class="em-folder ${activeCat === c ? "on" : ""}" data-action="emblem-lib-cat" data-cat="${escapeHtml(c)}">${escapeHtml(categoryLabel(c))}</button>`).join("")}
+    </div>`;
 
   const body =
     tab === "upload"
       ? `<label class="em-drop"><span class="em-drop-cue">${icon("upload", 22)}<span>Click to upload your own image</span></span><input type="file" accept="image/*" data-action="${cfg.upA}" hidden /></label>`
       : tab === "colour"
-        ? `<div class="em-colour">${
-            isSvg
-              ? `<p class="em-colour-note">Tint this vector mark:</p><div class="em-swatches">${colourSwatch("", "tint-none", "Original")}${colourSwatch("ink", "tint-ink", "Ink")}${colourSwatch("blue", "tint-blue", "Blue")}${colourSwatch("red", "tint-red", "Red")}</div>`
-              : `<p class="muted">Colour tinting only applies to the vector (SVG) marks. Pick one from the Library first.</p>`
-          }</div>`
-        : `<div class="em-scroll">${iconLibraryGrid(cfg.libA, cfg.currentLib)}</div>`;
+        ? `<div class="em-colour">
+            <p class="em-colour-note">Background <span class="em-colour-sub">shown behind the sigil — good for all-white marks</span></p>
+            <div class="em-swatches">${bgSwatch("", "", "None")}${bgSwatch("ink", "background:var(--ink)", "Ink")}${bgSwatch("blue", "background:var(--blue)", "Blue")}${bgSwatch("red", "background:var(--red)", "Red")}${bgSwatch("steel", "background:#5b6472", "Steel")}${bgSwatch("sand", "background:#caa96a", "Sand")}</div>
+            ${
+              isSvg
+                ? `<p class="em-colour-note" style="margin-top:16px">Sigil tint <span class="em-colour-sub">vector marks only</span></p><div class="em-swatches">${tintSwatch("", "tint-none", "Original")}${tintSwatch("ink", "tint-ink", "Ink")}${tintSwatch("blue", "tint-blue", "Blue")}${tintSwatch("red", "tint-red", "Red")}</div>`
+                : `<p class="muted" style="margin-top:14px">Tip: sigil recolouring works on the vector (SVG) marks. For any other sigil, set a background colour above.</p>`
+            }
+          </div>`
+        : `${folderChips}<div class="em-scroll">${iconLibraryGrid(cfg.libA, cfg.currentLib, activeCat)}</div>`;
 
   return `
   <div class="modal-root">
     <div class="modal-backdrop" data-action="close-modal"></div>
     <div class="modal-panel em-modal" role="dialog" aria-modal="true" aria-label="Choose an emblem">
       <header class="modal-header">
-        <div class="em-head"><span class="em-preview">${cfg.preview}</span><h2 class="modal-title">Choose an emblem</h2></div>
+        <div class="em-head"><span class="em-preview">${emblemView(cfg.fields, 40)}</span><h2 class="modal-title">Choose an emblem</h2></div>
         <button class="modal-close" data-action="close-modal" aria-label="Close">${icon("close", 18)}</button>
       </header>
       <div class="em-tabs" role="tablist">${tabBtns}</div>

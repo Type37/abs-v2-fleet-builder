@@ -32,6 +32,7 @@ import {
 } from "../src/data/junkspace-solo.ts";
 import { auxSlotText, escapeHtml, formatDate, primarySlotText } from "./format.ts";
 import { emblem, emblemMark, icon, massGlyph, statChips } from "./icons.ts";
+import { emblemView, weaponsTable } from "./render.ts";
 import { libraryUrl } from "./emblems.ts";
 import gunnerIcon from "./pilots/gunner.png";
 import haulerIcon from "./pilots/hauler.png";
@@ -65,7 +66,7 @@ export function soloListView(state: AppState): string {
       return `
       <article class="outfit-card">
         <a class="outfit-card-main" href="#/solo/${o.id}">
-          <span class="outfit-card-emblem">${emblemMark(o.emblem, o.emblemImage ?? libraryUrl(o.emblemLib), 34)}</span>
+          <span class="outfit-card-emblem">${emblemView(o, 34)}</span>
           <span class="outfit-card-id">
             <span class="outfit-card-name">${escapeHtml(o.name || "Unnamed outfit")}</span>
             <span class="outfit-card-meta">${o.ships.length} ${o.ships.length === 1 ? "ship" : "ships"} · updated ${formatDate(o.updatedAt)}</span>
@@ -124,20 +125,21 @@ function tabBar(o: SavedOutfit, tab: SoloTab): string {
 }
 
 function soloShipCatalog(): string {
+  // Same row as the fleet builder's catalogue: whole row is the add target,
+  // compact stat chips, the aligned PRI/AUX weapons table, and a standing ADD cue.
   return JUNKSPACE_SHIPS.map(
     (s) => `
-    <article class="ship-row">
-      <div class="ship-row-glyph">${massGlyph(s.mass, 26)}</div>
+    <article class="ship-row is-option" data-action="outfit-add-ship" data-ship="${s.id}" role="button" tabindex="0">
+      <div class="ship-row-glyph">${massGlyph(s.mass, 22)}</div>
       <div class="ship-row-body">
         <div class="ship-row-head">
           <h4 class="ship-name">${escapeHtml(s.name)}</h4>
           <span class="ship-cost">${ck(s.cost)}</span>
         </div>
-        <p class="ship-stats">${statChips(s)}</p>
-        <p class="ship-weapons"><span class="slot-label">Primary</span> ${primarySlotText(s)}</p>
-        <p class="ship-weapons"><span class="slot-label">Auxiliary</span> ${s.auxiliaryFitting ? escapeHtml(s.auxiliaryFitting) : auxSlotText(s)}</p>
+        <div class="ship-row-details">${statChips(s, true)}</div>
+        ${weaponsTable(s)}
       </div>
-      <button class="add-btn" data-action="outfit-add-ship" data-ship="${s.id}" title="Add ${escapeHtml(s.name)}">${icon("plus", 18)}<span>Add</span></button>
+      <span class="add-cue">${icon("plus", 15)}<span>Add</span></span>
     </article>`,
   ).join("");
 }
@@ -198,7 +200,7 @@ function outfitTab(o: SavedOutfit): string {
     <aside class="roster">
       <div class="roster-sheet">
         <header class="roster-head">
-          <span class="roster-emblem">${emblemMark(o.emblem, o.emblemImage ?? libraryUrl(o.emblemLib), 34)}</span>
+          <span class="roster-emblem">${emblemView(o, 34)}</span>
           <div>
             <h2 class="roster-title">${escapeHtml(o.name || "Unnamed outfit")}</h2>
             <p class="roster-subtitle">Junkspace outfit</p>
@@ -437,7 +439,7 @@ export function soloOutfitView(state: AppState): string {
 function outfitEmblemPicker(o: SavedOutfit): string {
   const img = o.emblemImage ?? libraryUrl(o.emblemLib);
   return `<button class="emblem-choose-btn" data-action="open-emblem-modal" data-target="outfit">
-    <span class="emblem-choose-preview">${emblemMark(o.emblem, img, 40)}</span>
+    <span class="emblem-choose-preview">${emblemView(o, 40)}</span>
     <span class="emblem-choose-label">${icon("image", 15)} Choose emblem</span>
   </button>`;
 }

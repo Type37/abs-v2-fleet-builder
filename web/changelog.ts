@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.37",
+    date: "2026-07-18",
+    title: "Solo catalogue matches the fleet builder, and the emblem picker grows up",
+    items: [
+      "The solo Stock Ship Classes catalogue now looks and behaves exactly like the fleet builder's: click the whole row to add, compact stat chips, and the same aligned PRI/AUX weapons table.",
+      "The emblem library is now organised into folders you can filter by, and the sigil tiles sit on a faint checkerboard so all-white marks are visible while you browse. The mouseover labels are gone.",
+      "New emblem customisation for fleets, custom factions, and solo outfits alike: pick a background colour behind any sigil (great for all-white marks) and, for vector marks, a tint colour — all from the Colour tab.",
+      "The emblem in the builder header is bigger.",
+    ],
+  },
+  {
     version: "0.8.36",
     date: "2026-07-18",
     title: "Hypergrowth is 300 or Unlimited, and solo ships show their stats",

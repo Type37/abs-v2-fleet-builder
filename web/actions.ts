@@ -29,7 +29,7 @@ import {
   updateList,
   updateOutfit,
 } from "./state.ts";
-import type { LastRoll, ShipFilter } from "./state.ts";
+import type { AppState, LastRoll, ShipFilter } from "./state.ts";
 import { RANDOM_BEHAVIOUR, GLITCH_BLIP, type RollRow } from "../src/data/junkspace-solo.ts";
 import { randomIconId } from "./emblems.ts";
 import { shareUrl } from "./share.ts";
@@ -133,6 +133,25 @@ function editFaction(factionId: string, fn: (f: Faction) => Faction): void {
 function currentFoundryId(): string | null {
   const r = store.getState().route;
   return r.view === "foundry" && r.factionId ? r.factionId : null;
+}
+
+/** Apply an emblem patch (colour/background) to whichever entity the emblem
+ *  modal currently targets: the active list, custom faction, or outfit. */
+function patchEmblemTarget(
+  state: AppState,
+  patch: { emblemColor?: "ink" | "blue" | "red"; emblemBg?: "ink" | "blue" | "red" | "steel" | "sand" },
+): void {
+  const m = state.ui.modal;
+  if (m?.kind !== "emblem") return;
+  if (m.target === "list") {
+    const id = currentListId();
+    if (id) store.setState((s) => updateList(s, id, (l) => ({ ...l, ...patch })));
+  } else if (m.target === "faction") {
+    const fid = currentFoundryId();
+    if (fid) editFaction(fid, (f) => ({ ...f, ...patch }));
+  } else {
+    editOutfit((o) => ({ ...o, ...patch }));
+  }
 }
 
 function downloadJson(filename: string, data: unknown): void {
@@ -380,6 +399,26 @@ function handleClick(e: MouseEvent): void {
       store.setState((s) =>
         s.ui.modal?.kind === "emblem" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, tab } } } : s,
       );
+      break;
+    }
+    case "emblem-lib-cat": {
+      const cat = target.dataset["cat"];
+      store.setState((s) =>
+        s.ui.modal?.kind === "emblem" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, libCat: cat } } } : s,
+      );
+      break;
+    }
+    case "emblem-set-color": {
+      const raw = target.dataset["color"];
+      const color = raw === "ink" || raw === "blue" || raw === "red" ? raw : undefined;
+      patchEmblemTarget(store.getState(), { emblemColor: color });
+      break;
+    }
+    case "emblem-set-bg": {
+      const raw = target.dataset["bg"];
+      const bg =
+        raw === "ink" || raw === "blue" || raw === "red" || raw === "steel" || raw === "sand" ? raw : undefined;
+      patchEmblemTarget(store.getState(), { emblemBg: bg });
       break;
     }
     case "clear-emblem-image": {

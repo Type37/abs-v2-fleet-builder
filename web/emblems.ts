@@ -59,15 +59,25 @@ export function randomIconId(): string | undefined {
 /** One flat, sorted grid of every icon (no category headers), for embedding.
  * Each tile carries its origin folder as data-cat so styling can treat sets
  * differently (e.g. keep the colour on the "vg" insignia). */
-export function iconLibraryGrid(actLib: string, currentLib?: string): string {
+export function iconLibraryGrid(actLib: string, currentLib?: string, activeCat?: string): string {
   const items = [...ICON_LIBRARY]
+    .filter((i) => !activeCat || activeCat === "all" || i.category === activeCat)
     .sort((a, b) => a.label.localeCompare(b.label))
     .map(
+      // No title tooltip - the mouseover label was noise. alt stays for a11y.
       (i) =>
-        `<button class="lib-icon ${currentLib === i.id ? "selected" : ""}" data-cat="${escapeHtml(i.category)}" data-action="${actLib}" data-lib="${escapeHtml(i.id)}" title="${escapeHtml(i.label)}"><img loading="lazy" src="${i.url}" alt="${escapeHtml(i.label)}" /></button>`,
+        `<button class="lib-icon ${currentLib === i.id ? "selected" : ""}" data-cat="${escapeHtml(i.category)}" data-action="${actLib}" data-lib="${escapeHtml(i.id)}"><img loading="lazy" src="${i.url}" alt="${escapeHtml(i.label)}" /></button>`,
     )
     .join("");
-  return items ? `<div class="lib-grid lib-grid-blob">${items}</div>` : '<p class="muted">No icons in the library yet.</p>';
+  return items ? `<div class="lib-grid lib-grid-blob">${items}</div>` : '<p class="muted">No icons in this folder.</p>';
+}
+
+/** A human label for a category folder (the folders are the emblem sub-folders). */
+export function categoryLabel(cat: string): string {
+  if (cat === "abs") return "A Billion Suns";
+  if (cat === "vg") return "Video Games";
+  if (cat === "General") return "General";
+  return titleCase(cat);
 }
 
 export function iconLibraryControls(actLib: string, actRandom: string, currentLib?: string): string {
