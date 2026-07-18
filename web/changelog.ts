@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.43",
+    date: "2026-07-18",
+    title: "The printed sheet tells you if the list is legal",
+    items: [
+      "The print header now shows the unit count and whether the fleet is legal, so the sheet you hand across the table is also the proof it checks out. It follows the mode: an Armageddon list without its HVP reads \"to resolve\", while a Hypergrowth Shipyard that doesn't take HVP reads \"Legal\".",
+    ],
+  },
+  {
     version: "0.8.42",
     date: "2026-07-18",
     title: "Cleaner page breaks when you actually print",

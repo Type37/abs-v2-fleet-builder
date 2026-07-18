@@ -1278,6 +1278,21 @@ function printView(state: AppState): string {
   // prints every available HVP plus a blank write-in slot on each ship.
   const isUnity = list.mode === "age-of-unity";
 
+  // The printed sheet doubles as the legality check, so the header says whether
+  // this list is legal. Same mode-aware relaxations the builder applies (null =
+  // Free Play or no faction, i.e. nothing to check).
+  const printIssues: number | null = (() => {
+    if (list.freePlay || !faction) return null;
+    const drop = new Set<string>();
+    if (isShipyard) drop.add("UNIT_SIZE_EXCEEDED");
+    if (isShipyard || isUnity) drop.add("HVP_COUNT");
+    if (list.mode === "combat-simulator") drop.add("HVP_DUPLICATE");
+    if (list.mode === "hypergrowth" && list.unlimitedShipyards) drop.add("OVER_BUDGET");
+    return validateFleet(list.fleet, makeCatalog(customs)).issues.filter(
+      (i) => !drop.has(i.code) && i.severity === "error",
+    ).length;
+  })();
+
   // A ship's silhouette is its starting HP; the tracker prints that many empty
   // boxes to tick off as damage lands.
   const hpBoxes = (hp: number) => `<span class="pr-hp">${Array.from({ length: hp }, () => '<span class="pr-hp-box"></span>').join("")}</span>`;
@@ -1491,6 +1506,7 @@ function printView(state: AppState): string {
         </div>
         <div class="sheet-totals">
           <p class="sheet-total-line">${credits(total)}${list.mode === "hypergrowth" && list.unlimitedShipyards ? " · unlimited shipyard" : ` of ${credits(list.fleet.creditsLimit)}`}</p>
+          <p class="sheet-count">${list.fleet.units.length} ${list.fleet.units.length === 1 ? "unit" : "units"}${printIssues === null ? "" : printIssues === 0 ? ` · <span class="sheet-legal">Legal</span>` : ` · <span class="sheet-illegal">${printIssues} to resolve</span>`}</p>
           <p class="sheet-date">${formatDate(new Date().toISOString())}</p>
         </div>
       </header>
