@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.25",
+    date: "2026-07-17",
+    title: "A properly centred Mass symbol, distinct era buttons, tighter slam",
+    items: [
+      "The circled Mass symbol in rules text is now drawn as an SVG with the M centred exactly, instead of a bordered text box that could never line the letter up reliably.",
+      "The era chooser in New Fleet is now three separate buttons that each name what you build with it (a Shipyard for Hypergrowth, a Fleet List for Age of Unity and Armageddon).",
+      "The Armageddon title's red underline now draws in the instant the name lands, rather than after the whole bounce settles.",
+    ],
+  },
+  {
     version: "0.8.24",
     date: "2026-07-17",
     title: "Layout fix, tidier compendium controls, and small faction-panel touches",

@@ -279,10 +279,9 @@ function slamTitle(el: HTMLElement, text: string): void {
     ],
     { duration: 360, easing: "cubic-bezier(.2,.9,.2,1)", fill: "forwards" },
   );
-  // Once the title has landed, drop the hold; the CSS transition on the
-  // underline draws it in. A timer, so it never gets stranded if the finish
-  // event is missed.
-  window.setTimeout(() => el.classList.remove("is-landing"), 380);
+  // Draw the red line in as the name lands (it hits translateY(0) at ~180ms),
+  // not after the whole squash settles - keeps the line tight to the impact.
+  window.setTimeout(() => el.classList.remove("is-landing"), 190);
 }
 
 // The dice / command glyphs pop in with a short left-to-right stagger just after

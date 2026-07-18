@@ -574,13 +574,15 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
         <div class="nf-controls">
           <div class="modal-field">
             <span class="control-label">1 / Era</span>
-            ${switcher(
-              "Era",
-              "nf-era",
-              "era",
-              ERA_ORDER.map((era) => [era, era] as [string, string]),
-              m.era,
-            )}
+            <div class="nf-eras" role="group" aria-label="Era">
+              ${ERA_ORDER.map((era) => {
+                const build = era === "Hypergrowth" ? "Build a Shipyard" : "Build a Fleet List";
+                return `<button class="nf-era-btn ${m.era === era ? "on" : ""}" data-action="nf-era" data-era="${era}" aria-pressed="${m.era === era}">
+                  <span class="nf-era-name">${escapeHtml(era)}</span>
+                  <span class="nf-era-hint">${build}</span>
+                </button>`;
+              }).join("")}
+            </div>
           </div>
           <div class="modal-field">
             <span class="control-label">2 / Credits limit</span>

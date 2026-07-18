@@ -188,11 +188,9 @@ summary { outline-offset: 2px; }
    identically on every font and in print (the raw glyph is missing from the
    body fonts and fell back to a stray "@"). Sized to the surrounding text. */
 .mass-inline {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 1.05em; height: 1.05em; margin: 0 0.14em; vertical-align: -0.14em;
-  border: 1.5px solid currentColor; border-radius: 50%;
-  font-family: var(--sans); font-weight: 800; font-size: 0.92em; line-height: 1;
+  display: inline-block; width: 1.12em; height: 1.12em; margin: 0 0.1em; vertical-align: -0.22em;
 }
+.mass-inline text { font-family: var(--sans); font-weight: 800; font-size: 13px; fill: currentColor; }
 .emblem { display: inline-block; vertical-align: middle; }
 
 /* Uppercase micro-labels: the NASA/Swiss data-label voice. */
@@ -1976,6 +1974,22 @@ button { font-family: inherit; }
 .nf-custom { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--color-line); padding: 4px 10px; }
 .nf-custom.on { border-color: var(--color-action); color: var(--color-action); }
 .nf-custom input { width: 64px; font-family: var(--sans); font-size: 13px; font-weight: 700; border: none; padding: 3px 0; background: transparent; color: var(--ink); }
+/* Era chooser: three distinct, separated cards rather than a joined segmented
+   control, each naming what you build with that era so the choice is legible. */
+.nf-eras { display: flex; gap: 8px; }
+.nf-era-btn {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left;
+  padding: 11px 12px; border: 1.5px solid var(--hair); background: var(--paper); cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, transform 0.06s ease;
+}
+.nf-era-btn:hover { border-color: var(--blue); background: var(--blue-wash); }
+.nf-era-btn:active { transform: translateY(1px); }
+.nf-era-btn.on { border-color: var(--blue); background: var(--blue); }
+.nf-era-name { font-family: var(--display); font-weight: 800; font-size: 14px; line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); text-wrap: balance; }
+.nf-era-hint { font-family: var(--sans); font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
+.nf-era-btn.on .nf-era-name { color: #fff; }
+.nf-era-btn.on .nf-era-hint { color: #cfe0fb; }
+@media (max-width: 480px) { .nf-eras { flex-direction: column; } }
 .modal-body .faction-plaques { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 @media (max-width: 480px) { .modal-body .faction-plaques { grid-template-columns: 1fr; } }
 /* All four era cards are the same size no matter which era you click through:
