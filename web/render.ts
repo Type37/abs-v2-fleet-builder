@@ -632,7 +632,6 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
                     : `<button type="button" class="nf-custom nf-custom-btn" data-action="nf-size-custom-open">Custom</button>`
               }
             </div>
-            ${m.era === "Hypergrowth" ? '<p class="nf-hyper-note">Hypergrowth is a 300bn Shipyard. You can lift the cap with Unlimited Shipyards in the builder.</p>' : ""}
           </div>
           <div class="modal-field">
             <span class="control-label">3 / Faction</span>
@@ -738,10 +737,10 @@ export function weaponsTable(ship: ShipClass): string {
     const arcLabel = arc === "primary" ? "Primary, 45 degree arc" : "Auxiliary, 180 degree arc";
     const arcAbbr = arc === "primary" ? "PRI" : "AUX";
     return `<div class="wt-row" role="row">
-      <span class="wt-arc" role="cell"><span class="visually-hidden">${arcLabel}</span>${icon(arc === "primary" ? "arc-primary" : "arc-aux", 12, "slot-arc")}<span class="wt-arc-abbr">${arcAbbr}</span></span>
+      <span class="wt-arc" role="cell"><span class="visually-hidden">${arcLabel}</span><span class="wt-arc-abbr">${arcAbbr}</span>${icon(arc === "primary" ? "arc-primary" : "arc-aux", 12, "slot-arc")}</span>
       <span class="wt-name" role="cell">${escapeHtml(w.name)}</span>
-      <span class="wt-num wt-atk" role="cell"><span class="wt-inline-lbl">Attack </span>${w.count}${w.die}</span>
       <span class="wt-num wt-rng" role="cell"><span class="wt-inline-lbl">Range </span>${w.rangeMin}-${w.rangeMax}"</span>
+      <span class="wt-num wt-atk" role="cell"><span class="wt-inline-lbl">Attack </span>${w.count}${w.die}</span>
       <span class="wt-num wt-dmg" role="cell"><span class="wt-inline-lbl">${damageGlyph(12)} Damage </span>${DAMAGE_BY_DIE[w.die]}</span>
     </div>`;
   };
@@ -760,7 +759,7 @@ export function weaponsTable(ship: ShipClass): string {
     : "";
   return `<div class="weap-table" role="table" aria-label="Weapons">
     <div class="wt-row wt-headrow" role="row">
-      <span class="wt-arc wt-h" role="columnheader">Arc</span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">${damageGlyph(12)} Dmg</span>
+      <span class="wt-arc wt-h" role="columnheader">Arc</span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">Dmg ${damageGlyph(12)}</span>
     </div>
     ${rows.join("")}${noteRow}
   </div>`;
@@ -842,6 +841,10 @@ function builderView(state: AppState): string {
   const { total, remaining } = listTotals(list, customs);
   // Hypergrowth Shipyard can run uncapped ("Unlimited Shipyards" toggle).
   const unlimited = list.mode === "hypergrowth" && list.unlimitedShipyards === true;
+  // A Shipyard holds ship CLASSES with a quantity, never units - units are only
+  // formed at requisition, in play. So the whole panel drops "unit" language.
+  // Declared here because the roster rows below read it.
+  const isStocking = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
   const era = MODE_ERA[list.mode];
   const catalogView = state.ui.catalogView;
   const chartStat = state.ui.catalogChartStat ?? "cost";
@@ -1040,7 +1043,11 @@ function builderView(state: AppState): string {
         <span class="ru-id">
           <span class="roster-unit-glyph">${r ? massGlyph(r.ship.mass, 22) : icon("warning", 20)}</span>
           <span class="ru-main">
-            <input class="unit-name-input" type="text" value="${escapeHtml(u.name ?? "")}" placeholder="${escapeHtml(unitName)}" data-action="unit-name" data-unit="${u.id}" />
+            ${
+              isStocking
+                ? `<span class="ru-classname">${escapeHtml(r?.ship.name ?? unitName)}</span>`
+                : `<input class="unit-name-input" type="text" value="${escapeHtml(u.name ?? "")}" placeholder="${escapeHtml(unitName)}" data-action="unit-name" data-unit="${u.id}" />`
+            }
             ${subline ? `<span class="ru-sub">${r && list.freePlay ? `<span class="muted">${escapeHtml(r.owner.name)}</span>` : ""}${carryMarkup}</span>` : ""}
             ${showSpecies ? speciesSelect(u) : ""}
           </span>
@@ -1148,7 +1155,8 @@ function builderView(state: AppState): string {
       </div>
     </details>`;
 
-  const unitWord = list.fleet.units.length === 1 ? "unit" : "units";
+  const nUnits = list.fleet.units.length;
+  const unitWord = isStocking ? (nUnits === 1 ? "ship class" : "ship classes") : nUnits === 1 ? "unit" : "units";
   // A fixed crew is not a tally against a cap - there is nothing to fill.
   const hvpCount = isFixedCrew
     ? "Issued by the scenario"
@@ -1182,7 +1190,7 @@ function builderView(state: AppState): string {
 
     <div class="mf-body">
       <section class="mf-manifest">
-        <h3 class="mf-h">Your fleet <span class="mf-h-count">${list.fleet.units.length} ${unitWord}</span></h3>
+        <h3 class="mf-h">${isStocking ? "Your shipyard" : "Your fleet"} <span class="mf-h-count">${nUnits} ${unitWord}</span></h3>
         ${
           // A legal fleet says nothing worth a standing line: silence is the
           // confirmation, and the line is only spent when there is something to
@@ -1407,13 +1415,18 @@ function printView(state: AppState): string {
           <span class="pc-cost">${credits(ship.cost * u.count)}</span>
           <button class="pr-drop" data-action="print-exclude-unit" data-unit="${u.id}" title="Leave this unit out of the printout" aria-label="Leave ${escapeHtml(title)} out of the printout">${icon("close", 12)}</button>
         </header>
-        <p class="pc-sub">${u.count}× ${escapeHtml(ship.name)} · ${massGlyph(ship.mass, 13)} Mass ${ship.mass}${u.species ? ` · ${escapeHtml(u.species)}` : ""}</p>
+        ${
+          // Only name the ship class here when it isn't already the card title -
+          // an unnamed unit takes its class name, so printing both read as
+          // "Pegasus Recon Wing / 1x Pegasus Recon Wing".
+          (() => {
+            const classLine = title === ship.name ? "" : `${escapeHtml(ship.name)} · `;
+            return `<p class="pc-sub">${u.count}× ${classLine}${massGlyph(ship.mass, 13)} Mass ${ship.mass}${u.species ? ` · ${escapeHtml(u.species)}` : ""}</p>`;
+          })()
+        }
         ${named.length ? `<p class="pc-ships">${escapeHtml(named.join(" / "))}</p>` : ""}
-        <table class="pc-stats"><tbody>
-          <tr><th>Thrust</th><td>${ship.thrust}"</td><th>Silhouette</th><td>${ship.silhouette}</td><th>Shields</th><td>${ship.shields}</td></tr>
-        </tbody></table>
-        <p class="pc-weap"><span class="pc-wlabel">${icon("arc-primary", 11, "slot-arc")} Primary</span> ${primarySlotText(ship)}</p>
-        <p class="pc-weap"><span class="pc-wlabel">${icon("arc-aux", 11, "slot-arc")} Auxiliary</span> ${auxSlotText(ship)}</p>
+        <div class="pc-stats-chips">${statChips(ship)}</div>
+        ${weaponsTable(ship)}
         ${carried.length ? `<p class="pc-carry">Carrying: ${escapeHtml(carried.join("; "))}</p>` : ""}
         ${opts.trackers ? `<div class="pc-track">${Array.from({ length: u.count }, () => `<span class="pc-track-row"><span class="pc-track-label">Hull</span>${hpBoxes(ship.silhouette)}</span>`).join("")}</div>` : ""}
       </article>`;

@@ -1,5 +1,6 @@
 import type { Faction, GameMode, Mass, PilotClass, Weapon } from "../src/types.ts";
 import { maxUnitSize } from "../src/validation.ts";
+import { MODE_BUILDER_SHAPE } from "../src/types.ts";
 import { w } from "../src/data/_helpers.ts";
 import { announce } from "./announce.ts";
 import { findFaction, isCustom } from "./catalog.ts";
@@ -515,15 +516,29 @@ function handleClick(e: MouseEvent): void {
       const id = currentListId();
       const shipId = target.dataset["ship"];
       if (!id || !shipId) return;
+      const list = state.lists.find((l) => l.id === id);
+      // A Shipyard mode (Hypergrowth) stocks ship CLASSES, not units: the first
+      // add creates the entry, every add after that raises how many you hold.
+      // Nothing here ever forms a unit - that happens at requisition, in play.
+      const stocking = list ? MODE_BUILDER_SHAPE[list.mode] === "shipyard" : false;
       let addedName = "Unit";
+      let held = 1;
       store.setState((s) =>
         updateFleet(s, id, (f) => {
           const faction = findFaction(f.factionId, s.customFactions);
           addedName = resolveShip(shipId, faction, s.customFactions)?.ship.name ?? "Unit";
+          if (stocking) {
+            const idx = f.units.findIndex((u) => u.shipClassId === shipId);
+            if (idx >= 0) {
+              const units = f.units.map((u, i) => (i === idx ? { ...u, count: u.count + 1 } : u));
+              held = units[idx]!.count;
+              return { ...f, units };
+            }
+          }
           return { ...f, units: [...f.units, { id: nextUnitIdFor(f), shipClassId: shipId, count: 1 }] };
         }),
       );
-      showToast(`Added ${addedName}.`);
+      showToast(stocking ? `${addedName} ×${held} in the Shipyard` : `Added ${addedName}`);
       break;
     }
     case "close-modal": {

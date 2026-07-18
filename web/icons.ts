@@ -160,10 +160,11 @@ export function statChips(
   s: { mass: number; thrust: number; silhouette: number; shields: number },
   compact = false,
 ): string {
+  // Every chip carries its word as well as its glyph, at every size: a bare
+  // icon + number is a puzzle. Compact only shrinks the type, it never drops
+  // the label (the labels use a condensed face so they stay cheap in width).
   const chip = (name: string, label: string, val: string) =>
-    compact
-      ? `<span class="stat-chip stat-chip-mini" title="${label}">${icon(name, 13, "stat-ico")}<span class="stat-val">${val}</span></span>`
-      : `<span class="stat-chip" title="${label}">${icon(name, 14, "stat-ico")}<span class="stat-lbl">${label}</span><span class="stat-val">${val}</span></span>`;
+    `<span class="stat-chip ${compact ? "stat-chip-mini" : ""}">${icon(name, compact ? 12 : 14, "stat-ico")}<span class="stat-lbl">${label}</span><span class="stat-val">${val}</span></span>`;
   return `<span class="stat-chips ${compact ? "stat-chips-mini" : ""}">${chip("stat-mass", "Mass", String(s.mass))}${chip("stat-thrust", "Thrust", `${s.thrust}"`)}${chip("stat-silhouette", "Sil", String(s.silhouette))}${chip("stat-shields", "Shields", String(s.shields))}</span>`;
 }
 

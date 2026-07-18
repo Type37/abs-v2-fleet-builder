@@ -9,6 +9,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.48",
+    date: "2026-07-18",
+    title: "Hypergrowth is a shipyard, not a list of units",
+    items: [
+      "In Hypergrowth you now stock ship classes, not units. Adding a ship puts one in the shipyard; every add after that just raises how many of that class you hold. No units are formed, nothing gets named, and the panel says \"Your shipyard, 2 ship classes\" instead of talking about units. Units are only formed when you requisition them, in play.",
+      "Every stat now shows its word as well as its symbol, everywhere, in a condensed face so it costs almost no room. A bare icon and a number was a puzzle.",
+      "Weapon tables read Range before Attack, and each arc shows PRI or AUX as a word first with the wedge after it.",
+      "Print cards use the same stat chips and weapon table as the rest of the app, and no longer print the ship's name twice.",
+      "The fleet builder's two columns are more evenly split, so the ship picker on the right has room to breathe and the roster stops banking dead space beside its weapon table.",
+    ],
+  },
+  {
     version: "0.8.47",
     date: "2026-07-18",
     title: "Solo mode stops looking squashed",
