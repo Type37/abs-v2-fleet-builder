@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.27",
+    date: "2026-07-17",
+    title: "The command tokens draw themselves in again, and the Armageddon slam is back",
+    items: [
+      "Command tokens on the New Fleet card draw themselves in and swell to full, one after another, the way they used to. They still show one triangle per token so the count reads at a glance.",
+      "Armageddon titles get their original slam back: the name lands big from above, overshoots, and jolts once on impact before settling. It was more fun to watch than the quieter thump, so it's back.",
+      "On the New Fleet card, Credits limit \"Custom\" is now just a word until you click it. Click it and it opens into a field to type your own cap.",
+      "The builder now offers both ways to finish at the foot of your fleet: Enter Play Mode and Print setup sit together as a pair. Print used to be tucked away in the overflow menu.",
+    ],
+  },
+  {
     version: "0.8.26",
     date: "2026-07-17",
     title: "Two-column builder: your fleet on the left, the catalogue on the right",

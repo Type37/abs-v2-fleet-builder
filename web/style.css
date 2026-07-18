@@ -150,7 +150,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
    there (8.6:1) while the red halo keeps the ring recognisably the same object
    as everywhere else. */
 .topbar a:focus-visible, .topbar button:focus-visible,
-.cta-btn:focus-visible, .mf-play-cta:focus-visible, .nameplate a:focus-visible {
+.cta-btn:focus-visible, .mf-play-cta:focus-visible, .mf-print-cta:focus-visible, .nameplate a:focus-visible {
   outline-color: #fff;
   box-shadow: 0 0 0 4px var(--red);
 }
@@ -1664,15 +1664,21 @@ button { font-family: inherit; }
 .mf-menu-panel .danger { color: var(--red-deep); }
 .mf-menu-panel .danger:hover { background: var(--red-wash); }
 
-/* Play Mode: the primary next step once a fleet is built - a full-width filled
-   call-to-action at the very bottom of the whole builder, below both columns. */
-.mf-play-cta {
-  display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 28px;
-  padding: 18px; background: var(--blue); color: #fff; text-decoration: none;
+/* The two "you're done building" output actions, at the foot of the manifest:
+   Play Mode (primary, filled) and Print (secondary, outlined). Play Mode takes
+   the room; Print sits under it, still a full-width target. */
+.mf-finish { display: flex; flex-direction: column; gap: 10px; margin-top: 28px; }
+.mf-play-cta, .mf-print-cta {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 18px; text-decoration: none;
   font-family: var(--display); font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: 0.04em;
-  border: 2px solid var(--blue); transition: background 0.12s ease, border-color 0.12s ease;
+  border: 2px solid var(--blue); transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
+.mf-play-cta { background: var(--blue); color: #fff; }
 .mf-play-cta:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
+.mf-print-cta { background: #fff; color: var(--blue); }
+.mf-print-cta:hover { background: var(--blue); color: #fff; }
+.mf-print-cta .icon { width: 20px; height: 20px; }
 
 .mf-subline { display: flex; align-items: center; gap: 12px; margin-top: 12px; min-height: 28px; }
 .mf-sep { color: var(--ink); font-weight: 900; }
@@ -1973,6 +1979,9 @@ button { font-family: inherit; }
 .nf-opt.on { background: var(--color-action); border-color: var(--color-action); color: #fff; }
 .nf-custom { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--color-line); padding: 4px 10px; }
 .nf-custom.on { border-color: var(--color-action); color: var(--color-action); }
+/* Closed state: "Custom" is a plain word-button; click it to open the field. */
+.nf-custom-btn { background: transparent; cursor: pointer; font-family: inherit; }
+.nf-custom-btn:hover { border-color: var(--color-action); color: var(--color-action); }
 .nf-custom input { width: 64px; font-family: var(--sans); font-size: 13px; font-weight: 700; border: none; padding: 3px 0; background: transparent; color: var(--ink); }
 /* Era chooser: three distinct, separated cards rather than a joined segmented
    control, each naming what you build with that era so the choice is legible. */

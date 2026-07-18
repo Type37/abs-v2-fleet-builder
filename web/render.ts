@@ -554,6 +554,7 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
     });
   const sizeBtn = (n: number) =>
     `<button class="nf-opt ${m.limit === n ? "on" : ""}" data-action="nf-size" data-limit="${n}">${credits(n)}</button>`;
+  const customIsPreset = [300, 400, 500].includes(m.limit);
   const plaque = (f: Faction) =>
     `<button class="faction-plaque ${m.factionId === f.id ? "selected" : ""}" data-action="nf-faction" data-faction="${f.id}">
       <span class="faction-plaque-name">${escapeHtml(f.name)}</span>
@@ -588,8 +589,15 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
             <span class="control-label">2 / Credits limit</span>
             <div class="nf-opts">
               ${[300, 400, 500].map(sizeBtn).join("")}
-              <label class="nf-custom ${![300, 400, 500].includes(m.limit) ? "on" : ""}">Custom
-                <input type="number" min="1" step="10" value="${![300, 400, 500].includes(m.limit) ? m.limit : ""}" placeholder="¢bn" data-action="nf-size-custom" /></label>
+              ${
+                // "Custom" is just a word until you click it; then it opens into
+                // a number field to type your own cap. Active whenever the limit
+                // isn't a preset, or you've explicitly opened it.
+                !customIsPreset || m.customOpen
+                  ? `<label class="nf-custom on">Custom
+                <input type="number" min="1" step="10" value="${!customIsPreset ? m.limit : ""}" placeholder="¢bn" data-action="nf-size-custom" autofocus /></label>`
+                  : `<button type="button" class="nf-custom nf-custom-btn" data-action="nf-size-custom-open">Custom</button>`
+              }
             </div>
           </div>
           <div class="modal-field">
@@ -1079,15 +1087,14 @@ function builderView(state: AppState): string {
         <div class="faction-switch-panel">${factionPickerBody}</div>
       </details>`;
 
-  // Overflow menu for the secondary fleet actions (print, share, duplicate,
-  // delete). A position:absolute popover so opening it shifts nothing. Play
-  // Mode is deliberately NOT in here - it is the primary action and gets its
-  // own button at the foot of the manifest.
+  // Overflow menu for the secondary fleet actions (share, duplicate, delete). A
+  // position:absolute popover so opening it shifts nothing. Play Mode and Print
+  // are deliberately NOT in here - they are the two "you're done building"
+  // output actions and get their own buttons at the foot of the manifest.
   const moreMenu = `
     <details class="mf-menu">
       <summary class="mf-menu-btn" title="More actions" aria-label="More actions">${icon("more", 20)}</summary>
       <div class="mf-menu-panel">
-        <a href="#/print/${list.id}">${icon("print", 16)} Print setup</a>
         <button data-action="share-list" data-id="${list.id}">${icon("link", 16)} Share link</button>
         <button data-action="copy-list-text" data-id="${list.id}">${icon("scroll", 16)} Copy as text</button>
         <button data-action="duplicate-list" data-id="${list.id}">${icon("duplicate", 16)} Duplicate</button>
@@ -1155,7 +1162,10 @@ function builderView(state: AppState): string {
           <textarea class="notes-input" rows="3" placeholder="Tactics, list rationale, reminders..." data-action="fleet-notes">${escapeHtml(list.fleet.notes ?? "")}</textarea>
         </details>
 
-        <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
+        <div class="mf-finish">
+          <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
+          <a class="mf-print-cta" href="#/print/${list.id}">${icon("print", 18)} Print setup</a>
+        </div>
       </section>
 
       <section class="mf-yard">

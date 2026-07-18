@@ -840,9 +840,21 @@ function handleClick(e: MouseEvent): void {
     case "nf-size": {
       const limit = Number(target.dataset["limit"]);
       store.setState((s) =>
-        s.ui.modal?.kind === "new-fleet" ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, limit } } } : s,
+        s.ui.modal?.kind === "new-fleet"
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, limit, customOpen: false } } }
+          : s,
       );
       showToast(limit <= 300 ? "Smaller game" : "Larger game");
+      break;
+    }
+    case "nf-size-custom-open": {
+      // Reveal the custom-amount field. Just opens it - the value only changes
+      // once the user types into the number input (nf-size-custom).
+      store.setState((s) =>
+        s.ui.modal?.kind === "new-fleet"
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, customOpen: true } } }
+          : s,
+      );
       break;
     }
     case "nf-faction": {

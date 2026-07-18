@@ -142,7 +142,7 @@ export interface AppState {
     showCreate?: boolean;
     /** An open modal dialog. */
     modal?:
-      | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean }
+      | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean; customOpen?: boolean }
       | { kind: "options" };
     /** In-progress first-visit coachmark tour, once the user has advanced past step 0. */
     tour?: { tourId: string; step: number };

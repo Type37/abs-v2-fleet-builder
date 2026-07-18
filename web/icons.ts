@@ -113,27 +113,29 @@ export function diceRow(initiative: string, size = 20): string {
   return `<span class="dice-row" aria-hidden="true">${one.repeat(n)}</span>`;
 }
 
-// A static command-token delta (no draw animation), for repeating in a row.
-const CMD_DELTA = '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" d="M12 4l9.25 16h-18.5Z"/>';
+/**
+ * The command-token glyph: a small delta draws itself in, then swells to a full
+ * triangle. One-shot SMIL, so it plays when the mark first renders. `delay`
+ * staggers the start so a row of them cascades left to right.
+ */
+export function commandToken(size = 20, cls = "", delay = 0): string {
+  const d = delay.toFixed(2);
+  const swell = (delay + 0.4).toFixed(2);
+  return `<svg class="cmd-token ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="28" stroke-dashoffset="28" d="M12 10l4 7h-8Z"><animate fill="freeze" attributeName="stroke-dashoffset" begin="${d}s" dur="0.4s" values="28;0"/></path><path d="M12 10l4 7h-8Z" opacity="0"><set fill="freeze" attributeName="opacity" begin="${swell}s" to="1"/><animate fill="freeze" attributeName="d" begin="${swell}s" dur="0.2s" values="M12 10l4 7h-8Z;M12 4l9.25 16h-18.5Z"/></path></g></svg>`;
+}
 
 /**
  * A row of command-token deltas sized to the faction's CMD-per-round value: a
  * numeric value shows that many triangles (capped), a die value (e.g. D12)
- * shows a single token. Mirrors diceRow for Initiative.
+ * shows a single token. Each draws itself in and swells, staggered, so the row
+ * resolves like a hazard mark forming. Mirrors diceRow for Initiative.
  */
 export function commandRow(cmdTokens: string, size = 20): string {
-  const one = `<svg class="cmd-token" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true">${CMD_DELTA}</svg>`;
   const m = /^\s*(\d+)/.exec(cmdTokens);
   const n = m ? Math.min(9, Math.max(1, parseInt(m[1] ?? "1", 10))) : 1;
-  return `<span class="dice-row cmd-row" aria-hidden="true">${one.repeat(n)}</span>`;
-}
-
-/**
- * The command-token glyph: a delta that draws itself in, then swells to a full
- * triangle. One-shot SMIL, so it plays when the mark first renders.
- */
-export function commandToken(size = 20, cls = ""): string {
-  return `<svg class="cmd-token ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="28" d="M12 10l4 7h-8Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="28;0"/></path><path d="M12 4l9.25 16h-18.5Z" opacity="0"><set fill="freeze" attributeName="opacity" begin="0.4s" to="1"/><animate fill="freeze" attributeName="d" begin="0.4s" dur="0.2s" values="M12 10l4 7h-8Z;M12 4l9.25 16h-18.5Z"/></path></g></svg>`;
+  let out = "";
+  for (let i = 0; i < n; i++) out += commandToken(size, "", i * 0.12);
+  return `<span class="dice-row cmd-row" aria-hidden="true">${out}</span>`;
 }
 
 /**

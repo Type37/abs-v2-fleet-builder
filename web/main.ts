@@ -262,32 +262,37 @@ function recedeTitle(el: HTMLElement, text: string): void {
   );
 }
 
-// Armageddon: the title thumps straight down and squashes on impact, then
-// rebounds - contained to the text itself (vertical only, no sideways shake),
-// and the red underline draws in only once it has landed.
+// Armageddon: the title lands big from above, overshoots small, then jolts once
+// on impact (a quick diagonal recoil) before settling. The red underline is held
+// collapsed through the slam and only draws in once the name has landed. This is
+// the original, punchier slam - more fun to watch than the contained thump.
 function slamTitle(el: HTMLElement, text: string): void {
   el.textContent = text;
   el.appendChild(titleRule());
-  el.classList.add("is-landing"); // hold the underline collapsed through the thump
-  el.style.transformOrigin = "50% 100%"; // land on the baseline
+  el.classList.add("is-landing"); // hold the underline collapsed through the slam
+  el.style.transformOrigin = "0% 50%";
   el.animate(
     [
-      { opacity: 0, transform: "translateY(-18px) scaleY(1.14)" },
-      { opacity: 1, transform: "translateY(0) scaleY(0.84)", offset: 0.5 },
-      { transform: "translateY(0) scaleY(1.07)", offset: 0.72 },
-      { transform: "translateY(0) scaleY(1)" },
+      { opacity: 0, transform: "scale(1.9)" },
+      { opacity: 1, transform: "scale(.96)", offset: 0.6 },
+      { transform: "translate(3px,-2px)", offset: 0.78 },
+      { transform: "translate(-3px,2px)", offset: 0.9 },
+      { transform: "translate(0,0) scale(1)" },
     ],
-    { duration: 360, easing: "cubic-bezier(.2,.9,.2,1)", fill: "forwards" },
+    { duration: 340, easing: "cubic-bezier(.2,.9,.2,1)", fill: "forwards" },
   );
-  // Draw the red line in as the name lands (it hits translateY(0) at ~180ms),
-  // not after the whole squash settles - keeps the line tight to the impact.
-  window.setTimeout(() => el.classList.remove("is-landing"), 190);
+  // Only once the title has landed (slam is 340ms): drop the hold and the CSS
+  // transition on .nfd-rule draws the red underline in. A timer, not the finish
+  // event, so the underline never gets stranded if the finish event is missed.
+  window.setTimeout(() => el.classList.remove("is-landing"), 360);
 }
 
 // The dice / command glyphs pop in with a short left-to-right stagger just after
 // the title, so the two figures feel like they resolve into place.
 function animateStatGlyphs(): void {
-  const glyphs = document.querySelectorAll<HTMLElement>(".nfd-stats .dice-ico, .nfd-stats .cmd-token");
+  // Only the dice pop via WAAPI; the command tokens draw + swell on their own
+  // SMIL timeline (commandToken), so leave them out or the two fight.
+  const glyphs = document.querySelectorAll<HTMLElement>(".nfd-stats .dice-ico");
   glyphs.forEach((g, i) => {
     g.animate(
       [
