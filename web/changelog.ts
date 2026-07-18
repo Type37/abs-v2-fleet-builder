@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.36",
+    date: "2026-07-18",
+    title: "Hypergrowth is 300 or Unlimited, and solo ships show their stats",
+    items: [
+      "Hypergrowth's credits are now just what they should be: a 300bn cap or Unlimited Shipyards, with no 400/500 or custom amount cluttering it — in both the New Fleet card and the builder.",
+      "Every ship in a solo outfit now shows its full stats (Mass, Thrust, Silhouette, Shields) and both weapon lines right in the roster, so you can see what each pick does without leaving the page.",
+    ],
+  },
+  {
     version: "0.8.35",
     date: "2026-07-18",
     title: "Unlimited Shipyards, matching builder controls, and Age of Unity HVP on print",

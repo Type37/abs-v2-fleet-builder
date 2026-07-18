@@ -589,17 +589,20 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
           <div class="modal-field">
             <span class="control-label">2 / Credits limit</span>
             <div class="nf-opts">
-              ${[300, 400, 500].map(sizeBtn).join("")}
+              ${(m.era === "Hypergrowth" ? [300] : [300, 400, 500]).map(sizeBtn).join("")}
               ${
-                // "Custom" is just a word until you click it; then it opens into
-                // a number field to type your own cap. Active whenever the limit
-                // isn't a preset, or you've explicitly opened it.
-                !customIsPreset || m.customOpen
-                  ? `<label class="nf-custom on">Custom
+                // Hypergrowth is "just 300, or Unlimited" - no custom cap here
+                // (you flip Unlimited Shipyards on in the builder). Other eras
+                // keep the click-to-open Custom field.
+                m.era === "Hypergrowth"
+                  ? ""
+                  : !customIsPreset || m.customOpen
+                    ? `<label class="nf-custom on">Custom
                 <input type="number" min="1" step="10" value="${!customIsPreset ? m.limit : ""}" placeholder="¢bn" data-action="nf-size-custom" autofocus /></label>`
-                  : `<button type="button" class="nf-custom nf-custom-btn" data-action="nf-size-custom-open">Custom</button>`
+                    : `<button type="button" class="nf-custom nf-custom-btn" data-action="nf-size-custom-open">Custom</button>`
               }
             </div>
+            ${m.era === "Hypergrowth" ? '<p class="nf-hyper-note">Hypergrowth is a 300bn Shipyard. You can lift the cap with Unlimited Shipyards in the builder.</p>' : ""}
           </div>
           <div class="modal-field">
             <span class="control-label">3 / Faction</span>
@@ -1073,17 +1076,21 @@ function builderView(state: AppState): string {
             : ""
         }
         <div class="nf-opts ${unlimited ? "is-disabled" : ""}">
-          ${[300, 400, 500]
+          ${(isHyper ? [300] : [300, 400, 500])
             .map(
               (n) =>
                 `<button class="nf-opt ${!unlimited && list.fleet.creditsLimit === n ? "on" : ""}" data-action="set-limit" data-limit="${n}" ${unlimited ? "disabled" : ""}>${credits(n)}</button>`,
             )
             .join("")}
           ${
-            !unlimited && (!limitIsPreset || limitCustomOpen)
-              ? `<label class="nf-custom on">Custom
+            // Hypergrowth is "just 300, or Unlimited" (no other caps) - so no
+            // custom amount there. Every other mode keeps the click-to-open Custom.
+            isHyper
+              ? ""
+              : !limitIsPreset || limitCustomOpen
+                ? `<label class="nf-custom on">Custom
               <input type="number" min="1" step="10" value="${!limitIsPreset ? list.fleet.creditsLimit : ""}" placeholder="¢bn" data-action="set-limit-free" autofocus /></label>`
-              : `<button type="button" class="nf-custom nf-custom-btn" data-action="open-limit-custom" ${unlimited ? "disabled" : ""}>Custom</button>`
+                : `<button type="button" class="nf-custom nf-custom-btn" data-action="open-limit-custom">Custom</button>`
           }
         </div>
       </div>

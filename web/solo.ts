@@ -167,6 +167,13 @@ function outfitTab(o: SavedOutfit): string {
           <input class="unit-name-input" type="text" value="${escapeHtml(s.shipName ?? "")}" placeholder="${escapeHtml(def?.name ?? "Ship")}" data-action="outfit-ship-name" data-ship="${s.id}" />
           <span class="roster-unit-cost">${ck(def?.cost ?? 0)}</span>
         </div>
+        ${
+          def
+            ? `<div class="roster-unit-stats">${statChips(def, true)}</div>
+        <p class="roster-unit-weap"><span class="ru-arc ru-arc-pri">PRI</span> ${primarySlotText(def)}</p>
+        <p class="roster-unit-weap"><span class="ru-arc ru-arc-aux">AUX</span> ${def.auxiliaryFitting ? escapeHtml(def.auxiliaryFitting) : auxSlotText(def)}</p>`
+            : ""
+        }
         <div class="roster-unit-tools">
           <div class="pilot-field">
             <span class="pilot-field-label">Pilot class</span>
