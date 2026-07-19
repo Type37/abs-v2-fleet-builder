@@ -55,8 +55,15 @@ export type Route =
   | { view: "solo-outfit"; outfitId: string }
   | { view: "ships" }
   | { view: "play"; listId: string }
-  | { view: "learn"; step: number }
+  | { view: "learn"; step: number; anchor?: string }
+  | { view: "refsheet" }
   | { view: "changelog" };
+
+// Kept as a literal rather than derived from ROUND_PHASES: the router must not
+// depend on the rules data, and these four strings are URL surface now, so they
+// should only ever change deliberately.
+const PHASE_SLUGS = ["command", "jump", "tactical", "end"] as const;
+const phaseSlugFor = (i: number): string => PHASE_SLUGS[i] ?? "command";
 
 export function parseRoute(hash: string): Route {
   const h = hash.replace(/^#/, "");
@@ -68,10 +75,26 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === "solo") return parts[1] ? { view: "solo-outfit", outfitId: parts[1] } : { view: "solo" };
   if (parts[0] === "ships") return { view: "ships" };
   if (parts[0] === "play" && parts[1]) return { view: "play", listId: parts[1] };
+  if (parts[0] === "refsheet") return { view: "refsheet" };
   if (parts[0] === "learn") {
-    // 0 Mission, 1 Fleet, 2 Table, 3 Round, 4-7 the four phases, 8 Launch.
-    const step = parts[1] ? Math.max(0, Math.min(8, parseInt(parts[1], 10) || 0)) : 0;
-    return { view: "learn", step };
+    // 0 Mission, 1 Fleet, 2 Table, 3 Round, 4 Launch. The four phases are
+    // accordions inside step 3, addressed as #/learn/3/command and so on.
+    let step = parts[1] ? Math.max(0, parseInt(parts[1], 10) || 0) : 0;
+    // Legacy links from when each phase was its own page: 4-7 were Command,
+    // Jump, Tactical and End, and 8 was the launch screen.
+    //
+    // 5-7 are past the end of the new walkthrough, so they can be redirected to
+    // their phase accordion with nothing to lose. 4 cannot: it is a live step in
+    // the new numbering (Battle), and a live route beats a dead one, so an old
+    // link to the Command Phase lands on Battle instead. That is the least bad
+    // of the two, and Command is the accordion that opens by default anyway.
+    let anchor = parts[2];
+    if (step >= 5 && step <= 7) {
+      anchor = phaseSlugFor(step - 4);
+      step = 3;
+    }
+    step = Math.min(4, step);
+    return anchor ? { view: "learn", step, anchor } : { view: "learn", step };
   }
   if (parts[0] === "changelog") return { view: "changelog" };
   return { view: "home" };
@@ -97,8 +120,12 @@ export function routeHash(route: Route): string {
       return "#/ships";
     case "play":
       return `#/play/${route.listId}`;
-    case "learn":
+    case "learn": {
+      if (route.anchor) return `#/learn/${route.step}/${route.anchor}`;
       return route.step > 0 ? `#/learn/${route.step}` : "#/learn";
+    }
+    case "refsheet":
+      return "#/refsheet";
     case "changelog":
       return "#/changelog";
   }

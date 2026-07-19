@@ -663,7 +663,12 @@ button { font-family: inherit; }
 }
 .emblem-menu-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .emblem-menu-panel .lib-cat:first-of-type { margin-top: 0; }
-.emblem-img { object-fit: cover; display: block; }
+/* contain, never cover. `cover` fills the square by scaling the art up and
+   cropping whatever falls outside it, so any emblem that isn't already square
+   lost its edges - a wide wordmark lost both ends. Letterboxing inside the tile
+   is the correct trade: the whole mark stays visible, which is the entire job of
+   a picker. */
+.emblem-img { object-fit: contain; display: block; }
 /* Emblem art renders in full colour, in the picker and everywhere it lands. */
 .emblem-img, .lib-icon img { filter: none; }
 /* Per-ship-class art upload in the Foundry ship editor. */
@@ -708,15 +713,8 @@ button { font-family: inherit; }
 .lib-icon:hover { border-color: var(--ink); }
 .lib-icon.selected { border-color: var(--blue); box-shadow: inset 0 0 0 2px var(--blue); }
 .lib-icon img { width: 100%; height: 100%; object-fit: contain; min-height: 0; }
-/* The mark's name under it. 253 anonymous pictures made a search result set look
-   arbitrary; the name is what tells you why something matched. */
-.lib-icon-name {
-  flex: none; width: 100%; margin-top: 3px;
-  font-family: var(--narrow); font-size: 9px; line-height: 1.15; font-weight: 600;
-  color: var(--ink-3); text-align: center;
-  overflow-wrap: anywhere;
-}
-.lib-icon.selected .lib-icon-name { color: var(--blue); font-weight: 800; }
+/* No .lib-icon-name rules: the caption under each tile is gone (see
+   iconLibraryGrid in emblems.ts). The name lives on title/aria-label now. */
 /* Tinted vector mark: the SVG painted as a solid colour via CSS mask. */
 .emblem-tint { display: inline-block; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; vertical-align: middle; }
 .tint-swatch { width: 24px; height: 24px; border: 1px solid var(--hair); cursor: pointer; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
@@ -2956,10 +2954,54 @@ a .icon,
 .learn-rules li::marker { color: var(--ink-3); }
 .learn-phase b a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--hair); }
 .learn-phase b a:hover { color: var(--blue); border-bottom-color: var(--blue); }
-/* Phase pages are sub-steps of "The round": a smaller, unnumbered dot. */
+/* The four phases hang vertically off "The round" on a rail, so the indent says
+   they are parts of step 4 rather than steps 5 to 8 of a longer walkthrough. */
+.learn-progress { align-items: flex-start; }
+.learn-dot-group { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.learn-dot-subs { display: flex; flex-direction: column; align-items: flex-start; margin: 2px 0 0 11px; padding-left: 14px; border-left: 1px solid var(--hair); }
+.learn-dot.is-sub { padding: 3px 4px; }
 .learn-dot.is-sub .learn-dot-n { display: none; }
-.learn-dot.is-sub { opacity: 0.75; }
-.learn-dot.is-sub.on { opacity: 1; }
+.learn-dot.is-sub .learn-dot-l { font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
+.learn-dot.is-sub:hover .learn-dot-l { color: var(--ink); }
+.learn-dot.is-sub.on .learn-dot-l { color: var(--blue); font-weight: 800; }
+/* The connectors sit on the main row, not at the top of the tallest group. */
+.learn-dot-sep { margin-top: 17px; }
+
+/* Phase accordions. Each phase is one of these and appears nowhere else on the
+   page, which is the whole point: the name is written once, in the header. */
+.learn-accs { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.learn-acc { border: 1px solid var(--hair-soft); border-left: 3px solid var(--hair); background: var(--paper); }
+.learn-acc[open] { border-left-color: var(--blue); }
+.learn-acc-head { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; cursor: pointer; list-style: none; }
+.learn-acc-head::-webkit-details-marker { display: none; }
+.learn-acc-head::marker { content: ""; }
+.learn-acc-head:hover .learn-acc-title { color: var(--blue); }
+.learn-acc-n { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1.5px solid var(--hair); font-family: var(--display); font-weight: 800; font-size: 12px; color: var(--ink-3); }
+.learn-acc[open] .learn-acc-n { background: var(--blue); border-color: var(--blue); color: #fff; }
+.learn-acc-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.learn-acc-title { font-family: var(--display); font-weight: 800; font-size: 16px; color: var(--ink); }
+.learn-acc-lede { font-family: var(--serif); font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.learn-acc-chev { flex: none; margin-top: 4px; color: var(--ink-3); transform: rotate(90deg); transition: transform 160ms cubic-bezier(.2,.8,.3,1); }
+.learn-acc[open] .learn-acc-chev { transform: rotate(-90deg); }
+.learn-acc-body { padding: 2px 16px 18px 50px; }
+.learn-acc-body > :first-child { margin-top: 0 !important; }
+.learn-acc-body .learn-sub:first-child { margin-top: 0 !important; }
+@media (max-width: 640px) { .learn-acc-body { padding-left: 16px; } }
+
+/* A quieter third button: the reference sheet is an aside, not the way forward. */
+.learn-btn-ref { border-color: var(--hair); color: var(--ink-2); font-size: 13px; padding: 10px 16px; }
+.learn-btn-ref:hover { border-color: var(--blue); color: var(--blue); }
+
+/* Visual friction on a page turn and on opening a phase, so moving through the
+   tutorial registers as movement instead of the text silently swapping. */
+@keyframes learn-page-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes learn-acc-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+.learn-stage { animation: learn-page-in 340ms cubic-bezier(.2,.8,.3,1) both; }
+.learn-acc[open] > .learn-acc-body { animation: learn-acc-in 240ms cubic-bezier(.2,.8,.3,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .learn-stage, .learn-acc[open] > .learn-acc-body { animation: none; }
+  .learn-acc-chev { transition: none; }
+}
 
 /* Tighter overall: the walkthrough had a poster's spacing on a manual's content. */
 .learn-title { margin-bottom: 8px !important; font-size: clamp(24px, 3.4vw, 34px) !important; }
@@ -2968,19 +3010,29 @@ a .icon,
 .learn-sub { margin: 20px 0 3px !important; font-size: 16px !important; }
 .learn-eyebrow { margin-bottom: 4px !important; }
 
-/* The tutorial table, drawn to the scenario's measurements. */
-.learn-map { max-width: 520px; }
+/* The tutorial table: a dimensioned setup drawing. Wider than the other
+   diagrams because it carries measurements in all four margins. */
+.learn-map { max-width: 640px; }
 .learn-dg .dg-map-table { fill: none; stroke: var(--ink-3); stroke-width: 1.5; }
 .learn-dg .dg-map-centre { stroke: var(--hair); stroke-width: 1; stroke-dasharray: 5 5; }
-.learn-dg .dg-jp-halo { fill: var(--blue); fill-opacity: 0.06; stroke: var(--blue); stroke-width: 0.8; stroke-dasharray: 3 4; }
-.learn-dg .dg-them .dg-jp-halo { fill: var(--red); stroke: var(--red); }
 .learn-dg .dg-jp-dot { fill: var(--blue); }
 .learn-dg .dg-them .dg-jp-dot { fill: var(--red); }
-.learn-dg .dg-obj-well { fill: var(--ink); fill-opacity: 0.05; stroke: var(--ink-3); stroke-width: 0.8; stroke-dasharray: 2 4; }
 .learn-dg .dg-obj-core { fill: var(--ink); }
 .learn-dg .dg-map-lbl { font-family: var(--narrow); font-size: 9px; font-weight: 700; fill: var(--ink-3); text-anchor: middle; text-transform: uppercase; letter-spacing: 0.04em; }
+/* Same label, anchored off its leader line rather than centred. Separate classes
+   because a CSS text-anchor beats the SVG attribute, so it cannot be set inline. */
+.learn-dg .dg-map-lbl-s,
+.learn-dg .dg-map-lbl-e { font-family: var(--narrow); font-size: 9px; font-weight: 700; fill: var(--ink-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.learn-dg .dg-map-lbl-s { text-anchor: start; }
+.learn-dg .dg-map-lbl-e { text-anchor: end; }
+.learn-dg .dg-map-note { font-family: var(--narrow); font-size: 9px; font-weight: 700; fill: var(--red); text-anchor: middle; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.8; }
 .learn-dg .dg-map-edge { font-family: var(--narrow); font-size: 10px; font-weight: 700; fill: var(--ink-2); text-anchor: middle; text-transform: uppercase; letter-spacing: 0.06em; }
-.learn-dg .dg-map-scale line { stroke: var(--ink-3); stroke-width: 1; }
+.learn-dg .dg-leader { stroke: var(--ink-3); stroke-width: 0.8; }
+/* Dimension lines read as measurements, so they are blue like every other
+   measured thing in these diagrams rather than another shade of grey. */
+.learn-dg .dg-dim line { stroke: var(--blue); stroke-width: 1; }
+.learn-dg .dg-dim-t { font-family: var(--narrow); font-size: 11px; font-weight: 700; fill: var(--blue); text-anchor: middle; }
+.learn-dg .dg-dim-t-s { text-anchor: start; }
 
 /* Sub-steps hang vertically off "The round", joined by a rail. */
 .learn-dots { align-items: flex-start; }
@@ -3018,16 +3070,45 @@ a .icon,
    the checklist, the counters, Next phase and the command list at 290 / 554 /
    773 / 1095px - four things you touch every turn, none of them visible at the
    same time. Left is what you are doing, right is what you are spending. */
-.play-cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px 26px; align-items: start; margin-top: 14px; }
-.play-col { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-.play-cols .phase-checklist { margin-top: 0; max-width: none; }
+.play-cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 12px 24px; align-items: start; margin-top: 10px; }
+.play-col { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+/* Trimmed rather than restyled: every value in here is spacing, and on the one
+   phase that carries the arc legend the screen was 28px short of fitting. */
+.play-cols .phase-checklist { margin-top: 0; max-width: none; padding: 12px 16px; min-height: 214px; }
 .play-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .play-actions .cta-btn { flex: 1 1 auto; justify-content: center; }
 .play-cols .pc-cmds { margin-top: 0; }
 .play-cols .play-counters { margin: 0; }
 .play-ref { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--hair-soft); display: flex; flex-direction: column; gap: 14px; }
-.play-reset { display: flex; }
-.play-arcs { margin-top: 0; padding-top: 0; border-top: none; }
+.play-ref:empty { display: none; }
+/* A two-line legend, not the arc diagram. The drawing was 355px tall and was the
+   single reason the Tactical Phase - the phase you sit on longest - was the only
+   one that made this screen scroll. Shrinking it did not help: at any size small
+   enough to fit, the cones were too small to read. So Play Mode states the two
+   arcs in words at 40px, and the diagram stays in Learn to Play where there is
+   room to draw it properly and where you are actually learning it. */
+.play-cols .play-arcs { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--hair-soft); display: flex; flex-direction: column; gap: 5px; }
+.play-arc-line { margin: 0; display: flex; align-items: center; gap: 8px; font-family: var(--serif); font-size: 12.5px; color: var(--ink-2); }
+
+/* One header line instead of a 137px masthead: where you are, which round (read
+   and adjusted in the same control), and the once-a-game Reset. */
+.play-body { padding-top: 10px; }
+.play-bar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-bottom: 9px; border-bottom: 2px solid var(--hair); }
+.play-bar-id { margin: 0; font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
+.play-bar-id a { color: var(--blue); text-decoration: none; }
+.play-bar-id a:hover { text-decoration: underline; }
+.play-bar-round { display: flex; align-items: center; gap: 9px; margin-left: auto; }
+.play-bar-round .control-label { margin: 0; }
+.play-bar-round .round-value { min-width: 1.4ch; }
+.play-bar-of { font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.play-bar-reset { flex: none; }
+/* Three counters, always one row. The fourth used to wrap and cost ~80px of
+   height for a single number; Round now lives in the header instead. */
+.play-cols .play-counters { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 620px) { .play-cols .play-counters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Sits at the bottom of the (usually shorter) left column, filling the space
+   the taller command list leaves next to it instead of leaving it blank. */
+.play-notes { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--hair-soft); display: flex; flex-direction: column; gap: 10px; }
 /* The masthead was 137px of mostly title; it only needs to say where you are. */
 .setup-band .page-title { font-size: clamp(20px, 2.6vw, 26px); }
 @media (max-width: 900px) {
@@ -3052,8 +3133,11 @@ a .icon,
 .learn-dg .dg-no { stroke: var(--red); stroke-width: 2.4; stroke-linecap: round; }
 .learn-dg .dg-jp-bad .dg-jp-dot { fill: var(--ink-3); opacity: 0.5; }
 .learn-dg .dg-strain-box { fill: none; stroke: var(--hair); stroke-width: 1.5; }
-.learn-dg .dg-strain-t { font-family: var(--display); font-size: 13px; font-weight: 800; fill: var(--ink); text-anchor: middle; }
-.learn-dg .dg-strain-s { font-family: var(--narrow); font-size: 10px; font-weight: 700; fill: var(--ink-3); text-anchor: middle; text-transform: uppercase; letter-spacing: 0.04em; }
+/* Name hard left, qualifier hard right, inside a full-width row. Anchoring to
+   the two ends rather than centring is what guarantees the two can never
+   collide however long either string gets. */
+.learn-dg .dg-strain-t { font-family: var(--display); font-size: 13px; font-weight: 800; fill: var(--ink); text-anchor: start; }
+.learn-dg .dg-strain-s { font-family: var(--narrow); font-size: 10px; font-weight: 700; fill: var(--ink-3); text-anchor: end; text-transform: uppercase; letter-spacing: 0.04em; }
 @keyframes dg-strain-cycle { 0%, 22% { stroke: var(--blue); stroke-width: 2.5; } 33%, 100% { stroke: var(--hair); stroke-width: 1.5; } }
 .learn-dg .dg-strain-1 .dg-strain-box { animation: dg-strain-cycle 3600ms ease-in-out infinite; }
 .learn-dg .dg-strain-2 .dg-strain-box { animation: dg-strain-cycle 3600ms ease-in-out infinite; animation-delay: 1200ms; }

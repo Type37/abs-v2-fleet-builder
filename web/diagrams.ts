@@ -14,8 +14,21 @@
 // the jump and battlegroup diagrams use one unit = 4px, so a 6" radius is 24px
 // against a 24px-wide hull, which is roughly the ratio on a real table.
 
+// Position lives on an OUTER group, the animatable class on an inner one.
+//
+// This split is load-bearing, not tidiness. A CSS `transform` overrides an SVG
+// `transform=` presentation attribute outright, so any element that carried both
+// its position attribute AND an animation class whose keyframes touch transform
+// lost its position the moment the animation applied: dg-roll settles on
+// `translateY(0) rotate(0)` and dg-pop on `scale(1)`, both identity matrices,
+// and with `animation-fill-mode: both` that identity sticks forever. Every die,
+// token and arriving ship collapsed onto the SVG origin and was clipped by the
+// corner of the viewBox - which is why the Command and Jump diagrams rendered as
+// empty boxes with a single smudge in the top-left. Keeping the two on separate
+// elements means the keyframes can own transform completely without the layout
+// depending on it.
 const SHIP = (x: number, y: number, rot = 0, cls = "dg-ship") =>
-  `<g class="${cls}" transform="translate(${x} ${y}) rotate(${rot})"><path d="M0 -9 L6 7 L0 4 L-6 7 Z"/></g>`;
+  `<g transform="translate(${x} ${y}) rotate(${rot})"><g class="${cls}"><path d="M0 -9 L6 7 L0 4 L-6 7 Z"/></g></g>`;
 
 const LABEL = (x: number, y: number, text: string, cls = "dg-label") =>
   `<text class="${cls}" x="${x}" y="${y}">${text}</text>`;
@@ -23,14 +36,18 @@ const LABEL = (x: number, y: number, text: string, cls = "dg-label") =>
 /** The Command Phase: initiative dice land, then CMD tokens stack up. */
 function commandDiagram(): string {
   const die = (i: number, x: number) => `
-    <g class="dg-die dg-die-${i}" transform="translate(${x} 44)">
-      <rect x="-13" y="-13" width="26" height="26" rx="4"/>
-      <circle class="dg-pip" cx="0" cy="0" r="2.6"/>
+    <g transform="translate(${x} 44)">
+      <g class="dg-die dg-die-${i}">
+        <rect x="-13" y="-13" width="26" height="26" rx="4"/>
+        <circle class="dg-pip" cx="0" cy="0" r="2.6"/>
+      </g>
     </g>`;
   const token = (i: number, x: number) => `
-    <g class="dg-token dg-token-${i}" transform="translate(${x} 112)">
-      <circle r="11"/>
-      <path class="dg-token-mark" d="M-4.5 0 L0 -5 L4.5 0 L0 5 Z"/>
+    <g transform="translate(${x} 112)">
+      <g class="dg-token dg-token-${i}">
+        <circle r="11"/>
+        <path class="dg-token-mark" d="M-4.5 0 L0 -5 L4.5 0 L0 5 Z"/>
+      </g>
     </g>`;
   return `
   <svg class="learn-dg" viewBox="0 0 320 150" role="img"
@@ -158,9 +175,11 @@ function passiveDiagram(): string {
 /** Action Step: one action, Open Fire shown as the common case. */
 function actionDiagram(): string {
   const die = (i: number, x: number) => `
-    <g class="dg-die dg-die-${i}" transform="translate(${x} 112)">
-      <rect x="-11" y="-11" width="22" height="22" rx="3.5"/>
-      <circle class="dg-pip" cx="0" cy="0" r="2.2"/>
+    <g transform="translate(${x} 112)">
+      <g class="dg-die dg-die-${i}">
+        <rect x="-11" y="-11" width="22" height="22" rx="3.5"/>
+        <circle class="dg-pip" cx="0" cy="0" r="2.2"/>
+      </g>
     </g>`;
   return `
   <svg class="learn-dg" viewBox="0 0 320 150" role="img"
@@ -178,53 +197,95 @@ function actionDiagram(): string {
 }
 
 /**
- * The tutorial table, drawn to the scenario's own measurements rather than
- * sketched: 48" by 36", flank Jump Points at the side edges 5" in from your own
- * edge and 24" apart, the central one 15" in on the centreline, objective in the
- * middle. One inch = 7px, so the 6" deployment bubbles and the 9" Gravity Well
- * around a Planetoid are true to each other and to the table.
+ * The tutorial table as a dimensioned setup drawing rather than a sketch.
+ *
+ * The job of this one picture is that after reading the Setup paragraph once you
+ * can lay out a real table without going back to the text. That means every
+ * number in the paragraph has to appear ON the drawing: the 48x36 table, the 5"
+ * inset to the flank Jump Points, the 24" between them, the 15" to the central
+ * one. The previous version drew the positions correctly but dimensioned none of
+ * them, so it could show you roughly where things went and never how far.
+ *
+ * Two things were removed to make room for those dimensions. The 6" deployment
+ * bubble is drawn on each of the six Jump Points no longer - six overlapping
+ * 42px halos turned the middle of the table into mud, and the 6" rule is taught
+ * properly on the Jump page where it belongs. The 9" ring around the objective
+ * went too: that is the Gravity Well, which has its own diagram and only applies
+ * at all if the objective happens to roll up as a Planetoid.
+ *
+ * Only YOUR half is dimensioned. The opponent's three points are the mirror of
+ * yours, so dimensioning them twice doubles the ink for no extra information.
+ *
+ * Dimensions are drawn against features already on the drawing - the 15" runs up
+ * the centreline, the 5" up the flank point's own column - so no extension lines
+ * have to be dragged across the table to reach a margin.
  */
 function deploymentMap(): string {
-  const IN = 7; // px per table inch
+  const IN = 9; // px per table inch
   const W = 48 * IN, H = 36 * IN;
   const x = (i: number) => i * IN;
   const y = (i: number) => i * IN;
-  // Your edge is the bottom. Flank points sit on the side edges 5" in; the
-  // central point 15" in on the centreline. Mirrored for the opponent.
-  const side = (bottom: boolean) => {
-    const edge = bottom ? 36 : 0;
-    const dir = bottom ? -1 : 1;
-    const cls = bottom ? "dg-you" : "dg-them";
-    const flankY = edge + dir * 5;
-    const centreY = edge + dir * 15;
-    const jp = (cx: number, cy: number, label: string) => `
-      <g class="dg-jp ${cls}" transform="translate(${x(cx)} ${y(cy)})">
-        <circle class="dg-jp-halo" r="${6 * IN}"/>
-        <circle class="dg-jp-dot" r="5"/>
-        <text class="dg-map-lbl" y="-${6 * IN + 5}">${label}</text>
-      </g>`;
-    // 24" apart, centred on the 48" width: 12" and 36".
-    return jp(12, flankY, "flank") + jp(36, flankY, "flank") + jp(24, centreY, "central");
-  };
+
+  // 24" apart, centred on the 48" width: 12" and 36".
+  const FLANK_L = x(12), FLANK_R = x(36), CENTRE = x(24);
+  const yFlank = y(31), yCentral = y(21); // 5" and 15" in from your edge (y=36")
+
+  const dimH = (x1: number, x2: number, yy: number, label: string, ly: number) => `
+    <g class="dg-dim">
+      <line x1="${x1}" y1="${yy}" x2="${x2}" y2="${yy}"/>
+      <line x1="${x1}" y1="${yy - 4}" x2="${x1}" y2="${yy + 4}"/>
+      <line x1="${x2}" y1="${yy - 4}" x2="${x2}" y2="${yy + 4}"/>
+      <text class="dg-dim-t" x="${(x1 + x2) / 2}" y="${ly}">${label}</text>
+    </g>`;
+  const dimV = (y1: number, y2: number, xx: number, label: string, lx: number, ly: number) => `
+    <g class="dg-dim">
+      <line x1="${xx}" y1="${y1}" x2="${xx}" y2="${y2}"/>
+      <line x1="${xx - 4}" y1="${y1}" x2="${xx + 4}" y2="${y1}"/>
+      <line x1="${xx - 4}" y1="${y2}" x2="${xx + 4}" y2="${y2}"/>
+      <text class="dg-dim-t dg-dim-t-s" x="${lx}" y="${ly}">${label}</text>
+    </g>`;
+  const jp = (cx: number, cy: number, cls: string) =>
+    `<g class="dg-jp ${cls}" transform="translate(${cx} ${cy})"><circle class="dg-jp-dot" r="5"/></g>`;
+
   return `
-  <svg class="learn-dg learn-map" viewBox="-14 -22 ${W + 28} ${H + 44}" role="img"
-       aria-label="Tutorial table setup: a 48 by 36 inch table, three jump points per player, and a central objective. Flank jump points sit on the side edges 5 inches in from your own edge and 24 inches apart; the central jump point is 15 inches in on the centreline.">
+  <svg class="learn-dg learn-map" viewBox="-42 -26 ${W + 84} ${H + 122}" role="img"
+       aria-label="Tutorial table setup, dimensioned. The table is 48 inches by 36 inches. Your three jump points: two flank points 5 inches in from your own table edge and 24 inches apart from each other, and a central point 15 inches in from your edge on the centreline. A central objective sits in the middle of the table. Your opponent's three jump points mirror yours from the opposite edge.">
     <rect class="dg-map-table" x="0" y="0" width="${W}" height="${H}"/>
-    <line class="dg-map-centre" x1="${x(24)}" y1="0" x2="${x(24)}" y2="${H}"/>
-    ${side(false)}
-    ${side(true)}
-    <g class="dg-objective" transform="translate(${x(24)} ${y(18)})">
-      <circle class="dg-obj-well" r="${9 * IN}"/>
-      <circle class="dg-obj-core" r="8"/>
-      <text class="dg-map-lbl" y="-${9 * IN + 5}">central objective</text>
+    <line class="dg-map-centre" x1="${CENTRE}" y1="0" x2="${CENTRE}" y2="${H}"/>
+
+    <!-- Opponent's half: the mirror of yours, stated once rather than dimensioned. -->
+    ${jp(FLANK_L, y(5), "dg-them")}${jp(FLANK_R, y(5), "dg-them")}${jp(CENTRE, y(15), "dg-them")}
+    <text class="dg-map-note" x="${CENTRE}" y="${y(8)}">opponent's 3 points mirror yours</text>
+
+    <!-- Central objective, labelled out to the left so it clears the two central
+         Jump Points that sit 3" above and below it. -->
+    <g transform="translate(${CENTRE} ${y(18)})">
+      <circle class="dg-obj-core" r="7"/>
+      <line class="dg-leader" x1="-9" y1="0" x2="-72" y2="0"/>
+      <text class="dg-map-lbl-e" x="-78" y="4">central objective</text>
     </g>
-    <text class="dg-map-edge" x="${x(24)}" y="${H + 17}">your table edge</text>
-    <text class="dg-map-edge" x="${x(24)}" y="-9">opponent's edge</text>
-    <g class="dg-map-scale" transform="translate(0 ${H + 4})">
-      <line x1="${x(0)}" y1="0" x2="${x(6)}" y2="0"/>
-      <line x1="${x(0)}" y1="-4" x2="${x(0)}" y2="4"/>
-      <line x1="${x(6)}" y1="-4" x2="${x(6)}" y2="4"/>
-      <text class="dg-map-lbl" x="${x(3)}" y="14">6"</text>
+
+    <!-- Your half. -->
+    ${jp(FLANK_L, yFlank, "dg-you")}${jp(FLANK_R, yFlank, "dg-you")}${jp(CENTRE, yCentral, "dg-you")}
+    <g transform="translate(${CENTRE} ${yCentral})">
+      <line class="dg-leader" x1="9" y1="0" x2="66" y2="0"/>
+      <text class="dg-map-lbl-s" x="72" y="4">central jump point</text>
+    </g>
+    <text class="dg-map-lbl" x="${FLANK_L}" y="${yFlank - 21}">flank jump point</text>
+    <text class="dg-map-lbl" x="${FLANK_R}" y="${yFlank - 21}">flank jump point</text>
+
+    ${dimH(FLANK_L, FLANK_R, yFlank, '24&quot;', yFlank - 7)}
+    ${dimV(yFlank, H, FLANK_L, '5&quot;', FLANK_L + 8, yFlank + 28)}
+    ${dimV(yCentral, H, CENTRE, '15&quot;', CENTRE + 8, yCentral + 46)}
+
+    <text class="dg-map-edge" x="${CENTRE}" y="${H + 18}">your table edge</text>
+    <text class="dg-map-edge" x="${CENTRE}" y="-11">opponent's edge</text>
+    ${dimH(0, W, H + 42, '48&quot; (4 ft)', H + 36)}
+    <g class="dg-dim">
+      <line x1="-24" y1="0" x2="-24" y2="${H}"/>
+      <line x1="-28" y1="0" x2="-20" y2="0"/>
+      <line x1="-28" y1="${H}" x2="-20" y2="${H}"/>
+      <text class="dg-dim-t" x="-24" y="${H / 2}" transform="rotate(-90 -24 ${H / 2})" dy="-6">36&quot; (3 ft)</text>
     </g>
   </svg>`;
 }
@@ -267,21 +328,27 @@ function gravityWellDiagram(): string {
  * one choice - the rule most easily missed, because each of the three reads
  * like an independent option elsewhere in the reference.
  */
+// Stacked vertically, not in a row. Side by side, each option got a 92px-wide
+// box in a 320-unit viewBox, and "to another Sector" measures 117 units at this
+// font - so the middle label burst its own box by 13 units at each end and ran
+// into the boxes either side of it, which is what made this diagram read as
+// broken and cut off. Down the page each row has the full width to itself, so no
+// label can outgrow its box however long the wording gets.
 function jumpStrainDiagram(): string {
-  const opt = (i: number, x: number, title: string, sub: string) => `
-    <g class="dg-strain dg-strain-${i}" transform="translate(${x} 96)">
-      <rect class="dg-strain-box" x="-46" y="-26" width="92" height="52" rx="3"/>
-      <text class="dg-strain-t" y="-4">${title}</text>
-      <text class="dg-strain-s" y="12">${sub}</text>
+  const opt = (i: number, y: number, title: string, sub: string) => `
+    <g class="dg-strain dg-strain-${i}" transform="translate(0 ${y})">
+      <rect class="dg-strain-box" x="26" y="-17" width="268" height="34" rx="3"/>
+      <text class="dg-strain-t" x="42" y="5">${title}</text>
+      <text class="dg-strain-s" x="278" y="4">${sub}</text>
     </g>`;
   return `
-  <svg class="learn-dg" viewBox="0 0 320 150" role="img"
-       aria-label="Jump Strain: a unit may only jump once per round. Choose Jump In, Jump Hop or Jump Out.">
+  <svg class="learn-dg" viewBox="0 0 320 182" role="img"
+       aria-label="Jump Strain: a unit may only jump once per round. Choose one of Jump In from Reserves, Jump Hop to another Sector, or Jump Out to Reserves.">
     ${LABEL(160, 16, "One jump per unit, per round", "dg-title")}
-    ${opt(1, 54, "Jump In", "from Reserves")}
-    ${opt(2, 160, "Jump Hop", "to another Sector")}
-    ${opt(3, 266, "Jump Out", "to Reserves")}
-    ${LABEL(160, 140, "pick one", "dg-mini")}
+    ${opt(1, 48, "Jump In", "from Reserves")}
+    ${opt(2, 92, "Jump Hop", "to another Sector")}
+    ${opt(3, 136, "Jump Out", "to Reserves")}
+    ${LABEL(160, 172, "pick one", "dg-mini")}
   </svg>`;
 }
 

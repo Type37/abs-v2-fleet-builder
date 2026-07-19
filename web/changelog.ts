@@ -9,6 +9,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.70",
+    date: "2026-07-19",
+    title: "The diagrams actually draw; one Command Phase, not three",
+    items: [
+      "Fixed the bug that emptied the Command and Jump diagrams. Their dice, command tokens and arriving ships are positioned by an SVG transform attribute, but a CSS transform overrides that attribute outright — and both animations settle on an identity transform, which with fill-mode both sticks permanently. Every one of those elements was having its position erased the moment its animation finished, collapsing all of them onto the top-left corner where the viewBox clipped them. Position and animation now live on separate elements, so the keyframes cannot wipe out the layout.",
+      "Redrew the table setup map as a dimensioned drawing. It placed everything correctly and measured none of it, so it could show you roughly where things went and never how far. The 48 by 36 inch table, the 5 inches in to the flank Jump Points, the 24 inches between them and the 15 inches to the central one are now all marked on the drawing. The six overlapping 6-inch bubbles that turned the middle into mud are gone, and so is the 9-inch ring around the objective — those are the Jump Phase's and the Gravity Well's rules, and both have their own diagram.",
+      "The Jump Strain options stack down the page instead of sitting in a row. Side by side, \"to another Sector\" was 117 units wide in a 92-unit box: it burst its own box at both ends and ran into the boxes either side, which is what made that diagram look broken and cut off.",
+      "The tutorial no longer says everything twice. \"The round\" listed all four phases with their summaries, then listed all four again as links, and then each phase got a page that opened by repeating its name and summary a third time — you met the words \"Command Phase\" three times before learning anything about it. Each phase is now one accordion, stated once, with a real anchor link: #/learn/3/tactical opens the Tactical Phase.",
+      "The four phases hang vertically off \"The round\" in the progress nav. Inline they read as steps 5 to 8 of a nine-step walkthrough, and the row wrapped so that \"Battle\" ended up sitting under \"Command\" looking like its child.",
+      "Put the book's wording back where it had been paraphrased. The Passive Attacks Step uses the Quick Reference line, and the Rapid Ingress and Initiative Check notes are now pulled from the transcribed scenario text rather than retyped from memory.",
+      "Added a printable Quick Reference sheet — the round, the activation steps, every Action and every Command on one page — reachable from any Learn to Play page. It needs no fleet and no faction, because the moment you want a reference card is while you are still reading.",
+      "Play Mode fits on one screen in every phase, with no scrolling at all. The masthead was a 137-pixel band whose headline read \"Round 1 of 4\" while a Round stepper 200 pixels below it read \"1\"; the round is now one compact control on the header line. The fourth counter was wrapping to its own row for a single number, Reset was the last thing on the page, and the arc diagram was 355 pixels tall — the only reason the Tactical Phase scrolled. Play Mode states the two arcs in words now and the diagram stays in Learn to Play, where there is room to draw it properly.",
+      "The emblem picker stops cropping your art. Thumbnails were set to fill their square by scaling up and cutting off whatever fell outside it, so anything not already square lost its edges. The filename caption under every tile is gone too — the name is still on hover and still what the search matches, it just isn't set in type under 253 pictures.",
+    ],
+  },
+  {
     version: "0.8.69",
     date: "2026-07-18",
     title: "Gradients retired",

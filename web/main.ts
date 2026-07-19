@@ -42,8 +42,24 @@ const VIEW_TITLE: Record<string, string> = {
   "solo-outfit": "Outfit",
   ships: "Ship Compendium",
   play: "Play Mode",
+  refsheet: "Reference sheet",
   changelog: "Changelog",
 };
+
+// Scroll a phase accordion into view when the route names one (#/learn/3/jump).
+// Keyed on the anchor so it fires on the navigation that asked for it and not on
+// every later repaint - re-running it on an ordinary click would yank the page
+// back up while you were reading further down.
+let lastLearnAnchor: string | null = null;
+function syncLearnAnchor(): void {
+  const r = store.getState().route;
+  const key = r.view === "learn" && r.anchor ? `${r.step}/${r.anchor}` : null;
+  if (key === lastLearnAnchor) return;
+  lastLearnAnchor = key;
+  if (!key || r.view !== "learn" || !r.anchor) return;
+  const el = document.getElementById(`phase-${r.anchor}`);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 // The hash router repaints the whole page without touching the title, so every
 // route read as the same document. A screen reader gets no signal that the view
@@ -142,6 +158,7 @@ function paint(): void {
   // focus. A newly opened modal owns the focus.
   syncModalFocus();
   revealSelectedSigil();
+  syncLearnAnchor();
 }
 
 // A share link carries the whole list (and any custom faction) in the hash. Import

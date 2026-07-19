@@ -280,13 +280,15 @@ export function iconLibraryGrid(
   const items = matches
     .slice(0, shown)
     .map(
-      // The name is back as a title. It was dropped as "mouseover noise", but the
-      // alternative turned out to be 253 anonymous pictures whose only name was a
-      // raw asset filename in alt text, so a search hit set looked arbitrary.
-      // Intrinsic width/height plus lazy/async decoding keep the grid from
-      // reflowing as images arrive.
+      // No caption under the tile. You pick a sigil by looking at it, and 253
+      // raw asset filenames printed under 253 thumbnails is what was actually
+      // making the grid hard to read. The name is still carried on `title` and
+      // `aria-label`, so it is there on hover, there for a screen reader, and
+      // still what the search matches against - it just isn't set in type under
+      // every tile. Intrinsic width/height plus lazy/async decoding keep the
+      // grid from reflowing as images arrive.
       (i, n) =>
-        `<button class="lib-icon ${currentLib === i.id ? "selected" : ""}" data-cat="${escapeHtml(i.category)}" data-action="${actLib}" data-lib="${escapeHtml(i.id)}" title="${escapeHtml(i.label)}" aria-pressed="${currentLib === i.id}" aria-label="${escapeHtml(i.label)}"><img loading="${n < EAGER ? "eager" : "lazy"}" decoding="async" width="64" height="64" src="${i.thumb}" alt="" /><span class="lib-icon-name">${escapeHtml(i.label)}</span></button>`,
+        `<button class="lib-icon ${currentLib === i.id ? "selected" : ""}" data-cat="${escapeHtml(i.category)}" data-action="${actLib}" data-lib="${escapeHtml(i.id)}" title="${escapeHtml(i.label)}" aria-pressed="${currentLib === i.id}" aria-label="${escapeHtml(i.label)}"><img loading="${n < EAGER ? "eager" : "lazy"}" decoding="async" width="64" height="64" src="${i.thumb}" alt="" /></button>`,
     )
     .join("");
   if (!items) {

@@ -2226,24 +2226,45 @@ function playView(state: AppState): string {
       ${checklistHtml}
     </div>`;
 
+  // This screen is used standing at a table mid-turn, so it has one job the rest
+  // of the app doesn't: fit on the screen. Everything below is in service of
+  // that, and the height came from three places.
+  //
+  // The masthead was a 137px band whose headline said "Round 1 of 4" while a
+  // Round stepper sat 200px below saying "1" - the same fact twice, one of them
+  // in 26px type. The band is gone; the round now reads and is adjusted in one
+  // compact control on a single header line.
+  //
+  // The counters were a repeat(auto-fit, minmax(170px)) grid, so the fourth one
+  // wrapped to a second row and cost ~80px for one number. Moving Round into
+  // the header leaves exactly three, which fit one row at any usable width.
+  //
+  // Reset moved up here too. It was the last thing on the page, which meant the
+  // page had to be scrollable to reach a button you press once per game.
   return `
   ${topbar()}
-  <section class="setup-band">
-    <div class="setup-head">
-      <div class="setup-identity">
-        <p class="band-eyebrow"><a href="#/list/${list.id}">${escapeHtml(list.fleet.name || "Unnamed fleet")}</a> / Play mode</p>
-        <h1 class="page-title" style="margin:0">Round ${play.round} of ${maxRound}</h1>
+  <main class="solo-body play-body">
+    <header class="play-bar">
+      <p class="play-bar-id"><a href="#/list/${list.id}">${escapeHtml(list.fleet.name || "Unnamed fleet")}</a> <span aria-hidden="true">/</span> Play mode</p>
+      <div class="play-bar-round">
+        <span class="control-label">Round</span>
+        <div class="round-control">
+          <button class="stepper-btn" data-action="play-round" data-delta="-1" aria-label="Previous round" title="Previous round">${icon("minus", 15)}</button>
+          <span class="round-value">${play.round}</span>
+          <button class="stepper-btn" data-action="play-round" data-delta="1" aria-label="Next round" title="Next round">${icon("plus", 15)}</button>
+        </div>
+        <span class="play-bar-of">of ${maxRound}</span>
       </div>
-    </div>
-  </section>
-  <main class="solo-body">
+      <button class="ghost-btn danger play-bar-reset" data-action="play-reset">${icon("close", 14)} Reset the game</button>
+    </header>
     <div class="phase-track">${phaseBtns}</div>
     <!--
-      Two columns, because the turn loop was spread over 1.81 screens: the
-      checklist at 290px, the counters at 554, Next phase at 773 and the command
-      list at 1095 - entirely below the fold. You were scrolling between the four
-      things you touch on every single turn. Left column is what you are doing,
-      right column is what you are spending; reference sits below both.
+      Left column is what you are doing, right column is what you are spending.
+      The command list on the right runs taller than the checklist on the left
+      (four to seven cards vs a five-step tickbox), so the scoring notes and the
+      faction rule sit at the bottom of the LEFT column and fill that gap. Both
+      are fixed-height and phase-independent, so parking them under the buttons
+      cannot make the buttons move.
     -->
     <div class="play-cols">
       <div class="play-col play-col-do">
@@ -2257,11 +2278,19 @@ function playView(state: AppState): string {
             ? `<div class="roll-result"><div class="roll-die">${last.value}</div><div class="roll-body"><p class="roll-table">${escapeHtml(last.table)}</p><p class="roll-headline">${escapeHtml(last.result)}</p>${last.detail ? `<p class="roll-detail">${escapeHtml(last.detail)}</p>` : ""}</div></div>`
             : ""
         }
+        ${notes || faction ? `<div class="play-notes">${notes ? `<ul class="rule-list">${notes}</ul>` : ""}${faction ? factionRuleBlock(faction, "compact") : ""}</div>` : ""}
+        ${
+          play.phase === 2
+            ? `<div class="play-arcs">
+                 <p class="play-arc-line"><span class="lf-arc lf-arc-pri">PRI</span> narrow 45&deg; cone dead ahead</p>
+                 <p class="play-arc-line"><span class="lf-arc lf-arc-aux">AUX</span> full 180&deg; front arc</p>
+               </div>`
+            : ""
+        }
       </div>
 
       <div class="play-col play-col-spend">
         <div class="play-counters">
-          ${counter("Round", play.round, "play-round")}
           ${counter("CMD tokens", play.cmd, "play-cmd")}
           ${counter(scoreLabel, play.vp, "play-vp")}
           ${counter("Opponent " + scoreLabel.toLowerCase(), play.oppVp, "play-oppvp")}
@@ -2270,21 +2299,6 @@ function playView(state: AppState): string {
       </div>
     </div>
 
-    <!-- Reference below the controls: it resizes with the phase, and nothing the
-         player presses may sit underneath something that resizes. -->
-    <section class="play-ref">
-      ${
-        play.phase === 2
-          ? `<div class="play-arcs">
-               <p class="phase-diagram-caption">Primary weapons only fire in the narrow cone dead ahead; auxiliary weapons cover the whole front half.</p>
-               ${tacticalDiagram("arcs")}
-             </div>`
-          : ""
-      }
-      ${notes ? `<ul class="rule-list">${notes}</ul>` : ""}
-      ${faction ? factionRuleBlock(faction, "compact") : ""}
-      <div class="play-reset"><button class="ghost-btn danger" data-action="play-reset">${icon("close", 14)} Reset the game</button></div>
-    </section>
   </main>
   ${toast(state)}
   ${footer()}`;
@@ -2583,24 +2597,31 @@ function optionsModal(state: AppState): string {
 // walks the round structure with a looping demo, then drops you into Play Mode.
 // ---------------------------------------------------------------------------
 
-// The walkthrough. The four phase pages sit under "The round" as sub-steps, so
-// each one gets the space to be explained properly rather than compressed into
-// a single card in a four-card grid.
+// The walkthrough. Five pages, and the four phases live as accordions INSIDE
+// "The round" rather than as four more pages after it.
+//
+// They used to be both, which is what made the tutorial repeat itself: "The
+// round" listed all four phases with their summary text, then listed all four
+// again as links, and then each phase got its own page that opened by repeating
+// that same name and summary a third time. Reading it straight through you met
+// the words "Command Phase" three times before learning anything about it. Now
+// each phase is stated exactly once, in one accordion that carries its summary
+// in the header and everything else in the body.
 interface LearnStep {
   label: string;
-  sub?: boolean;
+  /** Renders the four phase accordions, and gets sub-anchors in the progress nav. */
+  phases?: boolean;
 }
 const LEARN_STEPS: LearnStep[] = [
   { label: "Mission" },
   { label: "Your fleet" },
   { label: "The table" },
-  { label: "The round" },
-  { label: "Command", sub: true },
-  { label: "Jump", sub: true },
-  { label: "Tactical", sub: true },
-  { label: "End", sub: true },
+  { label: "The round", phases: true },
   { label: "Battle" },
 ];
+
+/** "Command Phase" -> "command". The anchor in #/learn/3/command. */
+const phaseSlug = (name: string): string => name.replace(/ Phase$/, "").toLowerCase();
 
 function learnCounts(): Map<string, number> {
   // Combat Simulator fleet composition (Basic Training p.60).
@@ -2664,10 +2685,23 @@ function learnActivationDemo(): string {
 
 function learnView(state: AppState): string {
   const step = state.route.view === "learn" ? state.route.step : 0;
-  let mainN = 0;
+  const anchor = state.route.view === "learn" ? state.route.anchor : undefined;
+
+  // The four phases hang vertically off "The round" rather than running on in
+  // the same horizontal track. Inline, they read as steps 5-8 of a nine-step
+  // walkthrough - which is what they used to be - and the row wrapped onto a
+  // second line at any normal width, so "Battle" ended up underneath "Command"
+  // looking like its child. Stacked, the indent says what they are: four parts
+  // of step 4, not four more steps.
   const progress = LEARN_STEPS.map((s2, i) => {
-    if (!s2.sub) mainN += 1;
-    return `<a class="learn-dot ${s2.sub ? "is-sub" : ""} ${i === step ? "on" : ""} ${i < step ? "done" : ""}" href="#/learn${i > 0 ? "/" + i : ""}" aria-label="${escapeHtml(s2.label)}"><span class="learn-dot-n">${s2.sub ? "" : mainN}</span><span class="learn-dot-l">${escapeHtml(s2.label)}</span></a>`;
+    const dot = `<a class="learn-dot ${i === step ? "on" : ""} ${i < step ? "done" : ""}" href="#/learn${i > 0 ? "/" + i : ""}"><span class="learn-dot-n">${i + 1}</span><span class="learn-dot-l">${escapeHtml(s2.label)}</span></a>`;
+    if (!s2.phases) return `<div class="learn-dot-group">${dot}</div>`;
+    const subs = ROUND_PHASES.map((p2) => {
+      const slug = phaseSlug(p2.name);
+      const on = i === step && anchor === slug;
+      return `<a class="learn-dot is-sub ${on ? "on" : ""}" href="#/learn/${i}/${slug}"><span class="learn-dot-l">${escapeHtml(p2.name.replace(" Phase", ""))}</span></a>`;
+    }).join("");
+    return `<div class="learn-dot-group">${dot}<div class="learn-dot-subs">${subs}</div></div>`;
   }).join('<span class="learn-dot-sep" aria-hidden="true"></span>');
 
   // Rules text on these pages comes from TRAINING_GUIDES (transcribed from the
@@ -2683,13 +2717,25 @@ function learnView(state: AppState): string {
       .map((t) => `<li>${escapeHtml(t)}</li>`)
       .join("");
 
-  const phasePage = (i: number, extra = "") => {
+  // One phase, stated once. The name and the Quick Reference summary live in the
+  // header, the detail in the body, and nothing repeats either of them. Opening
+  // is driven by the URL, so #/learn/3/tactical is a real, shareable link to the
+  // Tactical Phase rather than a scroll position.
+  const phaseAccordion = (i: number, body: string) => {
     const ph = ROUND_PHASES[i]!;
-    return `<div class="learn-screen">
-      <h1 class="learn-title">${escapeHtml(ph.name)}</h1>
-      <p class="learn-lede">${escapeHtml(ph.text)}</p>
-      ${extra}
-    </div>`;
+    const slug = phaseSlug(ph.name);
+    const open = anchor ? anchor === slug : i === 0;
+    return `<details class="learn-acc" id="phase-${slug}" ${open ? "open" : ""}>
+      <summary class="learn-acc-head">
+        <span class="learn-acc-n">${i + 1}</span>
+        <span class="learn-acc-text">
+          <span class="learn-acc-title">${escapeHtml(ph.name)}</span>
+          <span class="learn-acc-lede">${escapeHtml(ph.text)}</span>
+        </span>
+        ${icon("chevronRight", 17, "learn-acc-chev")}
+      </summary>
+      <div class="learn-acc-body">${body}</div>
+    </details>`;
   };
 
   const screens = [
@@ -2723,119 +2769,102 @@ function learnView(state: AppState): string {
       <ul class="learn-rules">${bullets(csStep("Victory points"))}</ul>
       <p class="learn-note">${escapeHtml(csStep("Game end and victory")?.text ?? "")}</p>
     </div>`,
-    // 3 - The round
+    // 3 - The round. Four accordions, one per phase, each stated exactly once.
     `<div class="learn-screen">
       <h1 class="learn-title">The round</h1>
-      <p class="learn-lede">Four rounds, each running the same four phases. The next four pages take them one at a time.</p>
-      <ol class="learn-phases">
-        ${ROUND_PHASES.map(
-          (p2, i) =>
-            `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b>${escapeHtml(p2.name)}</b><span>${escapeHtml(p2.text)}</span></div></li>`,
-        ).join("")}
-      </ol>
-      <h2 class="learn-sub">Take them one at a time</h2>
-      <ul class="learn-substeps">
-        ${ROUND_PHASES.map(
-          (p2, i) =>
-            `<li class="learn-substep"><a href="#/learn/${i + 4}"><b>${escapeHtml(p2.name)}</b><span>${i === 2 ? "Drag to Select, and the three activation steps" : i === 1 ? "Jump Points, jumping in, Jump Strain" : i === 0 ? "Initiative Check and CMD tokens" : "Scoring and clean-up"}</span></a></li>`,
-        ).join("")}
-      </ul>
+      <p class="learn-lede">Four rounds, each running the same four phases in the same order.</p>
+      <div class="learn-accs">
+        ${phaseAccordion(
+          0,
+          `${learnDiagram("command")}
+           <ul class="learn-rules">
+             <li>Roll a number of D6 equal to your faction's Initiative value.</li>
+             <li>Each 2 or 3 is one success; each 1 is two successes.</li>
+             <li>Most successes wins and chooses who holds Initiative this round. Ties: lowest dice sum wins, then clockwise from the last holder.</li>
+             <li>Every player who did not win gains +1 CMD token.</li>
+             ${bullets(csStep("Special rules"), /^Initiative Checks/)}
+           </ul>`,
+        )}
+        ${phaseAccordion(
+          1,
+          `${learnDiagram("jump")}
+           <h3 class="learn-sub">On your turn, do one thing</h3>
+           <ul class="learn-rules">
+             <li>Open a Jump Point, Jump In a unit, or Pass. None of these costs a CMD token.</li>
+             <li>Turn order follows Initiative: the Initiative holder chooses who goes first.</li>
+             <li>The phase ends once every player has passed in a row.</li>
+           </ul>
+           <h3 class="learn-sub">Jumping a unit in</h3>
+           <ul class="learn-rules">
+             <li>The unit deploys wholly within 6" of a friendly Jump Point. The range is flat &mdash; it is not reduced by the unit's Mass.</li>
+             <li>Arriving does no damage to anything nearby. There is no Jump Shock in the core rules.</li>
+             <li>Jump Strain: a unit may only jump once per round. Jump In, Jump Hop or Jump Out &mdash; pick one.</li>
+             ${bullets(csStep("Special rules"), /^Rapid Ingress/)}
+           </ul>
+           ${learnDiagram("jump-strain")}
+           <h3 class="learn-sub">Placing a Jump Point</h3>
+           <ul class="learn-rules">
+             <li>Jump Points are placed on the table and belong to the player who opened them.</li>
+             <li>Gravity Well: no Jump Point may be placed, and no jumping may happen, within 9" of a Planetoid.</li>
+             <li>Blockading an enemy Jump Point does not change who owns it, and does not stop its owner using it to Jump In or Jump Hop.</li>
+           </ul>
+           ${learnDiagram("gravity-well")}
+           <h3 class="learn-sub">Leaving by jump</h3>
+           <ul class="learn-rules">
+             <li>Jump Hop: if all ships are within 6" of a friendly Jump Point, remove them and set up within 6" of a friendly Jump Point in another Sector.</li>
+             <li>Jump Out: if all ships are within 6" of a friendly Jump Point, remove them to your Reserves.</li>
+           </ul>`,
+        )}
+        ${phaseAccordion(
+          2,
+          `<h3 class="learn-sub">Drag to Select</h3>
+           <p class="learn-note">A lead unit plus unactivated units within 6" of it; Combined Mass 10 or less.</p>
+           ${learnDiagram("drag-select")}
+           <h3 class="learn-sub">Then each unit works through three steps</h3>
+           <p class="learn-note">Every unit in the battlegroup finishes a step before the next step starts.</p>
+           <ol class="learn-phases learn-phases-steps">
+             ${ACTIVATION_STEPS.map(
+               (a, i) =>
+                 `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b>${escapeHtml(a.name)}</b><span>${escapeHtml(a.text)}</span></div></li>`,
+             ).join("")}
+           </ol>
+           ${learnDiagram("movement")}
+           <h3 class="learn-sub">${escapeHtml(ACTIVATION_STEPS[1]?.name ?? "")}</h3>
+           <p class="learn-note">${escapeHtml(ACTIVATION_STEPS[1]?.text ?? "")}</p>
+           ${learnDiagram("passive")}
+           <ul class="learn-rules">
+             <li>It triggers when an active unit moves <b>through or ends in</b> the range and arc of a passive enemy's auxiliary weapons.</li>
+             <li>Passive means unactivated: an enemy that has already activated this round does not fire.</li>
+             <li>They fire <b>auxiliary weapons only</b> &mdash; the 180&deg; front arc, never the primary 45&deg; cone.</li>
+             <li>Each passive enemy unit fires <b>once per activation</b> of your battlegroup. It can fire again when your next battlegroup activates.</li>
+             <li>Only units that actually moved in this activation can be targeted.</li>
+             <li>Facilities have a 360&deg; arc and so always fire in this step at every active unit in range.</li>
+             <li>Easy Target: moving less than 3" lets enemies re-roll attack dice against you.</li>
+           </ul>
+           ${learnDiagram("action")}
+           <p class="learn-note">Give each activated unit an Activated token. The phase ends when all units have activated.</p>`,
+        )}
+        ${phaseAccordion(
+          3,
+          `<h3 class="learn-sub">Score</h3>
+           <ul class="learn-rules">${bullets(csStep("Victory points"))}</ul>
+           <h3 class="learn-sub">Then clear the table</h3>
+           <ul class="learn-rules">
+             <li>Remove every Activated token &mdash; all units can act again next round.</li>
+             <li>Discard any CMD tokens you did not spend. They do not carry over, so a token saved for later is a token wasted. (Some faction rules change this.)</li>
+             <li>Begin the next round. The game ends after Round 4.</li>
+           </ul>
+           <p class="learn-note">${escapeHtml(csStep("Game end and victory")?.text ?? "")}</p>`,
+        )}
+      </div>
       <p class="learn-note learn-ref"><a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">${icon("scroll", 15)} Read the full Quick Reference (PDF)</a></p>
     </div>`,
-    // 4 - Command Phase
-    phasePage(
-      0,
-      `${learnDiagram("command")}
-       <ul class="learn-rules">
-         <li>Roll a number of D6 equal to your faction's Initiative value.</li>
-         <li>Each 2 or 3 is one success; each 1 is two successes.</li>
-         <li>Most successes wins and chooses who holds Initiative this round. Ties: lowest dice sum wins, then clockwise from the last holder.</li>
-         <li>Every player who did not win gains +1 CMD token.</li>
-       </ul>
-       <p class="learn-note">In the tutorial your Initiative Value is 3D6.</p>`,
-    ),
-    // 5 - Jump Phase
-    phasePage(
-      1,
-      `${learnDiagram("jump")}
-       <h2 class="learn-sub">On your turn, do one thing</h2>
-       <ul class="learn-rules">
-         <li>Open a Jump Point, Jump In a unit, or Pass. None of these costs a CMD token.</li>
-         <li>Turn order follows Initiative: the Initiative holder chooses who goes first.</li>
-         <li>The phase ends once every player has passed in a row.</li>
-       </ul>
-       <h2 class="learn-sub">Jumping a unit in</h2>
-       <ul class="learn-rules">
-         <li>The unit deploys wholly within 6" of a friendly Jump Point. The range is flat &mdash; it is not reduced by the unit's Mass.</li>
-         <li>Arriving does no damage to anything nearby. There is no Jump Shock in the core rules.</li>
-         <li>Jump Strain: a unit may only jump once per round. Jump In, Jump Hop or Jump Out &mdash; pick one.</li>
-       </ul>
-       ${learnDiagram("jump-strain")}
-       <h2 class="learn-sub">Placing a Jump Point</h2>
-       <ul class="learn-rules">
-         <li>Jump Points are placed on the table and belong to the player who opened them.</li>
-         <li>Gravity Well: no Jump Point may be placed, and no jumping may happen, within 9" of a Planetoid.</li>
-         <li>Blockading an enemy Jump Point does not change who owns it, and does not stop its owner using it to Jump In or Jump Hop.</li>
-       </ul>
-       ${learnDiagram("gravity-well")}
-       <h2 class="learn-sub">Leaving by jump</h2>
-       <ul class="learn-rules">
-         <li>Jump Hop: if all ships are within 6" of a friendly Jump Point, remove them and set up within 6" of a friendly Jump Point in another Sector.</li>
-         <li>Jump Out: if all ships are within 6" of a friendly Jump Point, remove them to your Reserves.</li>
-       </ul>
-       <p class="learn-note">Tutorial setup &mdash; your flank Jump Points sit at the table's side edges, 5" in from your own edge and 24" apart; the central one is 15" in from your edge on the centreline. Rapid Ingress: all units Jump In during the Round 1 Jump Phase.</p>`,
-    ),
-    // 6 - Tactical Phase
-    phasePage(
-      2,
-      `<h2 class="learn-sub">Drag to Select</h2>
-       <p class="learn-note">A lead unit plus unactivated units within 6" of it; Combined Mass 10 or less.</p>
-       ${learnDiagram("drag-select")}
-       <h2 class="learn-sub">Then each unit works through three steps</h2>
-       <p class="learn-note">Every unit in the battlegroup finishes a step before the next step starts.</p>
-       <ol class="learn-phases learn-phases-steps">
-         ${ACTIVATION_STEPS.map(
-           (a, i) =>
-             `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b>${escapeHtml(a.name)}</b><span>${escapeHtml(a.text)}</span></div></li>`,
-         ).join("")}
-       </ol>
-       ${learnDiagram("movement")}
-
-       <h2 class="learn-sub">What the Passive Attacks Step means</h2>
-       <p class="learn-note">This is the one step you do not choose. Having moved, your unit is shot at &mdash; free of charge, by enemies who are not even activating.</p>
-       ${learnDiagram("passive")}
-       <ul class="learn-rules">
-         <li>It triggers when an active unit moves <b>through or ends in</b> the range and arc of a passive enemy's auxiliary weapons.</li>
-         <li>Passive means unactivated: an enemy that has already activated this round does not fire.</li>
-         <li>They fire <b>auxiliary weapons only</b> &mdash; the 180&deg; front arc, never the primary 45&deg; cone.</li>
-         <li>Each passive enemy unit fires <b>once per activation</b> of your battlegroup. It can fire again when your next battlegroup activates.</li>
-         <li>Only units that actually moved in this activation can be targeted.</li>
-         <li>Facilities have a 360&deg; arc and so always fire in this step at every active unit in range.</li>
-       </ul>
-       <p class="learn-note">So a long dash across the table is not free: you take fire from everything whose front arc you cross on the way. Moving less than 3" has its own cost though &mdash; Easy Target lets enemies re-roll attack dice against you.</p>
-
-       ${learnDiagram("action")}
-       <p class="learn-note">Give each activated unit an Activated token. The phase ends when all units have activated.</p>`,
-    ),
-    // 7 - End Phase
-    phasePage(
-      3,
-      `<h2 class="learn-sub">Score</h2>
-       <ul class="learn-rules">${bullets(csStep("Victory points"))}</ul>
-       <h2 class="learn-sub">Then clear the table</h2>
-       <ul class="learn-rules">
-         <li>Remove every Activated token &mdash; all units can act again next round.</li>
-         <li>Discard any CMD tokens you did not spend. They do not carry over, so a token saved for later is a token wasted. (Some faction rules change this.)</li>
-         <li>Begin the next round. The game ends after Round 4.</li>
-       </ul>
-       <p class="learn-note">${escapeHtml(csStep("Game end and victory")?.text ?? "")}</p>`,
-    ),
-    // 8 - Launch
+    // 4 - Launch
     `<div class="learn-screen learn-screen-launch">
       <h1 class="learn-title">You're ready</h1>
-      <p class="learn-lede">We'll load the Training Fleet into Play Mode &mdash; a round-by-round tracker that walks each phase as a checklist, keeps your command tokens and victory points, and reminds you of the rules as you go.</p>
+      <p class="learn-lede">Ready to try it?</p>
       <button class="learn-launch-btn" data-action="learn-launch">${icon("flag", 20)} Start the battle</button>
-      <p class="learn-fineprint">This drops you straight into Play Mode with the ready-made fleet. You can leave any time.</p>
+      <p class="learn-fineprint">You can use the Play Mode to track your game if needed.</p>
     </div>`,
   ];
 
@@ -2845,15 +2874,102 @@ function learnView(state: AppState): string {
   const nav = `
     <div class="learn-nav">
       <a class="learn-btn learn-btn-back" href="${backHref}">${backLabel}</a>
+      <a class="learn-btn learn-btn-ref" href="#/refsheet">${icon("scroll", 16)} Reference sheet</a>
       ${atEnd ? "" : `<a class="learn-btn learn-btn-next" href="#/learn/${step + 1}">Next ${icon("chevronRight", 16)}</a>`}
     </div>`;
 
+  // data-learn-step changes on every page turn, so morphing swaps the node
+  // rather than patching it in place - which is what lets the entrance
+  // animation re-run instead of firing once and never again.
   return `
   ${topbar()}
   <main class="learn-main">
     <nav class="learn-progress" aria-label="Tutorial progress">${progress}</nav>
-    ${screens[step] ?? screens[0]}
+    <div class="learn-stage" data-learn-step="${step}${anchor ? "-" + escapeHtml(anchor) : ""}">${screens[step] ?? screens[0]}</div>
     ${nav}
+  </main>
+  ${footer()}`;
+}
+
+// ---------------------------------------------------------------------------
+// Printable reference sheet: the round, the activation steps, every Action and
+// every Command, on one page.
+//
+// Deliberately fleet-free and faction-free. The fleet printout at #/print/:id
+// needs a saved list before it can render anything, but the moment you most want
+// a reference card is while you are still reading Learn to Play and have not
+// built a fleet at all. So commands print at face cost with no faction discounts
+// applied, and the Hypergrowth-only one is tagged rather than dropped, because
+// this sheet has no game mode to filter against.
+// ---------------------------------------------------------------------------
+
+function refSheetView(state: AppState): string {
+  const opts = state.ui.print ?? DEFAULT_PRINT;
+  const paper = PAPER[opts.paper] ?? PAPER.letter;
+  const rows = (items: { name: string; text: string; tag?: string }[]) =>
+    `<dl class="print-ref-list">${items
+      .map(
+        (i) =>
+          `<dt>${escapeHtml(i.name)}${i.tag ? `<span class="print-ref-cost">${escapeHtml(i.tag)}</span>` : ""}</dt><dd>${escapeHtml(i.text)}</dd>`,
+      )
+      .join("")}</dl>`;
+
+  return `
+  ${topbar()}
+  <main class="print-page ${opts.inkSaver ? "is-inksaver" : ""}">
+    <div class="print-toolbar">
+      <a class="bar-btn" href="#/learn/3">${icon("chevronRight", 15, "flip-x")} Back to Learn to Play</a>
+      <div class="print-opts">
+        <span class="segment" role="group" aria-label="Paper size">
+          <button class="${opts.paper === "letter" ? "selected" : ""}" data-action="print-paper" data-paper="letter">Letter</button>
+          <button class="${opts.paper === "a4" ? "selected" : ""}" data-action="print-paper" data-paper="a4">A4</button>
+        </span>
+        <label class="print-toggle" title="No coloured fills, so it survives your browser's Background graphics setting and saves toner"><input type="checkbox" data-action="print-inksaver" ${opts.inkSaver ? "checked" : ""} /> Ink saver</label>
+      </div>
+      <div class="print-go">
+        <span class="print-pagecount" data-print-pagecount>&nbsp;</span>
+        <button class="cta-btn" data-action="do-print">${icon("print", 17)} Print</button>
+      </div>
+    </div>
+
+    <div class="sheet-viewport">
+    <article class="sheet" data-print-sheet data-paper-label="${paper.label}" style="--page-w:${paper.w}px;--page-h:${paper.h}px">
+      <header class="sheet-head">
+        <div class="sheet-title-block">
+          <h1 class="sheet-title">Quick Reference</h1>
+          <p class="sheet-subtitle">A Billion Suns 2E &middot; the round, actions and commands</p>
+        </div>
+      </header>
+
+      <section class="sheet-section">
+        <h2 class="print-ref-h">The round</h2>
+        ${rows(ROUND_PHASES.map((p2, i) => ({ name: `${i + 1}. ${p2.name}`, text: p2.text })))}
+      </section>
+
+      <section class="sheet-section">
+        <h2 class="print-ref-h">Activating a unit</h2>
+        <p class="print-ref-note">Drag to Select a battlegroup: a lead unit plus unactivated friendly units within 6" of it, Combined Mass 10 or less. Every unit finishes a step before the next step starts.</p>
+        ${rows(ACTIVATION_STEPS.map((a, i) => ({ name: `${i + 1}. ${a.name}`, text: a.text })))}
+      </section>
+
+      <section class="sheet-section">
+        <h2 class="print-ref-h">Actions <span class="print-ref-sub">one per activation</span></h2>
+        ${rows(CORE_ACTIONS.map((a) => ({ name: a.name, text: a.text })))}
+      </section>
+
+      <section class="sheet-section">
+        <h2 class="print-ref-h">Commands <span class="print-ref-sub">spend CMD tokens</span></h2>
+        ${rows(
+          CORE_COMMANDS.map((c) => ({
+            name: c.name,
+            text: c.text,
+            tag: `${c.cost} CMD${c.shipyardOnly ? " · Hypergrowth only" : ""}`,
+          })),
+        )}
+        <p class="print-ref-note">Costs are the base costs. Faction rules and High Value Personnel can change them.</p>
+      </section>
+    </article>
+    </div>
   </main>
   ${footer()}`;
 }
@@ -3037,6 +3153,8 @@ export function render(state: AppState): string {
         return playView(state);
       case "learn":
         return learnView(state);
+      case "refsheet":
+        return refSheetView(state);
       case "changelog":
         return changelogView();
     }
