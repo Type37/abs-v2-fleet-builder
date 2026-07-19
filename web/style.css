@@ -2967,3 +2967,28 @@ a .icon,
 .learn-screen > * + * { margin-top: 0; }
 .learn-sub { margin: 20px 0 3px !important; font-size: 16px !important; }
 .learn-eyebrow { margin-bottom: 4px !important; }
+
+/* The tutorial table, drawn to the scenario's measurements. */
+.learn-map { max-width: 520px; }
+.learn-dg .dg-map-table { fill: none; stroke: var(--ink-3); stroke-width: 1.5; }
+.learn-dg .dg-map-centre { stroke: var(--hair); stroke-width: 1; stroke-dasharray: 5 5; }
+.learn-dg .dg-jp-halo { fill: var(--blue); fill-opacity: 0.06; stroke: var(--blue); stroke-width: 0.8; stroke-dasharray: 3 4; }
+.learn-dg .dg-them .dg-jp-halo { fill: var(--red); stroke: var(--red); }
+.learn-dg .dg-jp-dot { fill: var(--blue); }
+.learn-dg .dg-them .dg-jp-dot { fill: var(--red); }
+.learn-dg .dg-obj-well { fill: var(--ink); fill-opacity: 0.05; stroke: var(--ink-3); stroke-width: 0.8; stroke-dasharray: 2 4; }
+.learn-dg .dg-obj-core { fill: var(--ink); }
+.learn-dg .dg-map-lbl { font-family: var(--narrow); font-size: 9px; font-weight: 700; fill: var(--ink-3); text-anchor: middle; text-transform: uppercase; letter-spacing: 0.04em; }
+.learn-dg .dg-map-edge { font-family: var(--narrow); font-size: 10px; font-weight: 700; fill: var(--ink-2); text-anchor: middle; text-transform: uppercase; letter-spacing: 0.06em; }
+.learn-dg .dg-map-scale line { stroke: var(--ink-3); stroke-width: 1; }
+
+/* Sub-steps hang vertically off "The round", joined by a rail. */
+.learn-dots { align-items: flex-start; }
+.learn-substeps { list-style: none; margin: 14px 0 0; padding: 0 0 0 14px; display: grid; gap: 6px; position: relative; max-width: 60ch; }
+.learn-substeps::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 10px; width: 2px; background: var(--hair); }
+.learn-substep { position: relative; padding-left: 18px; }
+.learn-substep::before { content: ""; position: absolute; left: 0; top: 11px; width: 12px; height: 2px; background: var(--hair); }
+.learn-substep a { display: flex; align-items: baseline; gap: 8px; padding: 5px 8px; border: 1px solid var(--hair); color: var(--ink); text-decoration: none; }
+.learn-substep a:hover { border-color: var(--blue); color: var(--blue); }
+.learn-substep b { font-family: var(--display); font-weight: 800; font-size: 13px; }
+.learn-substep span { font-size: 12px; color: var(--ink-3); }

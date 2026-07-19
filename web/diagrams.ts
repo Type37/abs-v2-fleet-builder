@@ -158,7 +158,60 @@ function actionDiagram(): string {
   </svg>`;
 }
 
+/**
+ * The tutorial table, drawn to the scenario's own measurements rather than
+ * sketched: 48" by 36", flank Jump Points at the side edges 5" in from your own
+ * edge and 24" apart, the central one 15" in on the centreline, objective in the
+ * middle. One inch = 7px, so the 6" deployment bubbles and the 9" Gravity Well
+ * around a Planetoid are true to each other and to the table.
+ */
+function deploymentMap(): string {
+  const IN = 7; // px per table inch
+  const W = 48 * IN, H = 36 * IN;
+  const x = (i: number) => i * IN;
+  const y = (i: number) => i * IN;
+  // Your edge is the bottom. Flank points sit on the side edges 5" in; the
+  // central point 15" in on the centreline. Mirrored for the opponent.
+  const side = (bottom: boolean) => {
+    const edge = bottom ? 36 : 0;
+    const dir = bottom ? -1 : 1;
+    const cls = bottom ? "dg-you" : "dg-them";
+    const flankY = edge + dir * 5;
+    const centreY = edge + dir * 15;
+    const jp = (cx: number, cy: number, label: string) => `
+      <g class="dg-jp ${cls}" transform="translate(${x(cx)} ${y(cy)})">
+        <circle class="dg-jp-halo" r="${6 * IN}"/>
+        <circle class="dg-jp-dot" r="5"/>
+        <text class="dg-map-lbl" y="-${6 * IN + 5}">${label}</text>
+      </g>`;
+    // 24" apart, centred on the 48" width: 12" and 36".
+    return jp(12, flankY, "flank") + jp(36, flankY, "flank") + jp(24, centreY, "central");
+  };
+  return `
+  <svg class="learn-dg learn-map" viewBox="-14 -22 ${W + 28} ${H + 44}" role="img"
+       aria-label="Tutorial table setup: a 48 by 36 inch table, three jump points per player, and a central objective. Flank jump points sit on the side edges 5 inches in from your own edge and 24 inches apart; the central jump point is 15 inches in on the centreline.">
+    <rect class="dg-map-table" x="0" y="0" width="${W}" height="${H}"/>
+    <line class="dg-map-centre" x1="${x(24)}" y1="0" x2="${x(24)}" y2="${H}"/>
+    ${side(false)}
+    ${side(true)}
+    <g class="dg-objective" transform="translate(${x(24)} ${y(18)})">
+      <circle class="dg-obj-well" r="${9 * IN}"/>
+      <circle class="dg-obj-core" r="8"/>
+      <text class="dg-map-lbl" y="-${9 * IN + 5}">central objective</text>
+    </g>
+    <text class="dg-map-edge" x="${x(24)}" y="${H + 17}">your table edge</text>
+    <text class="dg-map-edge" x="${x(24)}" y="-9">opponent's edge</text>
+    <g class="dg-map-scale" transform="translate(0 ${H + 4})">
+      <line x1="${x(0)}" y1="0" x2="${x(6)}" y2="0"/>
+      <line x1="${x(0)}" y1="-4" x2="${x(0)}" y2="4"/>
+      <line x1="${x(6)}" y1="-4" x2="${x(6)}" y2="4"/>
+      <text class="dg-map-lbl" x="${x(3)}" y="14">6"</text>
+    </g>
+  </svg>`;
+}
+
 const DIAGRAMS: Record<string, () => string> = {
+  deployment: deploymentMap,
   command: commandDiagram,
   jump: jumpDiagram,
   "drag-select": dragSelectDiagram,

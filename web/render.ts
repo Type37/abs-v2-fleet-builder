@@ -2097,15 +2097,16 @@ const SCORING_NOTES: Partial<Record<GameMode, string[]>> = {
  * applies). Requisition only exists in the Shipyard modes. Faction rules and
  * carried HVP can grant more or change the cost, so a standing note says so.
  */
-function playCommandsPanel(list: SavedList, phase: number, cmdLeft: number, faction: Faction | undefined): string {
+function playCommandsPanel(list: SavedList, cmdLeft: number, faction: Faction | undefined): string {
   const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
   const effects = commandEffectsFor(list, faction);
 
-  // Core commands at the cost THIS fleet pays, plus anything its rules grant.
-  // Affordability is judged on the real cost, so a command discounted to 0 stays
-  // lit when the player is out of tokens - which is exactly when they most need
-  // to notice they can still use it.
-  const core = CORE_COMMANDS.filter((c) => (!c.shipyardOnly || isShipyard) && c.phases.includes(phase)).map((c) => {
+  // Every command, always. CMD tokens are a single free pool in 2E and may be
+  // spent on any command at any legal moment, so filtering this list to the
+  // current phase hid options the player could legitimately take - including
+  // reactive ones like Red Alert and Power to Shields, which are spent during an
+  // OPPONENT's activation and so would never show under your own phase.
+  const core = CORE_COMMANDS.filter((c) => !c.shipyardOnly || isShipyard).map((c) => {
     const { cost, change } = effectiveCost(c.name, c.cost, effects.costChanges);
     return {
       name: c.name,
@@ -2116,9 +2117,6 @@ function playCommandsPanel(list: SavedList, phase: number, cmdLeft: number, fact
       notes: effects.notes.filter((n) => n.command === c.name),
     };
   });
-  // A granted command has no phase data of its own, so it shows in every phase.
-  // Better to see it once too often than to have it silently absent in the phase
-  // it was meant for.
   const granted = effects.granted.map((g) => ({
     name: g.name,
     cost: g.cost,
@@ -2159,7 +2157,7 @@ function playCommandsPanel(list: SavedList, phase: number, cmdLeft: number, fact
   return `
     <section class="pc-cmds">
       <div class="pc-cmds-head">
-        <h3 class="roster-section">Commands you can use now</h3>
+        <h3 class="roster-section">Commands</h3>
         <span class="pc-cmds-left ${cmdLeft <= 0 ? "is-out" : ""}">${cmdLeft} CMD left</span>
       </div>
       ${body}
@@ -2228,11 +2226,6 @@ function playView(state: AppState): string {
         <p class="band-eyebrow"><a href="#/list/${list.id}">${escapeHtml(list.fleet.name || "Unnamed fleet")}</a> / Play mode</p>
         <h1 class="page-title" style="margin:0">Round ${play.round} of ${maxRound}</h1>
       </div>
-      <div class="band-readout">
-        <div class="readout readout-primary"><span class="readout-label">${scoreLabel}</span><span class="readout-value">${play.vp}</span></div>
-        <div class="readout readout-quiet"><span class="readout-label">Opponent</span><span class="readout-value">${play.oppVp}</span></div>
-        <div class="readout readout-accent"><span class="readout-label">CMD</span><span class="readout-value">${play.cmd}</span></div>
-      </div>
     </div>
   </section>
   <main class="solo-body">
@@ -2247,7 +2240,6 @@ function playView(state: AppState): string {
 
     <div class="solo-grid" style="margin-top:20px">
       <section class="solo-card solo-card-primary">
-        <h3 class="roster-section">Counters</h3>
         <div class="play-counters">
           ${counter("Round", play.round, "play-round")}
           ${counter("CMD tokens", play.cmd, "play-cmd")}
@@ -2261,8 +2253,6 @@ function playView(state: AppState): string {
       </section>
 
       <section class="solo-card solo-card-quiet">
-        <h3 class="roster-section">Initiative check</h3>
-        <p class="panel-note">${faction ? `${escapeHtml(faction.name)} rolls ${escapeHtml(faction.initiative)}.` : ""} A 2 or 3 counts as one success; a 1 counts as two. Most successes chooses who has Initiative; non-winners gain 1 CMD token.</p>
         <button class="bar-btn" data-action="play-initiative" data-dice="${faction ? escapeHtml(faction.initiative) : "3D6"}">Roll ${faction ? escapeHtml(faction.initiative) : "3D6"}</button>
         ${
           last && last.table.startsWith("Initiative check")
@@ -2272,7 +2262,6 @@ function playView(state: AppState): string {
       </section>
 
       <section class="solo-card solo-card-quiet">
-        <h3 class="roster-section">Scoring reminders</h3>
         ${notes ? `<ul class="rule-list">${notes}</ul>` : '<p class="muted">Check your mission sheet for scoring.</p>'}
         ${faction ? factionRuleBlock(faction, "compact") : ""}
       </section>
@@ -2282,11 +2271,12 @@ function playView(state: AppState): string {
       // Reference material lives below the controls, deliberately. Both of these
       // change size with the phase - the command list runs from one card to
       // seven, and the arcs diagram is a 591px block that only the Tactical
-      // phase has - and while they sat above the counters and the Next phase
-      // button, every phase change threw those up to 433px up or down the page.
-      // That is what made Play Mode feel like it moved under you. Nothing the
-      // player presses now sits below anything that resizes.
-      playCommandsPanel(list, play.phase, play.cmd, faction)
+      // arcs diagram is a 591px block that only the Tactical phase has - and
+      // while they sat above the counters and the Next phase button, every phase
+      // change threw those up to 433px around the page. Nothing the player
+      // presses now sits below anything that resizes. (The command list itself no
+      // longer changes with the phase, but the diagram still does.)
+      playCommandsPanel(list, play.cmd, faction)
     }
     ${
       play.phase === 2
@@ -2697,7 +2687,6 @@ function learnView(state: AppState): string {
   const phasePage = (i: number, extra = "") => {
     const ph = ROUND_PHASES[i]!;
     return `<div class="learn-screen">
-      <p class="learn-eyebrow">The round &middot; Phase ${i + 1} of 4</p>
       <h1 class="learn-title">${escapeHtml(ph.name)}</h1>
       <p class="learn-lede">${escapeHtml(ph.text)}</p>
       ${extra}
@@ -2707,13 +2696,11 @@ function learnView(state: AppState): string {
   const screens = [
     // 0 - Mission brief
     `<div class="learn-screen">
-      <p class="learn-eyebrow">Learn to Play</p>
       <h1 class="learn-title">Your first battle</h1>
       <p class="learn-lede">${escapeHtml(cs?.intro ?? "")}</p>
     </div>`,
     // 1 - Your fleet
     `<div class="learn-screen">
-      <p class="learn-eyebrow">Step 2 &middot; Your fleet</p>
       <h1 class="learn-title">The Training Fleet</h1>
       <p class="learn-lede">Your ready-made fleet for the tutorial &mdash; real ships with real stats. You read a ship by four numbers and its weapons.</p>
       ${learnFleetTable()}
@@ -2728,10 +2715,9 @@ function learnView(state: AppState): string {
     </div>`,
     // 2 - The table
     `<div class="learn-screen">
-      <p class="learn-eyebrow">Step 3 &middot; The table</p>
       <h1 class="learn-title">Setup and winning</h1>
       <p class="learn-lede">${escapeHtml(csStep("Setup")?.text ?? "")}</p>
-      <div class="learn-diagram">${tacticalDiagram("deployment")}</div>
+      ${learnDiagram("deployment")}
       <h2 class="learn-sub">Blockading</h2>
       <ul class="learn-rules">${bullets(csStep("Special rules"), /^Blockading/)}</ul>
       <h2 class="learn-sub">Victory points</h2>
@@ -2740,15 +2726,21 @@ function learnView(state: AppState): string {
     </div>`,
     // 3 - The round
     `<div class="learn-screen">
-      <p class="learn-eyebrow">Step 4 &middot; How a round works</p>
       <h1 class="learn-title">The round</h1>
       <p class="learn-lede">Four rounds, each running the same four phases. The next four pages take them one at a time.</p>
       <ol class="learn-phases">
         ${ROUND_PHASES.map(
           (p2, i) =>
-            `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b><a href="#/learn/${i + 4}">${escapeHtml(p2.name)}</a></b><span>${escapeHtml(p2.text)}</span></div></li>`,
+            `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b>${escapeHtml(p2.name)}</b><span>${escapeHtml(p2.text)}</span></div></li>`,
         ).join("")}
       </ol>
+      <h2 class="learn-sub">Take them one at a time</h2>
+      <ul class="learn-substeps">
+        ${ROUND_PHASES.map(
+          (p2, i) =>
+            `<li class="learn-substep"><a href="#/learn/${i + 4}"><b>${escapeHtml(p2.name)}</b><span>${i === 2 ? "Drag to Select, and the three activation steps" : i === 1 ? "Jump Points, jumping in, Jump Strain" : i === 0 ? "Initiative Check and CMD tokens" : "Scoring and clean-up"}</span></a></li>`,
+        ).join("")}
+      </ul>
       <p class="learn-note learn-ref"><a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">${icon("scroll", 15)} Read the full Quick Reference (PDF)</a></p>
     </div>`,
     // 4 - Command Phase
@@ -2767,12 +2759,30 @@ function learnView(state: AppState): string {
     phasePage(
       1,
       `${learnDiagram("jump")}
+       <h2 class="learn-sub">On your turn, do one thing</h2>
        <ul class="learn-rules">
-         <li>Open a Jump Point, Jump In a unit, or Pass.</li>
-         <li>A unit jumping in deploys wholly within 6" of a friendly Jump Point.</li>
-         <li>The phase ends once every player has passed.</li>
+         <li>Open a Jump Point, Jump In a unit, or Pass. None of these costs a CMD token.</li>
+         <li>Turn order follows Initiative: the Initiative holder chooses who goes first.</li>
+         <li>The phase ends once every player has passed in a row.</li>
        </ul>
-       <p class="learn-note">Tutorial exception &mdash; Rapid Ingress: all units Jump In during the Round 1 Jump Phase.</p>`,
+       <h2 class="learn-sub">Jumping a unit in</h2>
+       <ul class="learn-rules">
+         <li>The unit deploys wholly within 6" of a friendly Jump Point. The range is flat &mdash; it is not reduced by the unit's Mass.</li>
+         <li>Arriving does no damage to anything nearby. There is no Jump Shock in the core rules.</li>
+         <li>Jump Strain: a unit may only jump once per round. Jump In, Jump Hop or Jump Out &mdash; pick one.</li>
+       </ul>
+       <h2 class="learn-sub">Placing a Jump Point</h2>
+       <ul class="learn-rules">
+         <li>Jump Points are placed on the table and belong to the player who opened them.</li>
+         <li>Gravity Well: no Jump Point may be placed, and no jumping may happen, within 9" of a Planetoid.</li>
+         <li>Blockading an enemy Jump Point does not change who owns it, and does not stop its owner using it to Jump In or Jump Hop.</li>
+       </ul>
+       <h2 class="learn-sub">Leaving by jump</h2>
+       <ul class="learn-rules">
+         <li>Jump Hop: if all ships are within 6" of a friendly Jump Point, remove them and set up within 6" of a friendly Jump Point in another Sector.</li>
+         <li>Jump Out: if all ships are within 6" of a friendly Jump Point, remove them to your Reserves.</li>
+       </ul>
+       <p class="learn-note">Tutorial setup &mdash; your flank Jump Points sit at the table's side edges, 5" in from your own edge and 24" apart; the central one is 15" in from your edge on the centreline. Rapid Ingress: all units Jump In during the Round 1 Jump Phase.</p>`,
     ),
     // 6 - Tactical Phase
     phasePage(
@@ -2797,7 +2807,6 @@ function learnView(state: AppState): string {
     phasePage(3, `<ul class="learn-rules">${bullets(csStep("Victory points"))}</ul>`),
     // 8 - Launch
     `<div class="learn-screen learn-screen-launch">
-      <p class="learn-eyebrow">Step 5 &middot; Into battle</p>
       <h1 class="learn-title">You're ready</h1>
       <p class="learn-lede">We'll load the Training Fleet into Play Mode &mdash; a round-by-round tracker that walks each phase as a checklist, keeps your command tokens and victory points, and reminds you of the rules as you go.</p>
       <button class="learn-launch-btn" data-action="learn-launch">${icon("flag", 20)} Start the battle</button>

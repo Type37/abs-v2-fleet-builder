@@ -9,6 +9,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.66",
+    date: "2026-07-18",
+    title: "Every command, always",
+    items: [
+      "Play Mode shows every command you can spend a token on, not just the ones I had tagged to the current phase. CMD tokens are a single free pool in 2E and may be spent on any command at any legal moment — the filtering hid reactive commands like Red Alert and Power to Shields entirely, since those are spent during your opponent’s activation and so never fell in your own phase.",
+      "Tightened Play Mode: the victory point, opponent and CMD readouts at the top duplicated the counters below them exactly, and the Counters, Initiative check and Scoring headings and their explainer paragraph are gone.",
+      "The Jump Phase page now has the real rules: no CMD cost, turn order by Initiative, deployment within 6 inches with no Mass penalty, no Jump Shock on arrival, Jump Strain (one jump per unit per round), Gravity Well, what blockading a jump point does and does not do, and Jump Hop and Jump Out.",
+      "Redrew the table map to the scenario’s own measurements: 48 by 36 inches, flank jump points on the side edges 5 inches in and 24 apart, the central one 15 inches in, with the 6 inch deployment bubbles and the 9 inch gravity well drawn true to scale against each other.",
+      "The four phase pages hang vertically off The round, joined by a rail.",
+      "Removed the eyebrow labels.",
+    ],
+  },
+  {
     version: "0.8.65",
     date: "2026-07-18",
     title: "Learn to Play, rebuilt on the actual rules",
