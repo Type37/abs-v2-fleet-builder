@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.62",
+    date: "2026-07-18",
+    title: "Stat numbers line up",
+    items: [
+      "The 2x2 stat block now aligns its columns: Mass sits above Silhouette, Thrust above Shields, and every number starts at the same place as the one above it. Each chip used to size itself independently, so a short label like Sil pulled its value left of the Mass value above it.",
+    ],
+  },
+  {
     version: "0.8.61",
     date: "2026-07-18",
     title: "Personnel in three columns",
