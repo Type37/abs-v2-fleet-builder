@@ -2883,3 +2883,87 @@ a .icon,
 .solo-body, .setup-band > .setup-head, .workspace, .mf-body {
   max-width: 1240px; margin-left: auto; margin-right: auto;
 }
+
+/* ------------------------------------------------- Learn to Play diagrams
+
+   Flat vector, one accent, motion only where the thing being explained IS a
+   movement. Everything settles on its end state, so the reduced-motion block at
+   the bottom can simply switch the animation off and leave a readable still. */
+.learn-dg { display: block; width: 100%; max-width: 420px; margin: 10px auto 0; height: auto; }
+.learn-dg .dg-ship { fill: var(--ink); }
+.learn-dg .dg-enemy { fill: var(--red); }
+.learn-dg .dg-lead { fill: var(--blue); }
+.learn-dg .dg-outside { fill: var(--ink-3); opacity: 0.45; }
+.learn-dg .dg-title { font-family: var(--sans); font-size: 11px; font-weight: 700; fill: var(--ink-2); text-anchor: middle; text-transform: uppercase; letter-spacing: 0.05em; }
+.learn-dg .dg-mini { font-family: var(--narrow); font-size: 10px; font-weight: 700; fill: var(--ink-3); text-anchor: middle; text-transform: uppercase; letter-spacing: 0.04em; }
+.learn-dg .dg-mini-out { fill: var(--ink-3); }
+.learn-dg .dg-range { fill: var(--blue); fill-opacity: 0.07; stroke: var(--blue); stroke-width: 1; stroke-dasharray: 4 4; }
+.learn-dg .dg-measure line { stroke: var(--ink-3); stroke-width: 1; }
+.learn-dg .dg-measure-text { font-family: var(--narrow); font-size: 10px; font-weight: 700; fill: var(--ink-3); text-anchor: middle; }
+.learn-dg .dg-track { fill: none; stroke: var(--hair); stroke-width: 1.5; stroke-dasharray: 5 5; }
+.learn-dg .dg-pivot-arc path { fill: none; stroke: var(--blue); stroke-width: 2; }
+.learn-dg .dg-arc-fill { fill: var(--blue); fill-opacity: 0.14; }
+.learn-dg .dg-arc-pri { fill: var(--red); fill-opacity: 0.16; }
+.learn-dg .dg-shot { stroke: var(--red); stroke-width: 2; stroke-linecap: round; }
+.learn-dg .dg-die rect { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
+.learn-dg .dg-pip { fill: var(--ink); }
+.learn-dg .dg-token circle { fill: var(--blue); }
+.learn-dg .dg-token-mark { fill: var(--paper); }
+.learn-dg .dg-jp-core { fill: var(--blue); }
+.learn-dg .dg-jp-ring { fill: none; stroke: var(--blue); stroke-width: 2; }
+
+@keyframes dg-roll { 0% { transform: translateY(-26px) rotate(-140deg); opacity: 0; } 55% { opacity: 1; } 70% { transform: translateY(3px) rotate(6deg); } 100% { transform: translateY(0) rotate(0); opacity: 1; } }
+@keyframes dg-pop { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes dg-grow { 0% { transform: scale(0.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes dg-ring { 0% { r: 9; opacity: 1; } 100% { r: 30; opacity: 0; } }
+@keyframes dg-pivot-then-run {
+  0%, 18% { transform: translate(60px, 96px) rotate(-90deg); }
+  34%, 42% { transform: translate(60px, 96px) rotate(0deg); }
+  86%, 100% { transform: translate(250px, 96px) rotate(0deg); }
+}
+@keyframes dg-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dg-fire { 0%, 40% { opacity: 0; stroke-dashoffset: 130; } 55% { opacity: 1; } 100% { opacity: 0.9; stroke-dashoffset: 0; } }
+
+.learn-dg .dg-die { animation: dg-roll 900ms cubic-bezier(.2,.8,.3,1) both; transform-box: fill-box; transform-origin: center; }
+.learn-dg .dg-die-2 { animation-delay: 120ms; }
+.learn-dg .dg-die-3 { animation-delay: 240ms; }
+.learn-dg .dg-die-4 { animation-delay: 360ms; }
+.learn-dg .dg-token { animation: dg-pop 420ms cubic-bezier(.2,.8,.3,1) both; animation-delay: 700ms; transform-box: fill-box; transform-origin: center; }
+.learn-dg .dg-token-2 { animation-delay: 800ms; }
+.learn-dg .dg-token-3 { animation-delay: 900ms; }
+.learn-dg .dg-token-4 { animation-delay: 1000ms; }
+.learn-dg .dg-range-grow { animation: dg-grow 700ms cubic-bezier(.2,.8,.3,1) both; transform-box: fill-box; transform-origin: center; }
+.learn-dg .dg-jp-ring { animation: dg-ring 1800ms ease-out infinite; }
+.learn-dg .dg-arrive { animation: dg-pop 500ms cubic-bezier(.2,.8,.3,1) both; transform-box: fill-box; transform-origin: center; }
+.learn-dg .dg-arrive-1 { animation-delay: 700ms; }
+.learn-dg .dg-arrive-2 { animation-delay: 900ms; }
+.learn-dg .dg-arrive-3 { animation-delay: 1100ms; }
+.learn-dg .dg-picked { animation: dg-fade-in 400ms ease both; }
+.learn-dg .dg-picked-1 { animation-delay: 700ms; }
+.learn-dg .dg-picked-2 { animation-delay: 850ms; }
+.learn-dg .dg-picked-3 { animation-delay: 1000ms; }
+.learn-dg .dg-mover { animation: dg-pivot-then-run 2600ms ease-in-out infinite; }
+.learn-dg .dg-measure-late { animation: dg-fade-in 500ms ease both; animation-delay: 900ms; }
+.learn-dg .dg-shot { stroke-dasharray: 130; animation: dg-fire 1600ms ease-out infinite; }
+.learn-dg .dg-shot-2 { animation-delay: 260ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-dg * { animation: none !important; }
+}
+
+/* Learn to Play: rules quoted from the book, and the sub-step dots. */
+.learn-rules { list-style: disc; margin: 10px 0 0; padding-left: 20px; display: grid; gap: 6px; max-width: 66ch; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.learn-rules li::marker { color: var(--ink-3); }
+.learn-phase b a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--hair); }
+.learn-phase b a:hover { color: var(--blue); border-bottom-color: var(--blue); }
+/* Phase pages are sub-steps of "The round": a smaller, unnumbered dot. */
+.learn-dot.is-sub .learn-dot-n { display: none; }
+.learn-dot.is-sub { opacity: 0.75; }
+.learn-dot.is-sub.on { opacity: 1; }
+
+/* Tighter overall: the walkthrough had a poster's spacing on a manual's content. */
+.learn-title { margin-bottom: 8px !important; font-size: clamp(24px, 3.4vw, 34px) !important; }
+.learn-lede { font-size: 16px !important; margin-bottom: 16px !important; }
+.learn-screen > * + * { margin-top: 0; }
+.learn-sub { margin: 20px 0 3px !important; font-size: 16px !important; }
+.learn-eyebrow { margin-bottom: 4px !important; }

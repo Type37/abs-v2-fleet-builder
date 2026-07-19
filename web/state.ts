@@ -69,7 +69,8 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === "ships") return { view: "ships" };
   if (parts[0] === "play" && parts[1]) return { view: "play", listId: parts[1] };
   if (parts[0] === "learn") {
-    const step = parts[1] ? Math.max(0, Math.min(4, parseInt(parts[1], 10) || 0)) : 0;
+    // 0 Mission, 1 Fleet, 2 Table, 3 Round, 4-7 the four phases, 8 Launch.
+    const step = parts[1] ? Math.max(0, Math.min(8, parseInt(parts[1], 10) || 0)) : 0;
     return { view: "learn", step };
   }
   if (parts[0] === "changelog") return { view: "changelog" };

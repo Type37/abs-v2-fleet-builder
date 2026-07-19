@@ -9,6 +9,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.65",
+    date: "2026-07-18",
+    title: "Learn to Play, rebuilt on the actual rules",
+    items: [
+      "Corrected the victory conditions. They were a paraphrase that softened the Blockading rule (dropping both tie-breaks) and left out the end-of-game scoring for enemy personnel entirely. The page now prints the scenario’s own text.",
+      "Reordered: your fleet, then the table, then the round.",
+      "Each phase of the round has its own page now, explained properly rather than squeezed into a card: Command, Jump, Tactical and End.",
+      "The Tactical page covers Drag to Select and all three activation steps — Movement, Passive Attacks, Action — each with an animated diagram showing what actually moves.",
+      "Animated diagrams for rolling initiative and taking command tokens, for jumping a unit in within six inches of a jump point, for drawing a battlegroup, for pivoting and moving, for suffering passive attacks, and for opening fire. All of them stop if your system asks for reduced motion.",
+      "Tightened the spacing throughout — it had a poster’s layout on a manual’s content.",
+    ],
+  },
+  {
     version: "0.8.64",
     date: "2026-07-18",
     title: "Learn to Play says what the rules say",

@@ -28,6 +28,7 @@ import {
   matchCount,
 } from "./emblems.ts";
 import { CHANGELOG } from "./changelog.ts";
+import { learnDiagram } from "./diagrams.ts";
 import { FACTION_LORE } from "./faction-lore.ts";
 import type { AppState } from "./state.ts";
 import { activeList, activeOutfit, DEFAULT_PRINT, PAPER } from "./state.ts";
@@ -2593,7 +2594,24 @@ function optionsModal(state: AppState): string {
 // walks the round structure with a looping demo, then drops you into Play Mode.
 // ---------------------------------------------------------------------------
 
-const LEARN_STEPS = ["Mission", "Your fleet", "The round", "The table", "Battle"];
+// The walkthrough. The four phase pages sit under "The round" as sub-steps, so
+// each one gets the space to be explained properly rather than compressed into
+// a single card in a four-card grid.
+interface LearnStep {
+  label: string;
+  sub?: boolean;
+}
+const LEARN_STEPS: LearnStep[] = [
+  { label: "Mission" },
+  { label: "Your fleet" },
+  { label: "The table" },
+  { label: "The round" },
+  { label: "Command", sub: true },
+  { label: "Jump", sub: true },
+  { label: "Tactical", sub: true },
+  { label: "End", sub: true },
+  { label: "Battle" },
+];
 
 function learnCounts(): Map<string, number> {
   // Combat Simulator fleet composition (Basic Training p.60).
@@ -2657,28 +2675,47 @@ function learnActivationDemo(): string {
 
 function learnView(state: AppState): string {
   const step = state.route.view === "learn" ? state.route.step : 0;
-  const progress = LEARN_STEPS.map(
-    (label, i) =>
-      `<a class="learn-dot ${i === step ? "on" : ""} ${i < step ? "done" : ""}" href="#/learn${i > 0 ? "/" + i : ""}" aria-label="${escapeHtml(label)}"><span class="learn-dot-n">${i + 1}</span><span class="learn-dot-l">${escapeHtml(label)}</span></a>`,
-  ).join('<span class="learn-dot-sep" aria-hidden="true"></span>');
+  let mainN = 0;
+  const progress = LEARN_STEPS.map((s2, i) => {
+    if (!s2.sub) mainN += 1;
+    return `<a class="learn-dot ${s2.sub ? "is-sub" : ""} ${i === step ? "on" : ""} ${i < step ? "done" : ""}" href="#/learn${i > 0 ? "/" + i : ""}" aria-label="${escapeHtml(s2.label)}"><span class="learn-dot-n">${s2.sub ? "" : mainN}</span><span class="learn-dot-l">${escapeHtml(s2.label)}</span></a>`;
+  }).join('<span class="learn-dot-sep" aria-hidden="true"></span>');
+
+  // Rules text on these pages comes from TRAINING_GUIDES (transcribed from the
+  // Combat Simulator scenario) and ROUND_PHASES / ACTIVATION_STEPS (transcribed
+  // from the Quick Reference). Nothing here is a summary written from memory -
+  // the previous scoring bullets were, and they both softened the Blockading
+  // rule and dropped the end-of-game HVP scoring entirely.
+  const cs = TRAINING_GUIDES["combat-simulator"];
+  const csStep = (title: string) => cs?.steps.find((x) => x.title === title);
+  const bullets = (b: GuideStep | undefined, match?: RegExp) =>
+    (b?.points ?? [])
+      .filter((t) => !match || match.test(t))
+      .map((t) => `<li>${escapeHtml(t)}</li>`)
+      .join("");
+
+  const phasePage = (i: number, extra = "") => {
+    const ph = ROUND_PHASES[i]!;
+    return `<div class="learn-screen">
+      <p class="learn-eyebrow">The round &middot; Phase ${i + 1} of 4</p>
+      <h1 class="learn-title">${escapeHtml(ph.name)}</h1>
+      <p class="learn-lede">${escapeHtml(ph.text)}</p>
+      ${extra}
+    </div>`;
+  };
 
   const screens = [
     // 0 - Mission brief
     `<div class="learn-screen">
       <p class="learn-eyebrow">Learn to Play</p>
       <h1 class="learn-title">Your first battle</h1>
-      <p class="learn-lede">A Billion Suns is a two-player game of fleets fighting over objectives. This tutorial walks you through one small skirmish so you learn the basics: activating your ships, moving, and shooting.</p>
-      <div class="learn-cards">
-        <div class="learn-card"><h3>Grab an opponent</h3><p>It plays two-sided. Bring a friend with a second fleet, or run both sides yourself to learn the flow.</p></div>
-        <div class="learn-card"><h3>No list-building yet</h3><p>You get a ready-made Training Fleet. Nothing to buy, nothing to pick &mdash; just learn the game.</p></div>
-        <div class="learn-card"><h3>Four short rounds</h3><p>The whole game is four rounds. We'll walk the structure, then drop you into a live tracker.</p></div>
-      </div>
+      <p class="learn-lede">${escapeHtml(cs?.intro ?? "")}</p>
     </div>`,
     // 1 - Your fleet
     `<div class="learn-screen">
       <p class="learn-eyebrow">Step 2 &middot; Your fleet</p>
       <h1 class="learn-title">The Training Fleet</h1>
-      <p class="learn-lede">This is your ready-made fleet for the tutorial &mdash; real ships with real stats. You'll read a ship by four numbers and its weapons.</p>
+      <p class="learn-lede">Your ready-made fleet for the tutorial &mdash; real ships with real stats. You read a ship by four numbers and its weapons.</p>
       ${learnFleetTable()}
       <ul class="learn-legend">
         <li><b>Mass</b> how big &amp; how many it can carry</li>
@@ -2689,46 +2726,76 @@ function learnView(state: AppState): string {
         <li><span class="lf-arc lf-arc-aux">AUX</span> full 180&deg; front arc</li>
       </ul>
     </div>`,
-    // 2 - The round. Phase names and wording come from ROUND_PHASES /
-    // ACTIVATION_STEPS, which are transcribed from the Quick Reference rather
-    // than summarised - a hand-written summary here previously called the
-    // Tactical Phase "Battle" and described an activation as move-then-shoot,
-    // which omits the Passive Attacks Step and makes firing sound automatic.
+    // 2 - The table
     `<div class="learn-screen">
-      <p class="learn-eyebrow">Step 3 &middot; How a round works</p>
+      <p class="learn-eyebrow">Step 3 &middot; The table</p>
+      <h1 class="learn-title">Setup and winning</h1>
+      <p class="learn-lede">${escapeHtml(csStep("Setup")?.text ?? "")}</p>
+      <div class="learn-diagram">${tacticalDiagram("deployment")}</div>
+      <h2 class="learn-sub">Blockading</h2>
+      <ul class="learn-rules">${bullets(csStep("Special rules"), /^Blockading/)}</ul>
+      <h2 class="learn-sub">Victory points</h2>
+      <ul class="learn-rules">${bullets(csStep("Victory points"))}</ul>
+      <p class="learn-note">${escapeHtml(csStep("Game end and victory")?.text ?? "")}</p>
+    </div>`,
+    // 3 - The round
+    `<div class="learn-screen">
+      <p class="learn-eyebrow">Step 4 &middot; How a round works</p>
       <h1 class="learn-title">The round</h1>
+      <p class="learn-lede">Four rounds, each running the same four phases. The next four pages take them one at a time.</p>
       <ol class="learn-phases">
         ${ROUND_PHASES.map(
-          (p, i) =>
-            `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b>${escapeHtml(p.name)}</b><span>${escapeHtml(p.text)}</span></div></li>`,
+          (p2, i) =>
+            `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b><a href="#/learn/${i + 4}">${escapeHtml(p2.name)}</a></b><span>${escapeHtml(p2.text)}</span></div></li>`,
         ).join("")}
       </ol>
-      <h2 class="learn-sub">Activating a unit</h2>
-      <p class="learn-note">In the Tactical Phase, every unit in the battlegroup finishes each step before the next one starts.</p>
-      <ol class="learn-phases learn-phases-steps">
-        ${ACTIVATION_STEPS.map(
-          (p, i) =>
-            `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b>${escapeHtml(p.name)}</b><span>${escapeHtml(p.text)}</span></div></li>`,
-        ).join("")}
-      </ol>
-      ${learnActivationDemo()}
       <p class="learn-note learn-ref"><a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">${icon("scroll", 15)} Read the full Quick Reference (PDF)</a></p>
     </div>`,
-    // 3 - The table
-    `<div class="learn-screen">
-      <p class="learn-eyebrow">Step 4 &middot; The table &amp; winning</p>
-      <h1 class="learn-title">Hold the objectives</h1>
-      <p class="learn-lede">Set up a roughly 4&times;3 foot table. Each player gets three jump points along their own edge, with a central objective in the middle.</p>
-      <div class="learn-split">
-        <div class="learn-diagram">${tacticalDiagram("deployment")}</div>
-        <ul class="learn-vp">
-          <li><b>Blockade</b> an objective by having the most Combined Mass within 6" of it.</li>
-          <li>Each End Phase: <b>+2VP</b> per enemy flank jump point you blockade, <b>+5VP</b> for their central jump point, <b>+3VP</b> for the central objective.</li>
-          <li>The game ends after <b>Round 4</b>. Most victory points wins.</li>
-        </ul>
-      </div>
-    </div>`,
-    // 4 - Launch
+    // 4 - Command Phase
+    phasePage(
+      0,
+      `${learnDiagram("command")}
+       <ul class="learn-rules">
+         <li>Roll a number of D6 equal to your faction's Initiative value.</li>
+         <li>Each 2 or 3 is one success; each 1 is two successes.</li>
+         <li>Most successes wins and chooses who holds Initiative this round. Ties: lowest dice sum wins, then clockwise from the last holder.</li>
+         <li>Every player who did not win gains +1 CMD token.</li>
+       </ul>
+       <p class="learn-note">In the tutorial your Initiative Value is 3D6.</p>`,
+    ),
+    // 5 - Jump Phase
+    phasePage(
+      1,
+      `${learnDiagram("jump")}
+       <ul class="learn-rules">
+         <li>Open a Jump Point, Jump In a unit, or Pass.</li>
+         <li>A unit jumping in deploys wholly within 6" of a friendly Jump Point.</li>
+         <li>The phase ends once every player has passed.</li>
+       </ul>
+       <p class="learn-note">Tutorial exception &mdash; Rapid Ingress: all units Jump In during the Round 1 Jump Phase.</p>`,
+    ),
+    // 6 - Tactical Phase
+    phasePage(
+      2,
+      `<h2 class="learn-sub">Drag to Select</h2>
+       <p class="learn-note">A lead unit plus unactivated units within 6" of it; Combined Mass 10 or less.</p>
+       ${learnDiagram("drag-select")}
+       <h2 class="learn-sub">Then each unit works through three steps</h2>
+       <p class="learn-note">Every unit in the battlegroup finishes a step before the next step starts.</p>
+       <ol class="learn-phases learn-phases-steps">
+         ${ACTIVATION_STEPS.map(
+           (a, i) =>
+             `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b>${escapeHtml(a.name)}</b><span>${escapeHtml(a.text)}</span></div></li>`,
+         ).join("")}
+       </ol>
+       ${learnDiagram("movement")}
+       ${learnDiagram("passive")}
+       ${learnDiagram("action")}
+       <p class="learn-note">Give each activated unit an Activated token. The phase ends when all units have activated.</p>`,
+    ),
+    // 7 - End Phase
+    phasePage(3, `<ul class="learn-rules">${bullets(csStep("Victory points"))}</ul>`),
+    // 8 - Launch
     `<div class="learn-screen learn-screen-launch">
       <p class="learn-eyebrow">Step 5 &middot; Into battle</p>
       <h1 class="learn-title">You're ready</h1>
