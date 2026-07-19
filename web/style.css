@@ -3033,3 +3033,28 @@ a .icon,
 @media (max-width: 900px) {
   .play-cols { grid-template-columns: 1fr; }
 }
+
+/* Every view gets a ceiling, not just the three I did first. All of these are
+   direct children of #app, so they need the id in the selector to outrank
+   "#app > * { max-width: 100% }" - a bare class silently loses to it.
+   Widths follow content: prose narrow, tables wide. */
+#app > .index-wrap { max-width: 1100px; margin-left: auto; margin-right: auto; }
+#app > .fleets-main { max-width: 1100px; margin-left: auto; margin-right: auto; }
+#app > .home-main { max-width: 1100px; margin-left: auto; margin-right: auto; }
+#app > .foundry-main { max-width: 1100px; margin-left: auto; margin-right: auto; }
+#app > .compendium { max-width: 1320px; margin-left: auto; margin-right: auto; }
+#app > .changelog-main { max-width: 820px; margin-left: auto; margin-right: auto; }
+#app > .builder { max-width: 1280px; margin-left: auto; margin-right: auto; }
+
+/* Gravity well and jump strain. */
+.learn-dg .dg-well { fill: var(--red); fill-opacity: 0.07; stroke: var(--red); stroke-width: 1; stroke-dasharray: 4 4; }
+.learn-dg .dg-planetoid { fill: var(--ink-3); }
+.learn-dg .dg-no { stroke: var(--red); stroke-width: 2.4; stroke-linecap: round; }
+.learn-dg .dg-jp-bad .dg-jp-dot { fill: var(--ink-3); opacity: 0.5; }
+.learn-dg .dg-strain-box { fill: none; stroke: var(--hair); stroke-width: 1.5; }
+.learn-dg .dg-strain-t { font-family: var(--display); font-size: 13px; font-weight: 800; fill: var(--ink); text-anchor: middle; }
+.learn-dg .dg-strain-s { font-family: var(--narrow); font-size: 10px; font-weight: 700; fill: var(--ink-3); text-anchor: middle; text-transform: uppercase; letter-spacing: 0.04em; }
+@keyframes dg-strain-cycle { 0%, 22% { stroke: var(--blue); stroke-width: 2.5; } 33%, 100% { stroke: var(--hair); stroke-width: 1.5; } }
+.learn-dg .dg-strain-1 .dg-strain-box { animation: dg-strain-cycle 3600ms ease-in-out infinite; }
+.learn-dg .dg-strain-2 .dg-strain-box { animation: dg-strain-cycle 3600ms ease-in-out infinite; animation-delay: 1200ms; }
+.learn-dg .dg-strain-3 .dg-strain-box { animation: dg-strain-cycle 3600ms ease-in-out infinite; animation-delay: 2400ms; }

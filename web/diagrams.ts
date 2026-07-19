@@ -229,8 +229,66 @@ function deploymentMap(): string {
   </svg>`;
 }
 
+/**
+ * Gravity Well: no Jump Point may be placed, and no jumping may happen, within
+ * 9" of a Planetoid. Drawn at the same 7px-per-inch scale as the table map, so
+ * the 9" exclusion reads as the large area it actually is.
+ */
+function gravityWellDiagram(): string {
+  const IN = 7;
+  return `
+  <svg class="learn-dg" viewBox="0 0 320 190" role="img"
+       aria-label="Gravity Well: no jump point may be placed, and no jumping may happen, within nine inches of a planetoid.">
+    ${LABEL(160, 15, 'Gravity Well — 9" around a Planetoid', "dg-title")}
+    <g transform="translate(150 104)">
+      <circle class="dg-well" r="${9 * IN}"/>
+      <circle class="dg-planetoid" r="17"/>
+      ${LABEL(0, 5, "", "dg-mini")}
+      <g class="dg-measure">
+        <line x1="0" y1="0" x2="${9 * IN}" y2="0"/>
+        ${LABEL(32, -6, '9"', "dg-measure-text")}
+      </g>
+    </g>
+    ${LABEL(150, 148, "planetoid", "dg-mini")}
+    <g class="dg-jp dg-jp-bad" transform="translate(196 74)">
+      <circle class="dg-jp-dot" r="5"/>
+      <path class="dg-no" d="M-7 -7 L7 7 M7 -7 L-7 7"/>
+    </g>
+    ${LABEL(226, 62, "no jump point", "dg-mini dg-mini-out")}
+    <g class="dg-jp" transform="translate(285 150)">
+      <circle class="dg-jp-dot" r="5"/>
+    </g>
+    ${LABEL(285, 170, "fine", "dg-mini")}
+  </svg>`;
+}
+
+/**
+ * Jump Strain: a unit jumps once per round and picks which kind. Three routes,
+ * one choice - the rule most easily missed, because each of the three reads
+ * like an independent option elsewhere in the reference.
+ */
+function jumpStrainDiagram(): string {
+  const opt = (i: number, x: number, title: string, sub: string) => `
+    <g class="dg-strain dg-strain-${i}" transform="translate(${x} 96)">
+      <rect class="dg-strain-box" x="-46" y="-26" width="92" height="52" rx="3"/>
+      <text class="dg-strain-t" y="-4">${title}</text>
+      <text class="dg-strain-s" y="12">${sub}</text>
+    </g>`;
+  return `
+  <svg class="learn-dg" viewBox="0 0 320 150" role="img"
+       aria-label="Jump Strain: a unit may only jump once per round. Choose Jump In, Jump Hop or Jump Out.">
+    ${LABEL(160, 16, "One jump per unit, per round", "dg-title")}
+    ${opt(1, 54, "Jump In", "from Reserves")}
+    ${opt(2, 160, "Jump Hop", "to another Sector")}
+    ${opt(3, 266, "Jump Out", "to Reserves")}
+    ${LABEL(160, 140, "pick one", "dg-mini")}
+  </svg>`;
+}
+
 const DIAGRAMS: Record<string, () => string> = {
   deployment: deploymentMap,
+  "gravity-well": gravityWellDiagram,
+  "jump-strain": jumpStrainDiagram,
   command: commandDiagram,
   jump: jumpDiagram,
   "drag-select": dragSelectDiagram,

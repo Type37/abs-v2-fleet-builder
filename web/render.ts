@@ -2770,12 +2770,14 @@ function learnView(state: AppState): string {
          <li>Arriving does no damage to anything nearby. There is no Jump Shock in the core rules.</li>
          <li>Jump Strain: a unit may only jump once per round. Jump In, Jump Hop or Jump Out &mdash; pick one.</li>
        </ul>
+       ${learnDiagram("jump-strain")}
        <h2 class="learn-sub">Placing a Jump Point</h2>
        <ul class="learn-rules">
          <li>Jump Points are placed on the table and belong to the player who opened them.</li>
          <li>Gravity Well: no Jump Point may be placed, and no jumping may happen, within 9" of a Planetoid.</li>
          <li>Blockading an enemy Jump Point does not change who owns it, and does not stop its owner using it to Jump In or Jump Hop.</li>
        </ul>
+       ${learnDiagram("gravity-well")}
        <h2 class="learn-sub">Leaving by jump</h2>
        <ul class="learn-rules">
          <li>Jump Hop: if all ships are within 6" of a friendly Jump Point, remove them and set up within 6" of a friendly Jump Point in another Sector.</li>
@@ -2816,7 +2818,18 @@ function learnView(state: AppState): string {
        <p class="learn-note">Give each activated unit an Activated token. The phase ends when all units have activated.</p>`,
     ),
     // 7 - End Phase
-    phasePage(3, `<ul class="learn-rules">${bullets(csStep("Victory points"))}</ul>`),
+    phasePage(
+      3,
+      `<h2 class="learn-sub">Score</h2>
+       <ul class="learn-rules">${bullets(csStep("Victory points"))}</ul>
+       <h2 class="learn-sub">Then clear the table</h2>
+       <ul class="learn-rules">
+         <li>Remove every Activated token &mdash; all units can act again next round.</li>
+         <li>Discard any CMD tokens you did not spend. They do not carry over, so a token saved for later is a token wasted. (Some faction rules change this.)</li>
+         <li>Begin the next round. The game ends after Round 4.</li>
+       </ul>
+       <p class="learn-note">${escapeHtml(csStep("Game end and victory")?.text ?? "")}</p>`,
+    ),
     // 8 - Launch
     `<div class="learn-screen learn-screen-launch">
       <h1 class="learn-title">You're ready</h1>

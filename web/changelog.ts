@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.68",
+    date: "2026-07-18",
+    title: "Finishing what was asked for",
+    items: [
+      "Every view now has a width ceiling, not just the three I did first. Home, Fleets, the Compendium, Solo, Custom Rules, the changelog and the fleet builder were all still running the full width of the glass.",
+      "The Jump Phase page has the diagrams it needed: the gravity well drawn to scale, showing why a jump point cannot go within nine inches of a planetoid, and Jump Strain showing that Jump In, Jump Hop and Jump Out are one choice per unit per round, not three.",
+      "Filled out the End Phase: what you score, then clearing activated tokens and discarding unspent command tokens — a token saved for later is a token wasted.",
+    ],
+  },
+  {
     version: "0.8.67",
     date: "2026-07-18",
     title: "Passive attacks explained; Play Mode fits a screen",
