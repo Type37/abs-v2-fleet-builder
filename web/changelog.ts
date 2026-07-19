@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.59",
+    date: "2026-07-18",
+    title: "Print cards rebuilt to the sketch",
+    items: [
+      "Cards follow the drawn layout: the unit name and count on one line with its cost, a 2x2 stat block, then each weapon as its arc and name over the range, attack and damage figures.",
+      "Cards are tighter. They were reusing the on-screen weapons table, a five-column grid built for a full-width panel, which spent most of a card on column gutters. A card is about 134px tall now.",
+      "Removed the \"Your extra commands from your rules\" heading. Commands your rules grant sit in the one list with the core ones, each already naming the rule it came from.",
+    ],
+  },
+  {
     version: "0.8.58",
     date: "2026-07-18",
     title: "Initiative and CMD match the faction screen",

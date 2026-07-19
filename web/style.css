@@ -1023,24 +1023,43 @@ button { font-family: inherit; }
 /* Print setup: options bar (screen only), per-unit cards, and trackers. */
 .print-opts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .print-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
-.print-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 12px; }
-.print-card { border: 1px solid var(--ink); padding: 10px 12px; break-inside: avoid; page-break-inside: avoid; }
-.pc-head { display: flex; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--hair); padding-bottom: 5px; margin-bottom: 5px; }
-.pc-index { font-family: var(--display); font-weight: 900; color: var(--blue); }
-.pc-name { font-family: var(--display); font-weight: 800; font-size: 15px; flex: 1; }
-.pc-cost { font-weight: 700; font-variant-numeric: tabular-nums; }
-.pc-sub { font-size: 11px; color: var(--ink-2); margin-bottom: 6px; }
-.pc-sub .mass-glyph { vertical-align: -2px; }
-.pc-stats-chips { margin: 4px 0 6px; }
-.pc-ships { font-family: var(--serif); font-size: 11.5px; color: var(--ink); margin-bottom: 6px; }
+.print-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 8px; }
+/* Cards are cut out and held at the table, so they are dense by design: the
+   layout is name + count with cost, a 2x2 stat block, then each weapon as its
+   arc and name over its figures. */
+.print-card { border: 1px solid var(--ink); padding: 6px 8px; break-inside: avoid; page-break-inside: avoid; }
+.pc-head { display: flex; align-items: baseline; gap: 6px; border-bottom: 1px solid var(--hair); padding-bottom: 3px; margin-bottom: 4px; }
+.pc-name { font-family: var(--display); font-weight: 800; font-size: 14px; line-height: 1.15; flex: 1; }
+.pc-x { font-weight: 900; color: var(--blue); }
+.is-inksaver .pc-x { color: var(--ink); }
+.pc-cost { font-weight: 700; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pc-sub { font-size: 10px; color: var(--ink-2); margin-bottom: 3px; }
+.pc-stats-chips { margin: 0 0 4px; }
+.pc-ships { font-family: var(--serif); font-size: 10.5px; color: var(--ink); margin-top: 3px; }
 /* Small, always-there firing-arc glyph beside the Primary/Auxiliary label -
    a permanent reminder of the fixed 45/180 degree geometry, not a stat that
    varies per ship. */
-.slot-arc { vertical-align: -2px; margin-right: 3px; color: var(--blue); }
-.pc-carry { font-size: 11px; font-style: italic; color: var(--ink-2); margin-top: 4px; }
-.pc-track { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
-.pc-track-row { display: flex; align-items: center; gap: 6px; }
-.pc-track-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); min-width: 30px; }
+.slot-arc { vertical-align: -2px; margin-left: 3px; color: var(--blue); }
+.is-inksaver .slot-arc { color: var(--ink-2); }
+/* One weapon: arc + name, figures beneath. */
+.pc-weapons { display: flex; flex-direction: column; gap: 3px; }
+.pcw { border-top: 1px solid var(--hair-soft); padding-top: 3px; }
+.pcw:first-child { border-top: none; padding-top: 0; }
+.pcw-head { display: flex; align-items: center; gap: 6px; }
+.pcw-arc {
+  display: inline-flex; align-items: center; flex: none;
+  font-family: var(--narrow); font-size: 9px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink-3);
+}
+.pcw-name { font-family: var(--serif); font-size: 11.5px; font-weight: 600; color: var(--ink); }
+.pcw-figures {
+  display: flex; gap: 9px; margin-top: 1px; padding-left: 2px;
+  font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-2);
+}
+.pcw-figures span + span { border-left: 1px solid var(--hair); padding-left: 9px; }
+.pc-carry { font-size: 10px; font-style: italic; color: var(--ink-2); margin-top: 3px; }
+.pc-track { margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
+.pc-track-row { display: flex; align-items: center; gap: 5px; }
+.pc-track-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); min-width: 26px; }
 .pr-hp { display: inline-flex; flex-wrap: wrap; gap: 3px; }
 .pr-hp-box { width: 11px; height: 11px; border: 1px solid var(--ink-2); display: inline-block; }
 .print-track-strip { display: flex; gap: 24px; flex-wrap: wrap; margin: 7px 0; padding: 5px 0; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
@@ -2731,3 +2750,9 @@ a .icon,
 .stat-chip, .sv-figure, .dice-row, .mf-rule-meta, .pts-item, .wt-arc {
   align-items: center;
 }
+
+
+/* Print-card stat block: the 2x2 grid, sized for a card rather than a panel. */
+.print-card .stat-chips { gap: 2px 10px; }
+.print-card .stat-chip { border: none; padding: 0; font-size: 11px; }
+.print-card .stat-lbl { font-size: 8.5px; }

@@ -759,6 +759,44 @@ function switcher(
 // dice, range and damage. Built with CSS grid (not a <table>) so column
 // widths are fixed by the grid template instead of an HTML table's auto
 // layout, which stretches short columns apart with huge, uneven gaps.
+/**
+ * Weapons for a print card, in the hand-drawn layout: the arc and its glyph
+ * beside the weapon name, then range / attack / damage on the line beneath.
+ * Deliberately not weaponsTable() - that is a five-column grid built for a
+ * screen-width panel, and inside a card three to a page it wastes most of its
+ * width on column gutters.
+ */
+function cardWeapons(ship: ShipClass): string {
+  const one = (w: Weapon, arc: "primary" | "aux") => `
+    <div class="pcw">
+      <div class="pcw-head">
+        <span class="pcw-arc">${arc === "primary" ? "PRI" : "AUX"}${icon(arc === "primary" ? "arc-primary" : "arc-aux", 11, "slot-arc")}</span>
+        <span class="pcw-name">${escapeHtml(w.name)}</span>
+      </div>
+      <div class="pcw-figures">
+        <span>${w.rangeMin}-${w.rangeMax}"</span>
+        <span>${w.count}${w.die}</span>
+        <span>Damage ${DAMAGE_BY_DIE[w.die]}</span>
+      </div>
+    </div>`;
+  const rows = [
+    ...ship.primary.map((w) => one(w, "primary")),
+    ...ship.auxiliary.map((w) => one(w, "aux")),
+  ];
+  // A fitting or utility bay is not a weapon but it occupies the slot, so the
+  // card has to say so rather than leaving the auxiliary line blank.
+  if (ship.auxiliary.length === 0 && (ship.auxiliaryFitting || ship.auxiliaryUtility)) {
+    rows.push(`
+    <div class="pcw">
+      <div class="pcw-head">
+        <span class="pcw-arc">AUX${icon("arc-aux", 11, "slot-arc")}</span>
+        <span class="pcw-name">${escapeHtml(ship.auxiliaryFitting ?? "Utility Bays")}</span>
+      </div>
+    </div>`);
+  }
+  return rows.length ? `<div class="pc-weapons">${rows.join("")}</div>` : "";
+}
+
 export function weaponsTable(ship: ShipClass): string {
   // Each weapon is wrapped in its own role="row". Previously the cells were
   // direct children of the role="table" with no row between them, which is
@@ -1456,7 +1494,7 @@ function printView(state: AppState): string {
   // Per-unit cards: a stat card each, several to a page, cut-and-keep at the
   // table. Never split across a page. HP boxes appear when trackers are on.
   const unitCards = printUnits
-    .map((u, i) => {
+    .map((u) => {
       const r = resolveShip(u.shipClassId, faction, customs);
       if (!r) return "";
       const ship = r.ship;
@@ -1468,29 +1506,21 @@ function printView(state: AppState): string {
           return h.customName ? `${h.customName}, ${def?.name ?? h.hvpId}` : (def?.name ?? h.hvpId);
         });
       const named = (u.shipNames ?? []).slice(0, u.count).filter((n) => n && n.trim());
+      // Card layout follows the sketch: name and count on one line with the
+      // cost, a 2x2 stat block, then each weapon as arc + name over its figures.
+      const classLine = title === ship.name ? "" : escapeHtml(ship.name);
+      const extras = [classLine, u.species ? escapeHtml(u.species) : ""].filter(Boolean).join(" · ");
       return `
       <article class="print-card">
         <header class="pc-head">
-          <span class="pc-index">${i + 1}</span>
-          <span class="pc-name">${escapeHtml(title)}</span>
+          <span class="pc-name">${escapeHtml(title)}${u.count > 1 ? ` <span class="pc-x">&times;${u.count}</span>` : ""}</span>
           <span class="pc-cost">${credits(ship.cost * u.count)}</span>
           <button class="pr-drop" data-action="print-exclude-unit" data-unit="${u.id}" title="Leave this unit out of the printout" aria-label="Leave ${escapeHtml(title)} out of the printout">${icon("close", 12)}</button>
         </header>
-        ${
-          // Only name the ship class here when it isn't already the card title -
-          // an unnamed unit takes its class name, so printing both read as
-          // "Pegasus Recon Wing / 1x Pegasus Recon Wing".
-          // Mass is in the stat chips directly below, so naming it here printed
-          // it twice on every card.
-          (() => {
-            const classLine = title === ship.name ? "" : `${escapeHtml(ship.name)}`;
-            const bits = [`${u.count}×`, classLine, u.species ? escapeHtml(u.species) : ""].filter(Boolean);
-            return `<p class="pc-sub">${bits.join(" · ")}</p>`;
-          })()
-        }
-        ${named.length ? `<p class="pc-ships">${escapeHtml(named.join(" / "))}</p>` : ""}
+        ${extras ? `<p class="pc-sub">${extras}</p>` : ""}
         <div class="pc-stats-chips">${statChips(ship)}</div>
-        ${weaponsTable(ship)}
+        ${cardWeapons(ship)}
+        ${named.length ? `<p class="pc-ships">${escapeHtml(named.join(" / "))}</p>` : ""}
         ${carried.length ? `<p class="pc-carry">Carrying: ${escapeHtml(carried.join("; "))}</p>` : ""}
         ${opts.trackers ? `<div class="pc-track">${Array.from({ length: u.count }, () => `<span class="pc-track-row"><span class="pc-track-label">Hull</span>${hpBoxes(ship.silhouette)}</span>`).join("")}</div>` : ""}
       </article>`;
@@ -1592,10 +1622,9 @@ function printView(state: AppState): string {
   const grantedEntries = effects.granted
     .map((g) => commandEntry(g.name, g.cost, g.text, `<span class="print-ref-mod">from ${escapeHtml(g.source)}</span>`))
     .join("");
-  const grantedBlock = grantedEntries
-    ? `<h4 class="print-ref-h">Your extra commands <span class="print-ref-sub">from your rules</span></h4>
-       <dl class="print-ref-list">${grantedEntries}</dl>`
-    : "";
+  // No separate heading for granted commands: they sit in the one list with the
+  // core ones, each already labelled with the rule that granted it.
+  const grantedBlock = "";
   const globalBlock = effects.global.length
     ? `<p class="print-ref-note">${effects.global
         .map((n) => `${escapeHtml(n.text)} <em>(${escapeHtml(n.source)})</em>`)
@@ -1614,7 +1643,7 @@ function printView(state: AppState): string {
         <div class="print-ref-col">
           <h4 class="print-ref-h">Commands <span class="print-ref-sub">spend CMD tokens</span></h4>
           ${globalBlock}
-          <dl class="print-ref-list">${coreEntries}</dl>
+          <dl class="print-ref-list">${coreEntries}${grantedEntries}</dl>
           ${grantedBlock}
         </div>
       </div>`;
