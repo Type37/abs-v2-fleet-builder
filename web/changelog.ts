@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.61",
+    date: "2026-07-18",
+    title: "Personnel in three columns",
+    items: [
+      "High-Value Personnel print three to a row. Each entry is a name and a sentence, so stacked full width they left most of every line empty — and an Age of Unity sheet prints twelve of them.",
+      "Weapon names are no longer bold. They are not headings, and the weight made every row shout.",
+      "Damage reads as DMG.",
+    ],
+  },
+  {
     version: "0.8.60",
     date: "2026-07-18",
     title: "Play Mode holds still; the sheet uses less ink",

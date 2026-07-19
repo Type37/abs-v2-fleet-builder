@@ -776,7 +776,7 @@ function cardWeapons(ship: ShipClass): string {
       <div class="pcw-figures">
         <span>${w.rangeMin}-${w.rangeMax}"</span>
         <span>${w.count}${w.die}</span>
-        <span>Damage ${DAMAGE_BY_DIE[w.die]}</span>
+        <span>DMG ${DAMAGE_BY_DIE[w.die]}</span>
       </div>
     </div>`;
   const rows = [
@@ -817,7 +817,7 @@ export function weaponsTable(ship: ShipClass): string {
       <span class="wt-name" role="cell">${escapeHtml(w.name)}</span>
       <span class="wt-num wt-rng" role="cell"><span class="wt-inline-lbl">Range </span>${w.rangeMin}-${w.rangeMax}"</span>
       <span class="wt-num wt-atk" role="cell"><span class="wt-inline-lbl">Attack </span>${w.count}${w.die}</span>
-      <span class="wt-num wt-dmg" role="cell"><span class="wt-inline-lbl">Damage </span>${DAMAGE_BY_DIE[w.die]}</span>
+      <span class="wt-num wt-dmg" role="cell"><span class="wt-inline-lbl">DMG </span>${DAMAGE_BY_DIE[w.die]}</span>
     </div>`;
   };
   const rows = [...ship.primary.map((w) => row(w, "primary")), ...ship.auxiliary.map((w) => row(w, "aux"))];
@@ -835,7 +835,7 @@ export function weaponsTable(ship: ShipClass): string {
     : "";
   return `<div class="weap-table" role="table" aria-label="Weapons">
     <div class="wt-row wt-headrow" role="row">
-      <span class="wt-arc wt-h" role="columnheader">Arc</span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">Damage</span>
+      <span class="wt-arc wt-h" role="columnheader">Arc</span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">DMG</span>
     </div>
     ${rows.join("")}${noteRow}
   </div>`;
@@ -1749,9 +1749,9 @@ function printView(state: AppState): string {
 
       ${
         isUnity
-          ? `<p class="print-note">Assign these to the HVP column above once your missions are generated. ${HVP_MECHANICS}</p>${availableHvpBlocks}`
+          ? `<p class="print-note">Assign these to the HVP column above once your missions are generated. ${HVP_MECHANICS}</p><div class="print-hvp-cols">${availableHvpBlocks}</div>`
           : hvpBlocks
-            ? `<p class="print-note">${HVP_MECHANICS}</p>${hvpBlocks}`
+            ? `<p class="print-note">${HVP_MECHANICS}</p><div class="print-hvp-cols">${hvpBlocks}</div>`
             : ""
       }
 

@@ -911,7 +911,7 @@ button { font-family: inherit; }
 .wt-arc { color: var(--blue); display: flex; align-items: center; gap: 4px; }
 /* Word first, then the wedge: the label is what you read, the glyph confirms it. */
 .wt-arc-abbr { font-size: 10px; font-weight: 800; letter-spacing: 0.03em; color: var(--ink-2); order: -1; }
-.wt-name { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.wt-name { font-size: 12.5px; font-weight: 400; color: var(--ink); }
 .wt-num { font-size: 12px; font-weight: 700; color: var(--ink); text-align: right; white-space: nowrap; }
 .wt-h.wt-num { font-weight: 700; }
 .wt-note { grid-column: 2 / -1; font-size: 11.5px; font-style: normal; color: var(--ink-2); }
@@ -1050,7 +1050,7 @@ button { font-family: inherit; }
   display: inline-flex; align-items: center; flex: none;
   font-family: var(--narrow); font-size: 9px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink-3);
 }
-.pcw-name { font-family: var(--serif); font-size: 11.5px; font-weight: 600; color: var(--ink); }
+.pcw-name { font-family: var(--serif); font-size: 11.5px; font-weight: 400; color: var(--ink); }
 .pcw-figures {
   display: flex; gap: 9px; margin-top: 1px; padding-left: 2px;
   font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-2);
@@ -2786,3 +2786,11 @@ a .icon,
 
 /* The firing-arcs reference, below the controls rather than among them. */
 .play-arcs { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hair-soft); }
+
+
+/* Personnel three to a row. Each entry is a name and a sentence or two, so
+   stacked full-width they left most of every line empty - and Age of Unity
+   prints twelve of them. Each block still avoids breaking across a page. */
+.print-hvp-cols { columns: 3; column-gap: 16px; }
+.print-hvp-cols .print-hvp { break-inside: avoid; -webkit-column-break-inside: avoid; margin-bottom: 7px; }
+@media (max-width: 700px) { .print-hvp-cols { columns: 1; } }
