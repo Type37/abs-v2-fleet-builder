@@ -56,7 +56,6 @@ export type Route =
   | { view: "ships" }
   | { view: "play"; listId: string }
   | { view: "learn"; step: number; anchor?: string }
-  | { view: "refsheet" }
   | { view: "changelog" };
 
 // Kept as a literal rather than derived from ROUND_PHASES: the router must not
@@ -64,6 +63,8 @@ export type Route =
 // should only ever change deliberately.
 const PHASE_SLUGS = ["command", "jump", "tactical", "end"] as const;
 const phaseSlugFor = (i: number): string => PHASE_SLUGS[i] ?? "command";
+/** 0 Mission, 1 Your fleet, 2 The table, 3 The round. Battle is an action, not a page. */
+const LEARN_LAST_STEP = 3;
 
 export function parseRoute(hash: string): Route {
   const h = hash.replace(/^#/, "");
@@ -75,7 +76,6 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === "solo") return parts[1] ? { view: "solo-outfit", outfitId: parts[1] } : { view: "solo" };
   if (parts[0] === "ships") return { view: "ships" };
   if (parts[0] === "play" && parts[1]) return { view: "play", listId: parts[1] };
-  if (parts[0] === "refsheet") return { view: "refsheet" };
   if (parts[0] === "learn") {
     // 0 Mission, 1 Fleet, 2 Table, 3 Round, 4 Launch. The four phases are
     // accordions inside step 3, addressed as #/learn/3/command and so on.
@@ -93,7 +93,7 @@ export function parseRoute(hash: string): Route {
       anchor = phaseSlugFor(step - 4);
       step = 3;
     }
-    step = Math.min(4, step);
+    step = Math.min(LEARN_LAST_STEP, step);
     return anchor ? { view: "learn", step, anchor } : { view: "learn", step };
   }
   if (parts[0] === "changelog") return { view: "changelog" };
@@ -124,8 +124,6 @@ export function routeHash(route: Route): string {
       if (route.anchor) return `#/learn/${route.step}/${route.anchor}`;
       return route.step > 0 ? `#/learn/${route.step}` : "#/learn";
     }
-    case "refsheet":
-      return "#/refsheet";
     case "changelog":
       return "#/changelog";
   }

@@ -43,14 +43,12 @@ import { fleetToMarkdown } from "./export-text.ts";
 // --- Solo dice roller -------------------------------------------------------
 
 /**
- * The fields to write when a library mark is chosen. A tint only survives if the
- * new mark can actually take one - otherwise the colour sat invisibly in storage
- * and sprang back the next time a tintable mark was picked.
+ * The fields to write when a library mark is chosen. emblemColor is always
+ * cleared: tinting is gone, and leaving a stale colour in storage would keep it
+ * in exported and shared fleets long after nothing reads it.
  */
-function libFields(lib: string): { emblemLib: string; emblemImage: undefined; emblemColor?: undefined } {
-  return libraryIcon(lib)?.tintable
-    ? { emblemLib: lib, emblemImage: undefined }
-    : { emblemLib: lib, emblemImage: undefined, emblemColor: undefined };
+function libFields(lib: string): { emblemLib: string; emblemImage: undefined; emblemColor: undefined } {
+  return { emblemLib: lib, emblemImage: undefined, emblemColor: undefined };
 }
 
 function d(sides: number): number {
@@ -448,12 +446,6 @@ function handleClick(e: MouseEvent): void {
           ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, libCat: cat, libShown: LIB_PAGE } } }
           : s,
       );
-      break;
-    }
-    case "emblem-set-color": {
-      const raw = target.dataset["color"];
-      const color = raw === "ink" || raw === "blue" || raw === "red" ? raw : undefined;
-      patchEmblemTarget(store.getState(), { emblemColor: color });
       break;
     }
     case "emblem-set-bg": {

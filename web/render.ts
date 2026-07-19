@@ -328,7 +328,6 @@ export function listTotals(list: SavedList, customs: Faction[]): { total: number
 // Shared chrome
 // ---------------------------------------------------------------------------
 
-const EMBLEM_TINT: Record<string, string> = { ink: "var(--ink)", blue: "var(--blue)", red: "var(--red)" };
 export const EMBLEM_BG: Record<string, string> = {
   ink: "var(--ink)",
   blue: "var(--blue)",
@@ -360,6 +359,17 @@ interface EmblemFields {
  */
 function factionRuleBlock(f: Faction, size: "full" | "compact" = "full"): string {
   const glyph = size === "full" ? 18 : 13;
+  // The compact variant drops Initiative. Every place it is used sits next to a
+  // "Roll 3D6" button that already states the value and is the thing you press,
+  // so printing it again beside the button was the same number twice a few
+  // pixels apart. The full variant keeps it - there is no roll button there.
+  const initiative =
+    size === "full"
+      ? `<div class="frv">
+        <span class="frv-label">Initiative</span>
+        <span class="frv-figure"><span class="frv-value">${escapeHtml(f.initiative)}</span>${diceRow(f.initiative, glyph)}</span>
+      </div>`
+      : "";
   return `
   <div class="frule frule-${size}">
     <div class="frule-main">
@@ -367,10 +377,7 @@ function factionRuleBlock(f: Faction, size: "full" | "compact" = "full"): string
       <p class="frule-text">${ruleText(f.rule.text)}</p>
     </div>
     <div class="frule-vitals">
-      <div class="frv">
-        <span class="frv-label">Initiative</span>
-        <span class="frv-figure"><span class="frv-value">${escapeHtml(f.initiative)}</span>${diceRow(f.initiative, glyph)}</span>
-      </div>
+      ${initiative}
       <div class="frv">
         <span class="frv-label">CMD / round</span>
         <span class="frv-figure"><span class="frv-value">${escapeHtml(f.cmdTokens)}</span>${commandRow(f.cmdTokens, glyph)}</span>
@@ -380,23 +387,18 @@ function factionRuleBlock(f: Faction, size: "full" | "compact" = "full"): string
 }
 
 function renderSigil(e: EmblemFields, size: number, cls = ""): string {
-  // Tinting paints the colour through the mark's own alpha channel, so it works
-  // on any cut-out image, not only vectors. libraryIcon().tintable is computed
-  // from the actual transparency of each file (see scripts/make-emblem-thumbs.py).
-  if (!e.emblemImage && e.emblemLib && e.emblemColor && libraryIcon(e.emblemLib)?.tintable) {
-    const url = libraryUrl(e.emblemLib);
-    if (url) {
-      const color = EMBLEM_TINT[e.emblemColor] ?? "var(--ink)";
-      return `<span class="emblem emblem-tint ${cls}" style="width:${size}px;height:${size}px;background-color:${color};-webkit-mask-image:url('${url}');mask-image:url('${url}');" role="img" aria-hidden="true"></span>`;
-    }
-  }
   return emblemMark(e.emblem ?? "delta", e.emblemImage ?? libraryUrl(e.emblemLib), size, cls);
 }
 
 // Full emblem: the sigil, optionally on a coloured background tile (so an
 // all-white sigil is visible, and any mark can be given a colour ground).
 export function emblemView(e: EmblemFields, size: number, cls = ""): string {
-  const bg = e.emblemBg ? EMBLEM_BG[e.emblemBg] : undefined;
+  // A near-white mark gets a black tile whether or not anyone asked for one.
+  // Without it the sigil is white-on-white and there is simply nothing on the
+  // page - which is the actual problem tinting was invented to work around.
+  // An explicit choice still wins; this only fills in where none was made.
+  const autoDark = !e.emblemBg && !e.emblemImage && e.emblemLib && libraryIcon(e.emblemLib)?.light;
+  const bg = e.emblemBg ? EMBLEM_BG[e.emblemBg] : autoDark ? EMBLEM_BG["ink"] : undefined;
   if (bg) {
     const inSize = Math.round(size * 0.72);
     return `<span class="emblem-bgbox ${cls}" style="width:${size}px;height:${size}px;background:${bg};">${renderSigil(e, inSize)}</span>`;
@@ -508,7 +510,7 @@ function homeView(state: AppState): string {
       ${tutorialCallout(state)}
       <nav class="index">
         ${row("01", "#/fleets", "Fleets", "Build, save, print, and share army lists for any faction and era.")}
-        ${row("02", "#/solo", "Solo Play", "Solitaire narrative campaign. Now with Debt!")}
+        ${row("02", "#/solo", "Solo Play", "One player, dice-driven Hostiles, and a debt to clear in eight games.")}
         ${row("03", "#/ships", "Ship Compendium", "Every ship in the game in one filterable, sortable table.")}
         ${row("04", "#/learn", "Learn to Play", "A guided walkthrough with a ready-made Training Fleet: the mission, the round structure, then straight into a live game.")}
         ${row("05", "#/foundry", "Custom Rules", "Design your own factions, ship classes, and personnel.")}
@@ -870,7 +872,11 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
         <span class="ship-cost">${credits(ship.cost)}</span>
       </div>
       <div class="ship-row-details">
-        ${statChips(ship, true)}
+        <!-- The chip repeats the mass glyph to its left, so it is dropped - but
+             only when that glyph is actually a mass glyph. A ship with custom
+             art shows the art there instead, and then the chip is the only
+             place the number appears. -->
+        ${statChips(ship, true, !!ship.image)}
         ${weaponsTable(ship)}
       </div>
     </div>
@@ -1144,7 +1150,7 @@ function builderView(state: AppState): string {
         ${
           r
             ? `<div class="ru-details">
-                ${statChips(r.ship, true)}
+                ${statChips(r.ship, true, false)}
                 ${weaponsTable(r.ship)}
               </div>`
             : ""
@@ -2158,7 +2164,6 @@ function playCommandsPanel(list: SavedList, cmdLeft: number, faction: Faction | 
     <section class="pc-cmds">
       <div class="pc-cmds-head">
         <h3 class="roster-section">Commands</h3>
-        <span class="pc-cmds-left ${cmdLeft <= 0 ? "is-out" : ""}">${cmdLeft} CMD left</span>
       </div>
       ${body}
     </section>`;
@@ -2255,7 +2260,6 @@ function playView(state: AppState): string {
         </div>
         <span class="play-bar-of">of ${maxRound}</span>
       </div>
-      <button class="ghost-btn danger play-bar-reset" data-action="play-reset">${icon("close", 14)} Reset the game</button>
     </header>
     <div class="phase-track">${phaseBtns}</div>
     <!--
@@ -2580,11 +2584,12 @@ function optionsModal(state: AppState): string {
         </section>
         <section class="opt-section">
           <h3 class="opt-h">About</h3>
+          <!-- Only the changelog. The rulebook, the Quick Reference and the
+               feedback address are all in the footer, which is on every page
+               including this one - so opening Options put each of them on
+               screen twice. The changelog is the one link the footer lacks. -->
           <ul class="opt-links">
             <li><a href="#/changelog" data-action="close-modal">${icon("scroll", 15)} What's new (v${escapeHtml(v)})</a></li>
-            <li><a href="https://planetsmashergames.com/a-billion-suns/" target="_blank" rel="noopener">${icon("book", 15)} Get the rulebook</a></li>
-            <li><a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">${icon("scroll", 15)} Quick Reference (PDF)</a></li>
-            <li><a href="mailto:warlore1@outlook.com">${icon("link", 15)} Send feedback</a></li>
           </ul>
         </section>
       </div>
@@ -2612,12 +2617,15 @@ interface LearnStep {
   /** Renders the four phase accordions, and gets sub-anchors in the progress nav. */
   phases?: boolean;
 }
+// Battle is deliberately NOT in here. It was a fifth page whose entire content
+// was a heading and a button that did the thing the page was named after, so
+// reaching the battle took two clicks where one would do. It is an action in the
+// progress rail now, and the last page's Next button launches directly.
 const LEARN_STEPS: LearnStep[] = [
   { label: "Mission" },
   { label: "Your fleet" },
   { label: "The table" },
   { label: "The round", phases: true },
-  { label: "Battle" },
 ];
 
 /** "Command Phase" -> "command". The anchor in #/learn/3/command. */
@@ -2702,7 +2710,11 @@ function learnView(state: AppState): string {
       return `<a class="learn-dot is-sub ${on ? "on" : ""}" href="#/learn/${i}/${slug}"><span class="learn-dot-l">${escapeHtml(p2.name.replace(" Phase", ""))}</span></a>`;
     }).join("");
     return `<div class="learn-dot-group">${dot}<div class="learn-dot-subs">${subs}</div></div>`;
-  }).join('<span class="learn-dot-sep" aria-hidden="true"></span>');
+  })
+    .concat([
+      `<div class="learn-dot-group"><button class="learn-dot learn-dot-go" data-action="learn-launch"><span class="learn-dot-n">${LEARN_STEPS.length + 1}</span><span class="learn-dot-l">Battle</span></button></div>`,
+    ])
+    .join('<span class="learn-dot-sep" aria-hidden="true"></span>');
 
   // Rules text on these pages comes from TRAINING_GUIDES (transcribed from the
   // Combat Simulator scenario) and ROUND_PHASES / ACTIVATION_STEPS (transcribed
@@ -2716,6 +2728,23 @@ function learnView(state: AppState): string {
       .filter((t) => !match || match.test(t))
       .map((t) => `<li>${escapeHtml(t)}</li>`)
       .join("");
+
+  // One activation step: its name, its Quick Reference line, its diagram and its
+  // rules, in that order, in one block.
+  //
+  // These used to be listed as a numbered <ol> of all three steps and THEN
+  // explained further down, with the diagrams floating between the two - so the
+  // movement diagram sat under a list item about the Action Step, and Passive
+  // Attacks was written out twice. The animation for a step belongs under that
+  // step's heading and nowhere else.
+  const activationStep = (i: number, body: string) => {
+    const a = ACTIVATION_STEPS[i]!;
+    return `<section class="learn-step">
+      <h3 class="learn-step-h"><span class="learn-step-n">${i + 1}</span>${escapeHtml(a.name)}</h3>
+      <p class="learn-note">${escapeHtml(a.text)}</p>
+      ${body}
+    </section>`;
+  };
 
   // One phase, stated once. The name and the Quick Reference summary live in the
   // header, the detail in the body, and nothing repeats either of them. Opening
@@ -2820,28 +2849,22 @@ function learnView(state: AppState): string {
           `<h3 class="learn-sub">Drag to Select</h3>
            <p class="learn-note">A lead unit plus unactivated units within 6" of it; Combined Mass 10 or less.</p>
            ${learnDiagram("drag-select")}
-           <h3 class="learn-sub">Then each unit works through three steps</h3>
-           <p class="learn-note">Every unit in the battlegroup finishes a step before the next step starts.</p>
-           <ol class="learn-phases learn-phases-steps">
-             ${ACTIVATION_STEPS.map(
-               (a, i) =>
-                 `<li class="learn-phase"><span class="lp-n">${i + 1}</span><div><b>${escapeHtml(a.name)}</b><span>${escapeHtml(a.text)}</span></div></li>`,
-             ).join("")}
-           </ol>
-           ${learnDiagram("movement")}
-           <h3 class="learn-sub">${escapeHtml(ACTIVATION_STEPS[1]?.name ?? "")}</h3>
-           <p class="learn-note">${escapeHtml(ACTIVATION_STEPS[1]?.text ?? "")}</p>
-           ${learnDiagram("passive")}
-           <ul class="learn-rules">
-             <li>It triggers when an active unit moves <b>through or ends in</b> the range and arc of a passive enemy's auxiliary weapons.</li>
-             <li>Passive means unactivated: an enemy that has already activated this round does not fire.</li>
-             <li>They fire <b>auxiliary weapons only</b> &mdash; the 180&deg; front arc, never the primary 45&deg; cone.</li>
-             <li>Each passive enemy unit fires <b>once per activation</b> of your battlegroup. It can fire again when your next battlegroup activates.</li>
-             <li>Only units that actually moved in this activation can be targeted.</li>
-             <li>Facilities have a 360&deg; arc and so always fire in this step at every active unit in range.</li>
-             <li>Easy Target: moving less than 3" lets enemies re-roll attack dice against you.</li>
-           </ul>
-           ${learnDiagram("action")}
+           <p class="learn-note">Then every unit in the battlegroup works through three steps, finishing each step before the next one starts.</p>
+           ${activationStep(0, learnDiagram("movement"))}
+           ${activationStep(
+             1,
+             `${learnDiagram("passive")}
+              <ul class="learn-rules">
+                <li>It triggers when an active unit moves <b>through or ends in</b> the range and arc of a passive enemy's auxiliary weapons.</li>
+                <li>Passive means unactivated: an enemy that has already activated this round does not fire.</li>
+                <li>They fire <b>auxiliary weapons only</b> &mdash; the 180&deg; front arc, never the primary 45&deg; cone.</li>
+                <li>Each passive enemy unit fires <b>once per activation</b> of your battlegroup. It can fire again when your next battlegroup activates.</li>
+                <li>Only units that actually moved in this activation can be targeted.</li>
+                <li>Facilities have a 360&deg; arc and so always fire in this step at every active unit in range.</li>
+                <li>Easy Target: moving less than 3" lets enemies re-roll attack dice against you.</li>
+              </ul>`,
+           )}
+           ${activationStep(2, learnDiagram("action"))}
            <p class="learn-note">Give each activated unit an Activated token. The phase ends when all units have activated.</p>`,
         )}
         ${phaseAccordion(
@@ -2857,25 +2880,23 @@ function learnView(state: AppState): string {
            <p class="learn-note">${escapeHtml(csStep("Game end and victory")?.text ?? "")}</p>`,
         )}
       </div>
-      <p class="learn-note learn-ref"><a href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">${icon("scroll", 15)} Read the full Quick Reference (PDF)</a></p>
-    </div>`,
-    // 4 - Launch
-    `<div class="learn-screen learn-screen-launch">
-      <h1 class="learn-title">You're ready</h1>
-      <p class="learn-lede">Ready to try it?</p>
-      <button class="learn-launch-btn" data-action="learn-launch">${icon("flag", 20)} Start the battle</button>
-      <p class="learn-fineprint">You can use the Play Mode to track your game if needed.</p>
     </div>`,
   ];
 
   const atEnd = step >= LEARN_STEPS.length - 1;
   const backHref = step > 0 ? `#/learn${step - 1 > 0 ? "/" + (step - 1) : ""}` : "#/";
   const backLabel = step > 0 ? `${icon("chevronRight", 16, "flip-x")} Back` : `${icon("home", 16)} Home`;
+  // At the end, Next becomes the launch itself rather than a link to a page whose
+  // only job was to hold the same button.
   const nav = `
     <div class="learn-nav">
       <a class="learn-btn learn-btn-back" href="${backHref}">${backLabel}</a>
-      <a class="learn-btn learn-btn-ref" href="#/refsheet">${icon("scroll", 16)} Reference sheet</a>
-      ${atEnd ? "" : `<a class="learn-btn learn-btn-next" href="#/learn/${step + 1}">Next ${icon("chevronRight", 16)}</a>`}
+      <a class="learn-btn learn-btn-ref" href="./ABS-2E-Quick-Reference.pdf" target="_blank" rel="noopener">${icon("scroll", 16)} Quick Reference (PDF)</a>
+      ${
+        atEnd
+          ? `<button class="learn-btn learn-btn-next" data-action="learn-launch">${icon("flag", 16)} Start the battle</button>`
+          : `<a class="learn-btn learn-btn-next" href="#/learn/${step + 1}">Next ${icon("chevronRight", 16)}</a>`
+      }
     </div>`;
 
   // data-learn-step changes on every page turn, so morphing swaps the node
@@ -2887,89 +2908,6 @@ function learnView(state: AppState): string {
     <nav class="learn-progress" aria-label="Tutorial progress">${progress}</nav>
     <div class="learn-stage" data-learn-step="${step}${anchor ? "-" + escapeHtml(anchor) : ""}">${screens[step] ?? screens[0]}</div>
     ${nav}
-  </main>
-  ${footer()}`;
-}
-
-// ---------------------------------------------------------------------------
-// Printable reference sheet: the round, the activation steps, every Action and
-// every Command, on one page.
-//
-// Deliberately fleet-free and faction-free. The fleet printout at #/print/:id
-// needs a saved list before it can render anything, but the moment you most want
-// a reference card is while you are still reading Learn to Play and have not
-// built a fleet at all. So commands print at face cost with no faction discounts
-// applied, and the Hypergrowth-only one is tagged rather than dropped, because
-// this sheet has no game mode to filter against.
-// ---------------------------------------------------------------------------
-
-function refSheetView(state: AppState): string {
-  const opts = state.ui.print ?? DEFAULT_PRINT;
-  const paper = PAPER[opts.paper] ?? PAPER.letter;
-  const rows = (items: { name: string; text: string; tag?: string }[]) =>
-    `<dl class="print-ref-list">${items
-      .map(
-        (i) =>
-          `<dt>${escapeHtml(i.name)}${i.tag ? `<span class="print-ref-cost">${escapeHtml(i.tag)}</span>` : ""}</dt><dd>${escapeHtml(i.text)}</dd>`,
-      )
-      .join("")}</dl>`;
-
-  return `
-  ${topbar()}
-  <main class="print-page ${opts.inkSaver ? "is-inksaver" : ""}">
-    <div class="print-toolbar">
-      <a class="bar-btn" href="#/learn/3">${icon("chevronRight", 15, "flip-x")} Back to Learn to Play</a>
-      <div class="print-opts">
-        <span class="segment" role="group" aria-label="Paper size">
-          <button class="${opts.paper === "letter" ? "selected" : ""}" data-action="print-paper" data-paper="letter">Letter</button>
-          <button class="${opts.paper === "a4" ? "selected" : ""}" data-action="print-paper" data-paper="a4">A4</button>
-        </span>
-        <label class="print-toggle" title="No coloured fills, so it survives your browser's Background graphics setting and saves toner"><input type="checkbox" data-action="print-inksaver" ${opts.inkSaver ? "checked" : ""} /> Ink saver</label>
-      </div>
-      <div class="print-go">
-        <span class="print-pagecount" data-print-pagecount>&nbsp;</span>
-        <button class="cta-btn" data-action="do-print">${icon("print", 17)} Print</button>
-      </div>
-    </div>
-
-    <div class="sheet-viewport">
-    <article class="sheet" data-print-sheet data-paper-label="${paper.label}" style="--page-w:${paper.w}px;--page-h:${paper.h}px">
-      <header class="sheet-head">
-        <div class="sheet-title-block">
-          <h1 class="sheet-title">Quick Reference</h1>
-          <p class="sheet-subtitle">A Billion Suns 2E &middot; the round, actions and commands</p>
-        </div>
-      </header>
-
-      <section class="sheet-section">
-        <h2 class="print-ref-h">The round</h2>
-        ${rows(ROUND_PHASES.map((p2, i) => ({ name: `${i + 1}. ${p2.name}`, text: p2.text })))}
-      </section>
-
-      <section class="sheet-section">
-        <h2 class="print-ref-h">Activating a unit</h2>
-        <p class="print-ref-note">Drag to Select a battlegroup: a lead unit plus unactivated friendly units within 6" of it, Combined Mass 10 or less. Every unit finishes a step before the next step starts.</p>
-        ${rows(ACTIVATION_STEPS.map((a, i) => ({ name: `${i + 1}. ${a.name}`, text: a.text })))}
-      </section>
-
-      <section class="sheet-section">
-        <h2 class="print-ref-h">Actions <span class="print-ref-sub">one per activation</span></h2>
-        ${rows(CORE_ACTIONS.map((a) => ({ name: a.name, text: a.text })))}
-      </section>
-
-      <section class="sheet-section">
-        <h2 class="print-ref-h">Commands <span class="print-ref-sub">spend CMD tokens</span></h2>
-        ${rows(
-          CORE_COMMANDS.map((c) => ({
-            name: c.name,
-            text: c.text,
-            tag: `${c.cost} CMD${c.shipyardOnly ? " · Hypergrowth only" : ""}`,
-          })),
-        )}
-        <p class="print-ref-note">Costs are the base costs. Faction rules and High Value Personnel can change them.</p>
-      </section>
-    </article>
-    </div>
   </main>
   ${footer()}`;
 }
@@ -3054,15 +2992,6 @@ function emblemModal(state: AppState): string {
     )
     .join("");
 
-  // Can a colour be painted through the chosen mark? Tinting is a CSS mask, so
-  // it needs the mark's own transparency; it was gated to SVG, which left a
-  // labelled control dead for 247 of 253 marks. 162 of them can actually take it.
-  const current = cfg.currentLib ? libraryIcon(cfg.currentLib) : undefined;
-  const canTint = cfg.currentLib ? (current?.tintable ?? /\.svg$/i.test(cfg.currentLib)) : false;
-  const tintWhy = !cfg.currentLib ? "pick a sigil first" : canTint ? "" : "this mark has no transparency";
-
-  const tintSwatch = (val: string, cls: string, label: string) =>
-    `<button class="tint-swatch ${cls} ${(cfg!.currentColor ?? "") === val ? "selected" : ""}" data-action="emblem-set-color" data-color="${val}" aria-label="${label}" title="${label}">${val === "" ? icon("close", 12) : ""}</button>`;
   const bgSwatch = (val: string, style: string, label: string) =>
     `<button class="bg-swatch ${(cfg!.currentBg ?? "") === val ? "selected" : ""}" data-action="emblem-set-bg" data-bg="${val}" aria-label="${label}" title="${label}" style="${style}">${val === "" ? icon("close", 12) : ""}</button>`;
 
@@ -3079,19 +3008,19 @@ function emblemModal(state: AppState): string {
       }).join("")}
     </div>`;
 
-  // Colour controls. These sit directly above the footer rather than under the
-  // grid: below the grid they were 1156px off-screen at the default page size
-  // and 4886px after "Show all", so "make it red" was undiscoverable in the very
-  // tab it had just been moved into. Shown on both tabs, since a background
-  // applies to an uploaded image too.
+  // Background only. The Tint row is gone: painting a colour through the mark's
+  // alpha channel flattens it to a silhouette, so any logo with internal detail
+  // came out as a shape, and the one real problem it was reaching for - a white
+  // mark vanishing on white - is now handled automatically by giving measured
+  // near-white marks a black ground (see emblemView).
+  //
+  // These sit directly above the footer rather than under the grid: below it
+  // they were 1156px off-screen at the default page size and 4886px after
+  // "Show all". Shown on both tabs, since a background applies to an upload too.
   const colourBlock = `<div class="em-colour">
       <div class="em-colour-row">
         <span class="em-colour-label">Background</span>
         <div class="em-swatches">${bgSwatch("", "", "None")}${bgSwatch("ink", "background:var(--ink)", "Ink")}${bgSwatch("blue", "background:var(--blue)", "Blue")}${bgSwatch("red", "background:var(--red)", "Red")}${bgSwatch("steel", "background:#5b6472", "Steel")}${bgSwatch("sand", "background:#caa96a", "Sand")}</div>
-      </div>
-      <div class="em-colour-row ${canTint ? "" : "is-off"}">
-        <span class="em-colour-label">Tint${tintWhy ? ` <span class="em-colour-why">${escapeHtml(tintWhy)}</span>` : ""}</span>
-        <div class="em-swatches">${tintSwatch("", "tint-none", "Original")}${tintSwatch("ink", "tint-ink", "Ink")}${tintSwatch("blue", "tint-blue", "Blue")}${tintSwatch("red", "tint-red", "Red")}</div>
       </div>
     </div>`;
 
@@ -3153,8 +3082,6 @@ export function render(state: AppState): string {
         return playView(state);
       case "learn":
         return learnView(state);
-      case "refsheet":
-        return refSheetView(state);
       case "changelog":
         return changelogView();
     }

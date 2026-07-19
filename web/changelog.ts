@@ -9,6 +9,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.71",
+    date: "2026-07-19",
+    title: "Tinting retired; a doubling purge",
+    items: [
+      "Removed the tinting system. Painting a colour through a mark's alpha channel flattens it to a silhouette, so any logo with internal detail came out as a blob, and it was never worth using. The one real problem it was reaching for was a white mark vanishing on white paper, and that is now handled properly: a script measures the mean luminance of the pixels each mark actually paints, and the 48 of 154 that come back near-white get a black tile behind them automatically. An explicit background still wins.",
+      "Both ships in the passive attacks diagram were pointing the wrong way. Your unit's hull was rotated -110 degrees while its path runs at about -76, so it was flying visibly sideways. Worse, the enemy captioned \"facing away, no shot\" was rotated to face straight at the action, meaning its front arc covered your unit completely and the drawing illustrated the exact opposite of its own label. Both enemies now face the same way and the only difference is which side of them you finish on, which is the actual rule.",
+      "The three activation steps each own their diagram now. They were listed as a numbered set and then explained again further down, with the animations floating between the two, so the movement diagram sat under a list item about the Action Step and Passive Attacks was written out twice. Movement, Passive Attacks and Action are each one block: heading, rule, animation.",
+      "Dropped the in-app reference sheet and linked the real Quick Reference PDF instead. A second, worse copy of a document that already ships with the app is not worth maintaining.",
+      "Battle is a button, not a page. It was a fifth tutorial page whose entire content was a heading and a button that did the thing the page was named after, so reaching a battle took two clicks. The last page launches directly.",
+      "Removed Reset the game from Play Mode.",
+      "A pass over duplicated information. Mass was printed twice on every ship row in the builder, once as the glyph and again as a chip six pixels away (the chip stays where a ship has custom art, since the glyph is replaced there). Play Mode showed the CMD count in a stepper and again as \"7 CMD left\" directly below it, and the faction's Initiative next to the Roll button that already states it. Options restated the footer's rulebook, Quick Reference and feedback links. Print setup no longer competes with Enter Play Mode as a second full-weight blue slab.",
+      "Corrected the Solo Play description. It called Junkspace a \"narrative campaign\" (nothing in the rules models narrative) and the enemy \"automated\" (it is a D6 behaviour table you roll yourself), and put ¢30k next to an identical ¢30k starting budget without distinguishing them.",
+    ],
+  },
+  {
     version: "0.8.70",
     date: "2026-07-19",
     title: "The diagrams actually draw; one Command Phase, not three",

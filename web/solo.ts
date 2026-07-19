@@ -90,7 +90,7 @@ export function soloListView(state: AppState): string {
   <main class="home-main solo-main">
     <header class="solo-head">
       <h1 class="page-title">Junkspace</h1>
-      <p class="solo-tagline">A solitaire narrative campaign. Fly Jobs against an automated enemy, and clear ${ck(STARTING_DEBT_K)} of debt within ${DEBT_CLEAR_GAMES} games to win.</p>
+      <p class="solo-tagline">A solo campaign. Run Jobs against dice-driven Hostiles, and clear your outfit's ${ck(STARTING_DEBT_K)} debt within ${DEBT_CLEAR_GAMES} games to win. Every credit you repay raises the Alert Level.</p>
     </header>
     <section class="commission-panel">
       <div class="solo-panel-head">

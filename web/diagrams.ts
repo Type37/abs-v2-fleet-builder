@@ -153,9 +153,15 @@ function passiveDiagram(): string {
     </g>
     ${LABEL(120, 52, 'AUX 180°', "dg-mini dg-mini-arc")}
 
-    <!-- Your unit's path: begins outside the arc, ends inside it. -->
+    <!-- Your unit's path: begins outside the arc, ends inside it.
+         The hull points along the direction of travel. It was at -110deg while
+         the path runs at about -76deg, so the ship was flying visibly sideways -
+         nose down-left, travelling up-left. SHIP() points up at rotation 0, so
+         the angle for a heading is atan2(dx, -dy): the run from (300,150) to
+         (134,104) is dx -166, dy -46, which is -74.5deg. -76 splits the
+         difference between that and the steeper final leg of the path. -->
     <path class="dg-path" d="M300 150 L196 118 L134 104"/>
-    <g class="dg-passive-mover">${SHIP(0, 0, -110, "dg-ship")}</g>
+    <g class="dg-passive-mover">${SHIP(0, 0, -76, "dg-ship")}</g>
     ${LABEL(300, 168, "your unit moves", "dg-mini")}
 
     <!-- Fire only once the mover is inside the arc. -->
@@ -164,9 +170,15 @@ function passiveDiagram(): string {
       <line class="dg-shot dg-pshot-2" x1="88" y1="108" x2="128" y2="108"/>
     </g>
 
-    <!-- In range, but facing away: no arc, no attack. -->
+    <!-- In range, but facing away: no arc, no attack.
+         This ship was rotated -90, which points it LEFT - straight at the action
+         at (134,104). Its front arc would have covered your unit completely, so
+         the drawing was illustrating the opposite of its own caption. Rotated 90
+         it faces right, the same way as the passive enemy, and your unit ends up
+         behind it. Both enemies now face the same way and the only difference is
+         which side of them you finish on, which is exactly the rule. -->
     <g transform="translate(232 48)">
-      ${SHIP(0, 0, -90, "dg-ship dg-enemy dg-enemy-away")}
+      ${SHIP(0, 0, 90, "dg-ship dg-enemy dg-enemy-away")}
       ${LABEL(0, 26, "facing away — no shot", "dg-mini dg-mini-out")}
     </g>
   </svg>`;

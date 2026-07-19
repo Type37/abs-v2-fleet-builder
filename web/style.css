@@ -716,9 +716,6 @@ button { font-family: inherit; }
 /* No .lib-icon-name rules: the caption under each tile is gone (see
    iconLibraryGrid in emblems.ts). The name lives on title/aria-label now. */
 /* Tinted vector mark: the SVG painted as a solid colour via CSS mask. */
-.emblem-tint { display: inline-block; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; vertical-align: middle; }
-.tint-swatch { width: 24px; height: 24px; border: 1px solid var(--hair); cursor: pointer; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
-.tint-swatch.selected { box-shadow: inset 0 0 0 2px var(--paper), 0 0 0 2px var(--ink); }
 .tint-none { background: var(--paper); color: var(--ink-3); }
 .tint-ink { background: var(--ink); }
 .tint-blue { background: var(--blue); }
@@ -1896,9 +1893,16 @@ button { font-family: inherit; }
 }
 .mf-play-cta { background: var(--blue); color: #fff; }
 .mf-play-cta:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
-.mf-print-cta { background: #fff; color: var(--blue); }
-.mf-print-cta:hover { background: var(--blue); color: #fff; }
-.mf-print-cta .icon { width: 20px; height: 20px; }
+/* Print is demoted, not removed. It sat at the same 18px/800 weight and the same
+   2px blue border as Enter Play Mode, so two full-width blue slabs argued for
+   the same click and nothing said which one "finishing" meant. Play Mode is what
+   you do with a finished fleet; printing is a thing you may also want. */
+.mf-print-cta {
+  background: transparent; color: var(--ink-2); border-color: var(--hair);
+  padding: 12px; font-size: 14px; letter-spacing: 0.03em;
+}
+.mf-print-cta:hover { background: transparent; border-color: var(--blue); color: var(--blue); }
+.mf-print-cta .icon { width: 16px; height: 16px; }
 
 /* faction reads as an inline editable field, the same dotted-underline
    convention as the fleet name and credits cap - not a filled button. */
@@ -2493,10 +2497,6 @@ button { font-family: inherit; }
 .learn-vp b { color: var(--ink); }
 
 /* Launch */
-.learn-screen-launch { text-align: center; padding: 20px 0; }
-.learn-screen-launch .learn-lede { margin-left: auto; margin-right: auto; }
-.learn-launch-btn { display: inline-flex; align-items: center; gap: 10px; padding: 18px 34px; background: var(--blue); color: #fff; border: 2px solid var(--blue); cursor: pointer; font-family: var(--display); font-weight: 800; font-size: 19px; text-transform: uppercase; letter-spacing: 0.04em; }
-.learn-launch-btn:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
 .learn-fineprint { font-size: 12.5px; color: var(--ink-3); margin: 14px 0 0; }
 
 /* Nav */
@@ -2581,14 +2581,11 @@ button { font-family: inherit; }
 .em-colour { flex: none; padding: 10px 18px; border-top: 1px solid var(--hair); display: flex; flex-direction: column; gap: 8px; }
 .em-colour-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .em-colour-label { font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--ink); min-width: 84px; }
-.em-colour-why { font-family: var(--narrow); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-3); }
 .em-colour-row.is-off { opacity: 0.45; }
-.em-colour-row.is-off .tint-swatch { pointer-events: none; }
 .em-colour-note { font-size: 13px; font-weight: 700; color: var(--ink); margin: 0 0 8px; }
 .em-colour-note + .em-swatches + .em-colour-note { margin-top: 14px; }
 .em-colour-sub { font-weight: 500; font-size: 11px; color: var(--ink-3); }
 .em-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
-.em-swatches .tint-swatch { width: 34px; height: 34px; }
 .bg-swatch { width: 34px; height: 34px; border: 1px solid var(--hair); cursor: pointer; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-3); background: var(--paper); }
 .bg-swatch.selected { box-shadow: inset 0 0 0 2px var(--paper), 0 0 0 2px var(--ink); }
 .em-search { width: 100%; margin-bottom: 10px; font-family: var(--sans); font-size: 14px; padding: 9px 11px; border: 1px solid var(--hair); background: var(--paper); color: var(--ink); }
@@ -2609,8 +2606,6 @@ button { font-family: inherit; }
 /* Play Mode: the commands legal in the current phase, with cost and full text. */
 .pc-cmds { margin-top: 20px; border: 1px solid var(--hair); background: var(--paper); padding: 11px 13px; }
 .pc-cmds-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
-.pc-cmds-left { font-family: var(--display); font-weight: 800; font-size: 14px; color: var(--blue); font-variant-numeric: tabular-nums; }
-.pc-cmds-left.is-out { color: var(--red-deep); }
 .pc-cmd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 6px; }
 .pc-cmd { border: 1px solid var(--hair-soft); border-left: 2px solid var(--blue); background: var(--ground); padding: 6px 9px; }
 .pc-cmd.is-short { border-left-color: var(--hair); opacity: 0.55; }
@@ -2987,6 +2982,19 @@ a .icon,
 .learn-acc-body > :first-child { margin-top: 0 !important; }
 .learn-acc-body .learn-sub:first-child { margin-top: 0 !important; }
 @media (max-width: 640px) { .learn-acc-body { padding-left: 16px; } }
+
+/* One activation step: heading, its line, its diagram, its rules. Ruled off from
+   its neighbours so the animation under a heading obviously belongs to it. */
+.learn-step { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hair-soft); }
+.learn-step:first-of-type { margin-top: 12px; padding-top: 0; border-top: none; }
+.learn-step-h { display: flex; align-items: center; gap: 9px; margin: 0 0 3px; font-family: var(--display); font-weight: 800; font-size: 15px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink); }
+.learn-step-n { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: var(--blue); color: #fff; font-size: 11px; }
+.learn-step .learn-note { margin-top: 0; }
+
+/* "Battle" is an action in the rail, not a page you walk to. */
+.learn-dot-go { border: none; background: none; cursor: pointer; font: inherit; }
+.learn-dot-go .learn-dot-n { background: var(--red); border-color: var(--red); color: #fff; }
+.learn-dot-go:hover .learn-dot-l { color: var(--red); }
 
 /* A quieter third button: the reference sheet is an aside, not the way forward. */
 .learn-btn-ref { border-color: var(--hair); color: var(--ink-2); font-size: 13px; padding: 10px 16px; }

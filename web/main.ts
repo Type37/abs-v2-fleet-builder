@@ -42,7 +42,6 @@ const VIEW_TITLE: Record<string, string> = {
   "solo-outfit": "Outfit",
   ships: "Ship Compendium",
   play: "Play Mode",
-  refsheet: "Reference sheet",
   changelog: "Changelog",
 };
 
