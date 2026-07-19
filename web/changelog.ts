@@ -9,6 +9,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.72",
+    date: "2026-07-19",
+    title: "Mass is back, and the home page works again",
+    items: [
+      "Mass is shown on every ship again. I had removed it as duplication because each row already draws a hull glyph — but that glyph is a silhouette, not a number, so removing the chip deleted the only readable Mass value in the app.",
+      "Fixed the home page for anyone with Reduce Motion turned on. The blue panel that slides in on hover is parked off-screen by a transform, and the reduced-motion rule was clearing that transform — so the panel sat over every card at rest, giving dark text on a dark blue field. The whole menu was unreadable.",
+      "One scrollbar, not two. The roster panel had its own scroller inside the page scroll, so the wheel did different things depending on where the pointer was.",
+      "Enter Play Mode and Print Setup no longer hover over the list as you scroll on a phone, and the fleet header only pins on desktop.",
+      "Play Mode shows your fleet: every unit with its stats, weapons and a hull tracker per ship. It was tracking the round while hiding the ships the round is about.",
+      "Bigger touch targets throughout — steppers, remove buttons and picker tiles are all at least 44px now.",
+      "The fleet menu is just the ••• glyph. \"Actions\" is a game term (the Action Step) and this menu is share, duplicate and delete.",
+      "New wording for the Learn to Play mission and fleet pages, and Mass is now explained properly rather than as a one-line bullet.",
+    ],
+  },
+  {
     version: "0.8.71",
     date: "2026-07-19",
     title: "Tinting retired; a doubling purge",

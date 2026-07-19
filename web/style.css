@@ -483,9 +483,17 @@ button { font-family: inherit; }
 }
 .index-row:hover .index-num { color: var(--blue); background: #fff; border-color: #fff; }
 @media (prefers-reduced-motion: reduce) {
-  .index-row, .index-row::before, .index-row:hover { transition: none; transform: none; }
-  .index-row:hover { background: var(--blue); }
-  .index-row:hover::before { transform: translateX(0) skewX(0); }
+  /* Do NOT null the transform here. The ::before fill is parked off-screen BY a
+     transform (translateX(-102%)), so "transform: none" slid it over every card
+     at rest - blue panel, dark unmoved text, the whole home page unreadable for
+     anyone with Reduce Motion turned on. Drop the sliding panel entirely in this
+     mode and swap a flat background on hover instead. */
+  .index-row, .index-row::before, .index-row::after { transition: none; }
+  .index-row:hover { transform: none; filter: none; }
+  .index-row::before, .index-row::after { display: none; }
+  .index-row:hover { background: var(--blue); color: #fff; }
+  .index-row:hover .index-desc { color: #cfe0fb; }
+  .index-row:hover .index-num { color: var(--blue); background: #fff; border-color: #fff; }
 }
 .index-main { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .index-name { font-family: var(--display); font-weight: 800; font-size: clamp(20px, 3vw, 30px); letter-spacing: -0.01em; line-height: 1.02; text-transform: uppercase; }
@@ -1816,9 +1824,8 @@ button { font-family: inherit; }
 /* On a short viewport the header wraps to two lines and pinning it would eat a
    third of the screen to keep one number in view, which is a bad trade. Below
    this height it scrolls with the page as before. */
-@media (max-height: 620px) {
+@media (max-height: 620px), (max-width: 900px) {
   .mf-head { position: static; }
-  .mf-manifest { top: 16px; max-height: calc(100vh - 32px); }
 }
 /* One line: emblem, name, faction, era badge, then the budget + actions pushed
    to the right edge. Wraps only when the viewport is genuinely too narrow. */
@@ -1950,20 +1957,18 @@ button { font-family: inherit; }
    the yard (ships, personnel) scrolls past on the right. */
 .mf-manifest {
   min-width: 0; padding-right: 28px; border-right: 1px solid var(--hair-soft);
-  position: sticky; top: var(--mf-head-h, 104px); max-height: calc(100vh - var(--mf-head-h, 104px) - 16px); overflow-y: auto;
+  /* One scroller, the page. This panel used to be sticky with its own
+     overflow-y:auto and a max-height, which gave the builder two scrollbars -
+     the wheel scrolled the roster or the page depending on where the pointer
+     happened to be. Testers hated it on both mobile and desktop. */
 }
-/* Scrolling a long roster must not cost you the two things you scroll it to
-   check: what you have, and what to do next. The count pins to the top of the
-   panel and the Play/Print actions to the bottom, so the list moves between
-   them instead of taking them with it. Both need an opaque ground, or rows
-   would show through as they pass underneath. */
-.mf-manifest > .mf-h {
-  position: sticky; top: 0; z-index: 2; background: var(--paper);
-  margin-top: 0; box-shadow: 0 1px 0 var(--hair-soft);
-}
+/* Nothing pins inside the roster any more. With the panel's own scroller gone
+   these had nothing to pin against, and on a phone the Enter Play Mode / Print
+   Setup bar hovering over the list as you scrolled was the single most
+   distracting thing on the page. */
+.mf-manifest > .mf-h { margin-top: 0; }
 .mf-manifest > .mf-finish {
-  position: sticky; bottom: 0; z-index: 2; background: var(--paper);
-  margin-top: 20px; padding: 12px 0 4px; border-top: 1px solid var(--hair-soft);
+  margin-top: 20px; padding: 14px 0 4px; border-top: 1px solid var(--hair-soft);
 }
 
 /* Section labels are quiet eyebrows, not headings - the fleet name and
@@ -2500,7 +2505,14 @@ button { font-family: inherit; }
 .learn-fineprint { font-size: 12.5px; color: var(--ink-3); margin: 14px 0 0; }
 
 /* Nav */
-.learn-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--hair); }
+/* Three buttons (Back / Quick Reference / Next) do not fit a 375px line, and
+   the row was pushing Next 46px off the right edge. Wrap it. */
+.learn-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--hair); }
+.learn-nav .learn-btn { flex: 0 1 auto; min-height: 44px; }
+@media (max-width: 560px) {
+  .learn-nav { gap: 8px; }
+  .learn-nav .learn-btn { flex: 1 1 100%; justify-content: center; margin-left: 0 !important; }
+}
 .learn-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; text-decoration: none; font-family: var(--display); font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.03em; border: 1.5px solid var(--ink); color: var(--ink); }
 .learn-btn-next { background: var(--ink); color: #fff; margin-left: auto; }
 .learn-btn:hover { border-color: var(--blue); }
@@ -3150,3 +3162,43 @@ a .icon,
 .learn-dg .dg-strain-1 .dg-strain-box { animation: dg-strain-cycle 3600ms ease-in-out infinite; }
 .learn-dg .dg-strain-2 .dg-strain-box { animation: dg-strain-cycle 3600ms ease-in-out infinite; animation-delay: 1200ms; }
 .learn-dg .dg-strain-3 .dg-strain-box { animation: dg-strain-cycle 3600ms ease-in-out infinite; animation-delay: 2400ms; }
+
+/* Stat definitions on the Learn "Your fleet" page: prose, not bullets. */
+.learn-stat-defs { margin-top: 16px; max-width: 64ch; display: grid; gap: 10px; }
+.learn-stat-defs p { font-size: 14.5px; line-height: 1.55; color: var(--ink-2); }
+.learn-stat-defs b { color: var(--ink); }
+.learn-stat-defs .stat-ico { color: var(--blue); vertical-align: -2px; }
+
+/* Touch targets. Testers found the builder fiddly on both phone and desktop:
+   the steppers and row buttons were well under the 44px the platform guidelines
+   ask for, and several sat within a few pixels of each other. */
+.stepper button, .ru-remove, .stepper-btn, .pr-drop {
+  min-width: 44px; min-height: 44px;
+}
+.ru-stepper .stepper-count { min-width: 44px; line-height: 44px; }
+.ru-controls { gap: 10px; }
+.lib-icon { min-height: 44px; }
+.em-folder, .em-tab { min-height: 40px; }
+@media (max-width: 900px) {
+  .ship-row .add-cue { min-height: 46px; padding: 10px 16px; }
+  .bar-btn, .ghost-btn, .cta-btn { min-height: 44px; }
+}
+
+/* ------------------------------------------------------- play mode: the fleet
+
+   Play Mode tracked the round but never showed the ships the round is about,
+   which is why testers called it useless. Every unit, its stats, its weapons,
+   and a hull tracker per ship. */
+.play-fleet { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--hair-soft); }
+.pf-hint { font-family: var(--sans); font-size: 11px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--ink-3); margin-left: 8px; }
+.pf-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 10px; margin-top: 10px; }
+.pf-unit { border: 1px solid var(--hair); padding: 9px 11px; }
+.pf-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.pf-glyph { color: var(--blue); display: inline-flex; }
+.pf-name { font-family: var(--display); font-weight: 800; font-size: 15px; }
+.pf-x { color: var(--blue); font-weight: 900; }
+.pf-stats { margin-bottom: 6px; }
+.pf-carry { font-size: 11.5px; font-style: italic; color: var(--ink-2); margin-top: 5px; }
+.pf-track { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.pf-track-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.pf-hp { width: 15px; height: 15px; border: 1.5px solid var(--ink-3); display: inline-block; }

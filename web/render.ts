@@ -876,7 +876,7 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
              only when that glyph is actually a mass glyph. A ship with custom
              art shows the art there instead, and then the chip is the only
              place the number appears. -->
-        ${statChips(ship, true, !!ship.image)}
+        ${statChips(ship, true)}
         ${weaponsTable(ship)}
       </div>
     </div>
@@ -1150,7 +1150,7 @@ function builderView(state: AppState): string {
         ${
           r
             ? `<div class="ru-details">
-                ${statChips(r.ship, true, false)}
+                ${statChips(r.ship, true)}
                 ${weaponsTable(r.ship)}
               </div>`
             : ""
@@ -1241,7 +1241,7 @@ function builderView(state: AppState): string {
   // output actions and get their own buttons at the foot of the manifest.
   const moreMenu = `
     <details class="mf-menu">
-      <summary class="mf-menu-btn" title="Fleet actions">${icon("more", 18)}<span class="mf-menu-label">Actions</span></summary>
+      <summary class="mf-menu-btn" title="Fleet options: share, duplicate, delete" aria-label="Fleet options">${icon("more", 18)}</summary>
       <div class="mf-menu-panel">
         <button data-action="share-list" data-id="${list.id}">${icon("link", 16)} Share link</button>
         <button data-action="copy-list-text" data-id="${list.id}">${icon("scroll", 16)} Copy as text</button>
@@ -2103,6 +2103,46 @@ const SCORING_NOTES: Partial<Record<GameMode, string[]>> = {
  * applies). Requisition only exists in the Shipyard modes. Faction rules and
  * carried HVP can grant more or change the cost, so a standing note says so.
  */
+/**
+ * The fleet, as a reference block for Play Mode. Every unit with its stats and
+ * weapons and a hull tracker per ship, because "I cannot see my fleet" was the
+ * single loudest complaint about Play Mode: it tracked the round for you while
+ * hiding the ships the round is about.
+ */
+function playFleetPanel(list: SavedList, faction: Faction | undefined, customs: Faction[]): string {
+  const names = unitDisplayNames(list.fleet.units, faction, customs);
+  const rows = list.fleet.units
+    .map((u) => {
+      const r = resolveShip(u.shipClassId, faction, customs);
+      if (!r) return "";
+      const ship = r.ship;
+      const title = u.name || names.get(u.id) || ship.name;
+      const carried = list.fleet.hvp
+        .filter((h) => h.assignedUnitId === u.id)
+        .map((h) => hvpById(h.hvpId, faction)?.name ?? h.hvpId);
+      return `
+      <article class="pf-unit">
+        <header class="pf-head">
+          <span class="pf-glyph">${massGlyph(ship.mass, 20)}</span>
+          <span class="pf-name">${escapeHtml(title)}${u.count > 1 ? ` <span class="pf-x">&times;${u.count}</span>` : ""}</span>
+        </header>
+        <div class="pf-stats">${statChips(ship, true)}</div>
+        ${weaponsTable(ship)}
+        ${carried.length ? `<p class="pf-carry">Carrying: ${escapeHtml(carried.join("; "))}</p>` : ""}
+        <div class="pf-track">${Array.from(
+          { length: u.count },
+          () => `<span class="pf-track-row">${Array.from({ length: ship.silhouette }, () => '<span class="pf-hp"></span>').join("")}</span>`,
+        ).join("")}</div>
+      </article>`;
+    })
+    .join("");
+  if (!rows) return "";
+  return `<section class="play-fleet">
+    <h3 class="roster-section">Your fleet <span class="pf-hint">tick a box per point of damage</span></h3>
+    <div class="pf-list">${rows}</div>
+  </section>`;
+}
+
 function playCommandsPanel(list: SavedList, cmdLeft: number, faction: Faction | undefined): string {
   const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
   const effects = commandEffectsFor(list, faction);
@@ -2302,6 +2342,8 @@ function playView(state: AppState): string {
         ${playCommandsPanel(list, play.cmd, faction)}
       </div>
     </div>
+
+    ${playFleetPanel(list, faction, customs)}
 
   </main>
   ${toast(state)}
@@ -2771,21 +2813,16 @@ function learnView(state: AppState): string {
     // 0 - Mission brief
     `<div class="learn-screen">
       <h1 class="learn-title">Your first battle</h1>
-      <p class="learn-lede">${escapeHtml(cs?.intro ?? "")}</p>
+      <p class="learn-lede">This step-by-step guide will explain to you the basics of playing &ldquo;A Billion Suns.&rdquo; You can read through the basics to get a feel for it, then dive in to the &ldquo;Combat Simulator&rdquo; at the end by going to the &ldquo;Battle&rdquo; section up top.</p>
     </div>`,
     // 1 - Your fleet
     `<div class="learn-screen">
       <h1 class="learn-title">The Training Fleet</h1>
-      <p class="learn-lede">Your ready-made fleet for the tutorial &mdash; real ships with real stats. You read a ship by four numbers and its weapons.</p>
+      <p class="learn-lede">This is a sample fleet that can be used in the tutorials. Here&rsquo;s the ship and the relevant statistics:</p>
       ${learnFleetTable()}
-      <ul class="learn-legend">
-        <li><b>Mass</b> how big &amp; how many it can carry</li>
-        <li><b>Thrust</b> how far it moves, in inches</li>
-        <li><b>Sil</b> its hit die and its starting HP</li>
-        <li><b>Shields</b> damage soaked each hit</li>
-        <li><span class="lf-arc lf-arc-pri">PRI</span> narrow 45&deg; cone ahead</li>
-        <li><span class="lf-arc lf-arc-aux">AUX</span> full 180&deg; front arc</li>
-      </ul>
+      <div class="learn-stat-defs">
+        <p><b>Mass</b> is a broad measure of the size and bulk of a ship. Throughout the rules, when you see the icon ${icon("stat-mass", 14, "stat-ico")}, replace that with the value of the Mass of the unit&rsquo;s ship class. If a rule refers to the Combined Mass of ships, sum the ${icon("stat-mass", 14, "stat-ico")} of all the related individual ships to form a total.</p>
+      </div>
     </div>`,
     // 2 - The table
     `<div class="learn-screen">

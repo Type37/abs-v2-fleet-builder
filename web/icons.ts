@@ -152,20 +152,19 @@ export function commandRow(cmdTokens: string, size = 20): string {
 export function statChips(
   s: { mass: number; thrust: number; silhouette: number; shields: number },
   compact = false,
-  // Rows that already carry a mass glyph pass false. The builder's roster and
-  // catalog rows draw massGlyph() and then a "Mass 3" chip about six pixels
-  // away, which is the same number twice on every row of every list in the app.
-  // The glyph stays (it is the visual anchor and the owned badge mounts on it),
-  // so the chip is the copy that goes.
-  withMass = true,
 ): string {
   // Every chip carries its word as well as its glyph, at every size: a bare
   // icon + number is a puzzle. Compact only shrinks the type, it never drops
   // the label (the labels use a condensed face so they stay cheap in width).
+  //
+  // Mass is ALWAYS here. It was briefly dropped from rows that draw massGlyph(),
+  // on the reasoning that the glyph made the chip redundant - but the glyph is a
+  // hull silhouette keyed to the mass tier, not a numeral. Removing the chip
+  // removed the only readable Mass value in the app, and the first thing testers
+  // asked was where Mass had gone.
   const chip = (name: string, label: string, val: string) =>
     `<span class="stat-chip ${compact ? "stat-chip-mini" : ""}">${icon(name, compact ? 12 : 14, "stat-ico")}<span class="stat-lbl">${label}</span><span class="stat-val">${val}</span></span>`;
-  const mass = withMass ? chip("stat-mass", "Mass", String(s.mass)) : "";
-  return `<span class="stat-chips ${compact ? "stat-chips-mini" : ""}">${mass}${chip("stat-thrust", "Thrust", `${s.thrust}"`)}${chip("stat-silhouette", "Sil", String(s.silhouette))}${chip("stat-shields", "Shields", String(s.shields))}</span>`;
+  return `<span class="stat-chips ${compact ? "stat-chips-mini" : ""}">${chip("stat-mass", "Mass", String(s.mass))}${chip("stat-thrust", "Thrust", `${s.thrust}"`)}${chip("stat-silhouette", "Sil", String(s.silhouette))}${chip("stat-shields", "Shields", String(s.shields))}</span>`;
 }
 
 /** Render an uploaded image if present, otherwise fall back to a built-in emblem glyph. */
