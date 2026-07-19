@@ -14,7 +14,6 @@ import {
   diceRow,
   emblemMark,
   icon,
-  initiativeDice,
   massGlyph,
   statChips,
   tacticalDiagram,
@@ -347,6 +346,38 @@ interface EmblemFields {
 
 // The bare sigil: a tinted vector (SVG + chosen colour, painted via CSS mask),
 // or the shared emblemMark for uploads / raster marks / built-in glyphs.
+/**
+ * A faction's rule and its two per-round numbers, as one block: the rule on the
+ * left, Initiative over CMD / round on the right.
+ *
+ *   Faction rule        | Initiative    3D6
+ *                       | CMD / round   7
+ *
+ * Used everywhere a faction rule appears - the picker, the builder's roster, the
+ * printed sheet and Play Mode - so the three facts that describe a faction are
+ * always in the same arrangement rather than three different ones per screen.
+ */
+function factionRuleBlock(f: Faction, size: "full" | "compact" = "full"): string {
+  const glyph = size === "full" ? 18 : 13;
+  return `
+  <div class="frule frule-${size}">
+    <div class="frule-main">
+      <h4 class="frule-name">${escapeHtml(f.rule.name)}</h4>
+      <p class="frule-text">${ruleText(f.rule.text)}</p>
+    </div>
+    <div class="frule-vitals">
+      <div class="frv">
+        <span class="frv-label">Initiative</span>
+        <span class="frv-figure"><span class="frv-value">${escapeHtml(f.initiative)}</span>${diceRow(f.initiative, glyph)}</span>
+      </div>
+      <div class="frv">
+        <span class="frv-label">CMD / round</span>
+        <span class="frv-figure"><span class="frv-value">${escapeHtml(f.cmdTokens)}</span>${commandRow(f.cmdTokens, glyph)}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderSigil(e: EmblemFields, size: number, cls = ""): string {
   // Tinting paints the colour through the mark's own alpha channel, so it works
   // on any cut-out image, not only vectors. libraryIcon().tintable is computed
@@ -581,26 +612,7 @@ function factionDetailPane(f: Faction): string {
         ${slogan ? `<p class="nfd-tagline ${slogan.startsWith(">") ? "nfd-tagline--term" : ""}">${escapeHtml(slogan)}</p>` : ""}
         ${fallback ? `<p class="nfd-summary">${escapeHtml(fallback)}</p>` : ""}
       </div>
-      <div class="nfd-stats">
-        <div class="nfd-stat">
-          <span class="nfd-stat-label">Initiative</span>
-          <span class="nfd-stat-figure">
-            <span class="nfd-stat-val">${escapeHtml(f.initiative)}</span>
-            ${diceRow(f.initiative, 20)}
-          </span>
-        </div>
-        <div class="nfd-stat">
-          <span class="nfd-stat-label">CMD / round</span>
-          <span class="nfd-stat-figure">
-            <span class="nfd-stat-val">${escapeHtml(f.cmdTokens)}</span>
-            ${commandRow(f.cmdTokens, 20)}
-          </span>
-        </div>
-      </div>
-      <div class="nfd-ability">
-        <h4 class="nfd-h">Signature ability</h4>
-        <p class="nfd-rule"><span class="nfd-rule-name">${escapeHtml(f.rule.name)}.</span> ${ruleText(f.rule.text)}</p>
-      </div>
+      ${factionRuleBlock(f, "full")}
     </div>`;
 }
 
@@ -1295,11 +1307,7 @@ function builderView(state: AppState): string {
       <section class="mf-yard">
         ${
           faction && !list.freePlay
-            ? `<div class="mf-rule">
-                <div class="mf-rule-meta">Init <b>${escapeHtml(faction.initiative)}</b> ${initiativeDice(faction.initiative, 13)} <span class="mf-sep">/</span> CMD <b>${escapeHtml(faction.cmdTokens)}</b>/rd</div>
-                <div class="mf-rule-name">${escapeHtml(faction.rule.name)}</div>
-                <div class="mf-rule-text">${ruleText(faction.rule.text)}</div>
-              </div>`
+            ? `<div class="mf-rule">${factionRuleBlock(faction, "compact")}</div>`
             : ""
         }
         <h3 class="mf-h">Ship classes${
@@ -1469,12 +1477,6 @@ function printView(state: AppState): string {
     })
     .join("");
 
-  // Columns before Cost: Unit, Mass, Thrust, Sil, Shields, Primary, Auxiliary.
-  // "Ships" is gone - the count rides in the unit name - and "Cost each" and
-  // "Total" are one column, since per-ship cost is a list-building number that
-  // nobody consults once the fleet is on the table.
-  const leadCols = 7;
-  const tailCols = (isShipyard ? 1 : 0) + (opts.trackers ? 1 : 0) + (fieldsHvp ? 1 : 0);
   const unitBlocks = unitRows
     ? `
     <table class="print-roster">
@@ -1485,9 +1487,6 @@ function printView(state: AppState): string {
         </tr>
       </thead>
       <tbody>${unitRows}</tbody>
-      <tfoot>
-        <tr><td colspan="${leadCols}" class="pr-total-label">Total</td><td class="pr-num pr-cost">${credits(total)}</td>${Array.from({ length: tailCols }, () => "<td></td>").join("")}</tr>
-      </tfoot>
     </table>`
     : "";
 
@@ -1539,34 +1538,30 @@ function printView(state: AppState): string {
       </section>`
     : "";
 
-  // How HVP actually work, which the sheet never said. Carried by a unit; the
-  // benefit applies only while an in-play unit carries the token (not from
-  // Reserves, the Shipyard, or an enemy that has taken it); when the last ship
-  // of the carrying unit dies the token becomes free-floating salvage, and
-  // either side collects it with a Scan within 3". That is the difference
-  // between a static roster line and something you keep amending mid-game.
-  const HVP_MECHANICS =
-    'Rides a Mass 1+ unit, and only counts while that unit is in play. If its last ship dies the token goes free-floating — either side collects it by Scanning within 3".';
-
-  const hvpBlocks = list.fleet.hvp
-    .map((sel) => {
-      const def = hvpById(sel.hvpId, faction);
-      if (!def) return "";
-      const displayName = sel.customName ? `${sel.customName}, ${def.name}` : def.name;
-      // Name the starting carrier here as well as in the roster column: the
-      // column is where you amend it, this is where you read what it does.
-      const carrier = sel.assignedUnitId
-        ? (list.fleet.units.find((u) => u.id === sel.assignedUnitId)?.name ??
-           unitNames.get(sel.assignedUnitId) ??
-           "")
-        : "";
-      return `
-      <section class="print-hvp ${GENERIC_HVP.some((g) => g.id === sel.hvpId) ? "is-generic" : ""}">
+  const selectedBlock = (sel: (typeof list.fleet.hvp)[number]) => {
+    const def = hvpById(sel.hvpId, faction);
+    if (!def) return "";
+    const displayName = sel.customName ? `${sel.customName}, ${def.name}` : def.name;
+    // Name the starting carrier here as well as in the roster column: the
+    // column is where you amend it, this is where you read what it does.
+    const carrier = sel.assignedUnitId
+      ? (list.fleet.units.find((u) => u.id === sel.assignedUnitId)?.name ??
+         unitNames.get(sel.assignedUnitId) ??
+         "")
+      : "";
+    const generic = GENERIC_HVP.some((g) => g.id === sel.hvpId);
+    return `
+      <section class="print-hvp ${generic ? "is-generic" : ""}">
         <h4>${escapeHtml(displayName)} <span class="print-hvp-slot">${carrier ? `starts on ${escapeHtml(carrier)}` : "carrier: _______________"}</span></h4>
         <p>${ruleText(def.rule)}</p>
       </section>`;
-    })
-    .join("");
+  };
+  const isGenericSel = (sel: (typeof list.fleet.hvp)[number]) => GENERIC_HVP.some((g) => g.id === sel.hvpId);
+  const hvpBlocks = {
+    own: list.fleet.hvp.filter((h) => !isGenericSel(h)).map(selectedBlock).join(""),
+    shared: list.fleet.hvp.filter(isGenericSel).map(selectedBlock).join(""),
+  };
+  const hasHvpBlocks = hvpBlocks.own !== "" || hvpBlocks.shared !== "";
 
   // Age of Unity: every HVP the faction can field, so you can assign them to the
   // ship slots above once the missions are known. Faction HVP first, then generics.
@@ -1578,15 +1573,17 @@ function printView(state: AppState): string {
   // Generic personnel are the shared pool; the faction's own are the ones worth
   // reading first. Printed in the same black, twelve blocks read as one
   // undifferentiated wall, so the generics sit back in grey.
-  const availableHvpBlocks = availableHvp
-    .map(
-      (def) => `
-      <section class="print-hvp ${GENERIC_HVP.some((g) => g.id === def.id) ? "is-generic" : ""}">
+  const hvpEntry = (def: Hvp, generic: boolean) => `
+      <section class="print-hvp ${generic ? "is-generic" : ""}">
         <h4>${escapeHtml(def.name)}</h4>
         <p>${ruleText(def.rule)}</p>
-      </section>`,
-    )
-    .join("");
+      </section>`;
+  // Faction personnel fill the left two columns; the generic pool - the same
+  // five for everybody - is kept together in the right-hand column so the
+  // faction's own are read as a set rather than interleaved with them.
+  const availableHvpBlocks = `
+    <div class="print-hvp-own">${(faction?.hvp ?? []).map((d) => hvpEntry(d, false)).join("")}</div>
+    <div class="print-hvp-shared">${GENERIC_HVP.map((d) => hvpEntry(d, true)).join("")}</div>`;
 
   // Actions and Commands reference: the full set every fleet can use, so the
   // sheet replaces the rulebook at the table. Requisition is Hypergrowth-only,
@@ -1699,33 +1696,10 @@ function printView(state: AppState): string {
         </div>
       </header>
 
-      ${
-        // Initiative and CMD tokens are read at the top of EVERY round, which
-        // makes them the two most-consulted numbers on the sheet. They used to
-        // be a small italic line inside the faction-rule box, and worse, that
-        // box is behind the "Rules" toggle - so turning rules off hid the two
-        // things you cannot play a round without. They are their own banner now,
-        // always printed, set large enough to read across the table.
-        faction
-          ? `<section class="sheet-vitals">
-              <div class="sv-item">
-                <span class="sv-label">Initiative</span>
-                <span class="sv-figure"><span class="sv-value">${escapeHtml(faction.initiative)}</span>${diceRow(faction.initiative, 18)}</span>
-              </div>
-              <div class="sv-item">
-                <span class="sv-label">CMD / round</span>
-                <span class="sv-figure"><span class="sv-value">${escapeHtml(faction.cmdTokens)}</span>${commandRow(faction.cmdTokens, 18)}</span>
-              </div>
-            </section>`
-          : ""
-      }
 
       ${
         faction && opts.rules
-          ? `<section class="print-rule">
-              <h3>Faction rule: ${escapeHtml(faction.rule.name)}</h3>
-              <p>${ruleText(faction.rule.text)}</p>
-            </section>`
+          ? `<section class="print-rule">${factionRuleBlock(faction, "compact")}</section>`
           : ""
       }
 
@@ -1749,20 +1723,21 @@ function printView(state: AppState): string {
 
       ${
         isUnity
-          ? `<p class="print-note">Assign these to the HVP column above once your missions are generated. ${HVP_MECHANICS}</p><div class="print-hvp-cols">${availableHvpBlocks}</div>`
-          : hvpBlocks
-            ? `<p class="print-note">${HVP_MECHANICS}</p><div class="print-hvp-cols">${hvpBlocks}</div>`
+          ? `<div class="print-hvp-cols">${availableHvpBlocks}</div>`
+          : hasHvpBlocks
+            ? `<div class="print-hvp-cols">
+                 <div class="print-hvp-own">${hvpBlocks.own}</div>
+                 <div class="print-hvp-shared">${hvpBlocks.shared}</div>
+               </div>`
             : ""
       }
 
-      <h2 class="sheet-section">Score record</h2>
       ${(() => {
         const maxRound = list.mode === "management-training" ? 3 : 4;
         const isCredits = list.mode === "hypergrowth" || list.mode === "management-training";
         const roundNames = ["Round One", "Round Two", "Round Three", "Round Four"].slice(0, maxRound);
         const cells = roundNames.map(() => "<td></td>").join("");
         return `
-      <p class="print-note">${list.mode === "management-training" ? "Management Training ends at the end of the third round; most credits wins." : "The game ends at the end of the fourth round."}</p>
       <table class="print-score">
         <thead><tr><th></th>${roundNames.map((n) => `<th>${n}</th>`).join("")}<th>Final</th></tr></thead>
         <tbody>
@@ -2298,7 +2273,7 @@ function playView(state: AppState): string {
       <section class="solo-card solo-card-quiet">
         <h3 class="roster-section">Scoring reminders</h3>
         ${notes ? `<ul class="rule-list">${notes}</ul>` : '<p class="muted">Check your mission sheet for scoring.</p>'}
-        ${faction ? `<h4 class="ref-sub">${escapeHtml(faction.rule.name)}</h4><p class="rule-card-text">${ruleText(faction.rule.text)}</p>` : ""}
+        ${faction ? factionRuleBlock(faction, "compact") : ""}
       </section>
     </div>
 

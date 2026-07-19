@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.63",
+    date: "2026-07-18",
+    title: "One shape for a faction rule",
+    items: [
+      "A faction rule is now laid out the same way everywhere it appears — the picker, the builder roster, the printed sheet and Play Mode: the rule on the left, Initiative over CMD per round on the right. Each of those screens used to arrange the same three facts differently.",
+      "Removed from the printed sheet: the Score record heading, the \"game ends at the end of the fourth round\" line, the Total row under the roster table, and the paragraph explaining how personnel are carried.",
+      "The five generic personnel are kept together in the right-hand column, so your faction's own read as a set instead of being interleaved with them.",
+    ],
+  },
+  {
     version: "0.8.62",
     date: "2026-07-18",
     title: "Stat numbers line up",

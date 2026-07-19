@@ -2811,6 +2811,52 @@ a .icon,
 /* Personnel three to a row. Each entry is a name and a sentence or two, so
    stacked full-width they left most of every line empty - and Age of Unity
    prints twelve of them. Each block still avoids breaking across a page. */
-.print-hvp-cols { columns: 3; column-gap: 16px; }
+/* Faction personnel across the left two columns, the shared generic pool kept
+   together in the right-hand one. A plain 3-column flow interleaved them
+   wherever the break happened to land. */
+.print-hvp-cols { display: grid; grid-template-columns: 2fr 1fr; gap: 0 16px; align-items: start; }
+.print-hvp-own { columns: 2; column-gap: 16px; }
 .print-hvp-cols .print-hvp { break-inside: avoid; -webkit-column-break-inside: avoid; margin-bottom: 7px; }
-@media (max-width: 700px) { .print-hvp-cols { columns: 1; } }
+@media (max-width: 700px) {
+  .print-hvp-cols { grid-template-columns: 1fr; }
+  .print-hvp-own { columns: 1; }
+}
+
+
+/* ---------------------------------------------------------- faction rule block
+
+   The rule on the left, its two per-round numbers stacked on the right. One
+   arrangement everywhere a faction rule appears - picker, roster, sheet, Play
+   Mode - rather than a different one per screen. */
+.frule { display: grid; grid-template-columns: minmax(0, 1fr) max-content; gap: 12px 20px; align-items: start; }
+.frule-main { min-width: 0; }
+.frule-name { font-family: var(--display); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink); }
+.frule-text { font-family: var(--serif); color: var(--ink-2); }
+.frule-vitals { display: flex; flex-direction: column; gap: 6px; }
+.frv { display: flex; flex-direction: column; gap: 2px; }
+.frv-label { font-family: var(--sans); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); white-space: nowrap; }
+.frv-figure { display: flex; align-items: center; gap: 8px; }
+.frv-value { font-family: var(--display); font-weight: 800; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.frule-full { padding: 14px 0 0; border-top: 1px solid var(--hair); margin-top: 16px; }
+.frule-full .frule-name { font-size: 16px; margin-bottom: 5px; }
+.frule-full .frule-text { font-size: 14px; line-height: 1.5; }
+.frule-full .frv-label { font-size: 10px; }
+.frule-full .frv-value { font-size: 22px; }
+.frule-full .frule-vitals { min-width: 132px; }
+
+.frule-compact .frule-name { font-size: 13px; margin-bottom: 3px; }
+.frule-compact .frule-text { font-size: 12.5px; line-height: 1.4; }
+.frule-compact .frv-label { font-size: 9px; }
+.frule-compact .frv-value { font-size: 16px; }
+.frule-compact .frule-vitals { min-width: 104px; }
+.frule-compact { gap: 8px 16px; }
+
+/* On the sheet the block is the rule box, so it carries no extra chrome. */
+.print-rule .frule-compact { gap: 6px 14px; }
+.sheet .frule-text { color: var(--ink-2); }
+
+@media (max-width: 560px) {
+  .frule { grid-template-columns: 1fr; }
+  .frule-vitals { flex-direction: row; gap: 20px; }
+}
