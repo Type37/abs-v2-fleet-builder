@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.69",
+    date: "2026-07-18",
+    title: "Gradients retired",
+    items: [
+      "Removed the Gradient folder from the emblem library. It was 93 of 253 marks — more than a third of the library in one bucket that described a rendering style rather than anything you would go looking for. The library is 160 marks now, and the folder list reads as things instead.",
+      "A fleet still pointing at a gradient mark falls back to its built-in glyph rather than showing a broken image.",
+    ],
+  },
+  {
     version: "0.8.68",
     date: "2026-07-18",
     title: "Finishing what was asked for",
