@@ -55,8 +55,7 @@ export type Route =
   | { view: "solo-outfit"; outfitId: string }
   | { view: "ships" }
   | { view: "play"; listId: string }
-  | { view: "learn"; step: number; anchor?: string }
-  | { view: "changelog" };
+  | { view: "learn"; step: number; anchor?: string };
 
 // Kept as a literal rather than derived from ROUND_PHASES: the router must not
 // depend on the rules data, and these four strings are URL surface now, so they
@@ -96,7 +95,6 @@ export function parseRoute(hash: string): Route {
     step = Math.min(LEARN_LAST_STEP, step);
     return anchor ? { view: "learn", step, anchor } : { view: "learn", step };
   }
-  if (parts[0] === "changelog") return { view: "changelog" };
   return { view: "home" };
 }
 
@@ -124,8 +122,6 @@ export function routeHash(route: Route): string {
       if (route.anchor) return `#/learn/${route.step}/${route.anchor}`;
       return route.step > 0 ? `#/learn/${route.step}` : "#/learn";
     }
-    case "changelog":
-      return "#/changelog";
   }
 }
 

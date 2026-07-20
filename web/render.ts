@@ -28,7 +28,7 @@ import {
   libraryUrl,
   matchCount,
 } from "./emblems.ts";
-import { CHANGELOG } from "./changelog.ts";
+import pkg from "../package.json";
 import { learnDiagram } from "./diagrams.ts";
 import { FACTION_LORE } from "./faction-lore.ts";
 import type { AppState } from "./state.ts";
@@ -872,12 +872,18 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
         <span class="ship-cost">${credits(ship.cost)}</span>
       </div>
       <div class="ship-row-details">
-        <!-- The chip repeats the mass glyph to its left, so it is dropped - but
-             only when that glyph is actually a mass glyph. A ship with custom
-             art shows the art there instead, and then the chip is the only
-             place the number appears. -->
         ${statChips(ship, true)}
-        ${weaponsTable(ship)}
+        ${
+          // The weapons table only appears here while this class is NOT in your
+          // fleet. Once it is, your roster is drawing the identical table a few
+          // hundred pixels away, and the same grid twice on one screen is the
+          // thing that made the builder feel like it was repeating itself.
+          // Nothing is hidden by this: the roster row is the copy, and it is the
+          // authoritative one, since it is your fleet rather than the catalogue.
+          owned > 0
+            ? `<p class="ship-row-owned">${icon("check", 13)} ${owned} in your fleet <span class="ship-row-owned-note">weapons on your roster</span></p>`
+            : weaponsTable(ship)
+        }
       </div>
     </div>
     <span class="add-cue">${icon("plus", 15)}<span>Add</span></span>
@@ -1243,10 +1249,10 @@ function builderView(state: AppState): string {
     <details class="mf-menu">
       <summary class="mf-menu-btn" title="Fleet options: share, duplicate, delete" aria-label="Fleet options">${icon("more", 18)}</summary>
       <div class="mf-menu-panel">
-        <button data-action="share-list" data-id="${list.id}">${icon("link", 16)} Share link</button>
+        <button data-action="share-list" data-id="${list.id}">${icon("ix-share", 16)} Share link</button>
         <button data-action="copy-list-text" data-id="${list.id}">${icon("scroll", 16)} Copy as text</button>
-        <button data-action="duplicate-list" data-id="${list.id}">${icon("duplicate", 16)} Duplicate</button>
-        <button class="danger" data-action="delete-list" data-id="${list.id}">${icon("trash", 16)} Delete fleet</button>
+        <button data-action="duplicate-list" data-id="${list.id}">${icon("ix-duplicate", 16)} Duplicate</button>
+        <button class="danger" data-action="delete-list" data-id="${list.id}">${icon("ix-trash", 16)} Delete fleet</button>
       </div>
     </details>`;
 
@@ -1804,10 +1810,10 @@ function foundryListView(state: AppState): string {
         <td class="cell-num">${f.ships.length}</td>
         <td class="cell-num">${f.hvp.length}</td>
         <td class="cell-actions">
-          <button class="ghost-btn" data-action="clone-faction" data-source="${f.id}" title="Duplicate this faction">${icon("duplicate", 16)} Duplicate</button>
+          <button class="ghost-btn" data-action="clone-faction" data-source="${f.id}" title="Duplicate this faction">${icon("ix-duplicate", 16)} Duplicate</button>
           <button class="ghost-btn" data-action="copy-faction" data-id="${f.id}" title="Copy as JSON to share">${icon("scroll", 16)} Copy</button>
           <button class="ghost-btn" data-action="export-faction" data-id="${f.id}" title="Download as a file">${icon("download", 16)} Download</button>
-          <button class="ghost-btn danger" data-action="delete-faction" data-id="${f.id}" title="Delete">${icon("trash", 16)} Delete</button>
+          <button class="ghost-btn danger" data-action="delete-faction" data-id="${f.id}" title="Delete">${icon("ix-trash", 16)} Delete</button>
         </td>
       </tr>`,
     )
@@ -2024,33 +2030,6 @@ function foundryEditView(state: AppState, factionId: string): string {
     </section>
   </main>
   ${toast(state)}
-  ${footer()}`;
-}
-
-// ---------------------------------------------------------------------------
-// Changelog
-// ---------------------------------------------------------------------------
-
-function changelogView(): string {
-  const entries = CHANGELOG.map(
-    (e) => `
-    <section class="log-entry">
-      <header class="log-head">
-        <h2 class="log-version">${e.version}</h2>
-        <div>
-          <h3 class="log-title">${escapeHtml(e.title)}</h3>
-          <p class="log-date">${formatDate(e.date)}</p>
-        </div>
-      </header>
-      <ul class="log-items">${e.items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>
-    </section>`,
-  ).join("");
-  return `
-  ${topbar()}
-  <main class="changelog-main">
-    <h1 class="page-title">Changelog</h1>
-    ${entries}
-  </main>
   ${footer()}`;
 }
 
@@ -2663,7 +2642,7 @@ function tourPopover(state: AppState): string {
 function optionsModal(state: AppState): string {
   const m = state.ui.modal;
   if (!m || m.kind !== "options") return "";
-  const v = CHANGELOG[0]?.version ?? "";
+  const v = pkg.version;
   return `
   <div class="modal-root">
     <div class="modal-backdrop" data-action="close-modal"></div>
@@ -2685,13 +2664,11 @@ function optionsModal(state: AppState): string {
         </section>
         <section class="opt-section">
           <h3 class="opt-h">About</h3>
-          <!-- Only the changelog. The rulebook, the Quick Reference and the
-               feedback address are all in the footer, which is on every page
-               including this one - so opening Options put each of them on
-               screen twice. The changelog is the one link the footer lacks. -->
-          <ul class="opt-links">
-            <li><a href="#/changelog" data-action="close-modal">${icon("scroll", 15)} What's new (v${escapeHtml(v)})</a></li>
-          </ul>
+          <!-- The rulebook, the Quick Reference and the feedback address are
+               all in the footer, which is on every page including this one, so
+               listing them here put each of them on screen twice. That leaves
+               the version, which is a fact rather than a link. -->
+          <p class="opt-version">Version ${escapeHtml(v)}</p>
         </section>
       </div>
     </div>
@@ -3192,8 +3169,6 @@ export function render(state: AppState): string {
         return playView(state);
       case "learn":
         return learnView(state);
-      case "changelog":
-        return changelogView();
     }
   })();
   return `${body}${optionsModal(state)}${emblemModal(state)}${tourPopover(state)}`;

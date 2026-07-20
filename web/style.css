@@ -97,6 +97,14 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+/* Reserve the scrollbar's width on EVERY page, whether that page scrolls or not.
+   Without this, a short page (Learn step 1, an empty fleet list) has no
+   scrollbar and a long one does, so the viewport is 13px wider on one than the
+   other and every centred thing on the page slides sideways the moment you
+   navigate. That is the horizontal half of "the screen jumps around" - it is not
+   an animation, it is the layout being measured against two different widths.
+   See the no-jump rule in HANDOFF.md. */
+html { scrollbar-gutter: stable; }
 
 body {
   background: var(--paper);
@@ -206,7 +214,7 @@ summary { outline-offset: 2px; }
 /* Uppercase micro-labels: the NASA/Swiss data-label voice. */
 .hero-eyebrow, .band-eyebrow, .readout-label, .slot-label, .stat-sep,
 .era-title, .catalog-title, .roster-section, .sheet-section, .panel-title,
-.log-version, .freeplay-badge, .breadcrumb, .dock-table th, .print-stats th,
+.freeplay-badge, .breadcrumb, .dock-table th, .print-stats th,
 .print-score th {
   font-family: var(--sans);
   text-transform: uppercase;
@@ -346,6 +354,9 @@ button { font-family: inherit; }
 .game-info-footer { margin-top: 64px; border-top: 1px solid var(--hair-soft); padding: 18px 16px 30px; }
 .gif-inner { max-width: var(--shell); margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 24px; font-size: 12.5px; color: var(--ink-2); }
 .gif-inner > span, .gif-inner > a { padding: 0 2px; }
+/* The footer links that carry a glyph centre it against the words rather than
+   sitting it on the text baseline, where it rode about a pixel high. */
+.gif-inner > a { display: inline-flex; align-items: center; gap: 5px; }
 .gif-title { font-weight: 800; color: var(--ink); }
 .game-info-footer a { color: var(--color-action); font-weight: 600; position: relative; display: inline-block; --underline-color: currentColor; }
 .game-info-footer a:hover { text-decoration: underline; }
@@ -876,6 +887,13 @@ button { font-family: inherit; }
    wide child (like the weapons table) pushes the row wider than its box,
    overlapping the ADD control instead of wrapping inside its own space. */
 .ship-row-body { min-width: 0; }
+/* Stands in for the weapons table on a class you already field, so the same
+   grid is not drawn twice on one screen. Quiet: it is a state note, not data. */
+.ship-row-owned {
+  display: flex; align-items: center; gap: 6px; margin: 0;
+  font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--blue);
+}
+.ship-row-owned-note { font-weight: 500; color: var(--ink-3); }
 .catalog-list > .ship-row:last-child { border-bottom: none; }
 .ship-row:hover { border-color: var(--color-line); border-left-color: var(--color-action); background: var(--blue-wash); }
 /* The glyph column is now sized for ship art (44px), so a mass-glyph icon
@@ -1258,7 +1276,7 @@ button { font-family: inherit; }
 
 /* ------------------------------------------------------------ foundry */
 
-.foundry-main, .changelog-main { max-width: 960px; margin: 0 auto; padding: clamp(28px, 4vw, 52px) clamp(16px, 4vw, 40px) 0; }
+.foundry-main { max-width: 960px; margin: 0 auto; padding: clamp(28px, 4vw, 52px) clamp(16px, 4vw, 40px) 0; }
 .page-title { font-family: var(--display); font-weight: 900; font-size: clamp(32px, 6vw, 56px); letter-spacing: -0.02em; text-transform: uppercase; margin-bottom: 12px; }
 .cf-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .cf-title-row .page-title { margin-bottom: 0; }
@@ -1328,12 +1346,6 @@ button { font-family: inherit; }
 
 /* ------------------------------------------------------------ changelog */
 
-.log-entry { border-top: 2px solid var(--hair); padding: 22px 0; }
-.log-head { display: flex; gap: 20px; align-items: baseline; }
-.log-version { font-family: var(--display); font-weight: 900; font-size: 15px; color: var(--red-deep); font-variant-numeric: tabular-nums; }
-.log-title { font-family: var(--display); font-weight: 800; font-size: 20px; }
-.log-date { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
-.log-items { margin: 14px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--ink-2); }
 
 /* ------------------------------------------------------------ misc */
 
@@ -1460,8 +1472,10 @@ button { font-family: inherit; }
   font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   padding: 9px 12px; white-space: nowrap;
 }
-.comp-table thead th.comp-stat { text-align: center; }
-.comp-table thead th.comp-stat .stat-ico { color: #fff; vertical-align: -2px; margin-right: 4px; }
+/* vertical-align middle so the glyph and its label sit on one optical centre.
+   In a table cell the default baseline alignment left the icon 1.5px high. */
+.comp-table thead th.comp-stat { text-align: center; vertical-align: middle; }
+.comp-table thead th.comp-stat .stat-ico { color: #fff; vertical-align: middle; margin-right: 4px; position: relative; top: -0.5px; }
 .comp-hlabel { }
 /* Column headers double as sort controls: click to sort, red rule marks the
    active column. */
@@ -1767,7 +1781,7 @@ button { font-family: inherit; }
   .roster-sheet { overflow-y: visible; }
   .fleet-dock { position: static; }
 
-  .foundry-main, .changelog-main, .compendium, .solo-body { padding-left: 14px; padding-right: 14px; }
+  .foundry-main, .compendium, .solo-body { padding-left: 14px; padding-right: 14px; }
 
   .index-row { grid-template-columns: 44px 1fr 22px; gap: 12px; padding: 16px 14px; }
   .index-num { width: 40px; height: 40px; font-size: 18px; }
@@ -2234,6 +2248,7 @@ button { font-family: inherit; }
 .opt-h { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--hair-soft); padding-bottom: 6px; }
 .opt-note { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
 .opt-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.opt-version { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink-3); margin: 0; font-variant-numeric: tabular-nums; }
 .opt-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .opt-links a { display: inline-flex; align-items: center; gap: 9px; padding: 8px 4px; color: var(--blue); font-weight: 600; font-size: 14px; }
 .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; background: var(--color-action); color: #fff; }
@@ -2485,7 +2500,7 @@ button { font-family: inherit; }
 .flip-x { transform: scaleX(-1); }
 /* #app > * sets max-width:100% and carries ID specificity, so a bare class
    selector here loses to it and the page ran the full width of the glass. */
-#app > .learn-main { max-width: 780px; margin: 0 auto; padding: clamp(20px, 3vw, 34px) clamp(16px, 4vw, 40px) 72px; }
+#app > .learn-main { max-width: 780px; margin: 0 auto; padding: clamp(16px, 2.2vw, 26px) clamp(16px, 4vw, 40px) 36px; }
 
 /* Progress dots along the top */
 /* A wrapping row of equal chips. The old rail used stretchy separators, which
@@ -3086,12 +3101,19 @@ a .icon,
   .learn-acc-chev { transition: none; }
 }
 
-/* Tighter overall: the walkthrough had a poster's spacing on a manual's content. */
-.learn-title { margin-bottom: 8px !important; font-size: clamp(24px, 3.4vw, 34px) !important; }
-.learn-lede { font-size: 16px !important; margin-bottom: 16px !important; }
+/* Tighter overall: the walkthrough had a poster's spacing on a manual's content.
+   Second pass - the gaps between the rail, the heading, the lede and the body
+   were each individually reasonable and collectively pushed the actual rules
+   below the fold on a laptop. */
+.learn-title { margin-bottom: 6px !important; font-size: clamp(24px, 3.4vw, 34px) !important; }
+.learn-lede { font-size: 16px !important; margin-bottom: 14px !important; }
 .learn-screen > * + * { margin-top: 0; }
-.learn-sub { margin: 20px 0 3px !important; font-size: 16px !important; }
+.learn-sub { margin: 18px 0 3px !important; font-size: 16px !important; }
 .learn-eyebrow { margin-bottom: 4px !important; }
+.learn-progress { margin-bottom: 14px !important; }
+.learn-actions { margin-top: 20px !important; padding-top: 14px !important; }
+.learn-accs { margin-top: 12px; gap: 6px; }
+.learn-rules { margin-top: 8px; gap: 5px; }
 
 /* The tutorial table: a dimensioned setup drawing. Wider than the other
    diagrams because it carries measurements in all four margins. */
@@ -3220,7 +3242,6 @@ a .icon,
 #app > .home-main { max-width: 1100px; margin-left: auto; margin-right: auto; }
 #app > .foundry-main { max-width: 1100px; margin-left: auto; margin-right: auto; }
 #app > .compendium { max-width: 1320px; margin-left: auto; margin-right: auto; }
-#app > .changelog-main { max-width: 820px; margin-left: auto; margin-right: auto; }
 #app > .builder { max-width: 1280px; margin-left: auto; margin-right: auto; }
 
 /* Gravity well and jump strain. */

@@ -75,9 +75,9 @@ const PATHS: Record<string, string> = {
   // drawn true - the cone is 42 degrees of the 45, the dome a real half-disc -
   // so the picture is not lying about coverage.
   "arc-primary":
-    '<g fill="currentColor" stroke="none"><path d="M12 18.4 7.9 7.9A11.2 11.2 0 0 1 16.1 7.9Z"/><rect x="7.4" y="18.4" width="9.2" height="3"/></g>',
+    '<g fill="currentColor" stroke="none"><path d="M12 18.4 7.9 7.9A11.2 11.2 0 0 1 16.1 7.9Z"/><rect x="8.9" y="18.4" width="6.2" height="2.8"/></g>',
   "arc-aux":
-    '<g fill="currentColor" stroke="none"><path d="M1.6 18.4A10.4 10.4 0 0 1 22.4 18.4Z"/><rect x="7.4" y="18.4" width="9.2" height="3"/></g>',
+    '<g fill="currentColor" stroke="none"><path d="M1.6 18.4A10.4 10.4 0 0 1 22.4 18.4Z"/><rect x="8.9" y="18.4" width="6.2" height="2.8"/></g>',
 };
 
 // Fleet emblems: crisp geometric insignia on the 24 grid. Filled where a bold

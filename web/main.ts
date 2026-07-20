@@ -42,7 +42,7 @@ const VIEW_TITLE: Record<string, string> = {
   "solo-outfit": "Outfit",
   ships: "Ship Compendium",
   play: "Play Mode",
-  changelog: "Changelog",
+  learn: "Learn to Play",
 };
 
 // Scroll a phase accordion into view when the route names one (#/learn/3/jump).
