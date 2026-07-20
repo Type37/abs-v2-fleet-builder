@@ -400,6 +400,18 @@ button { font-family: inherit; }
       rather than a width query, so it follows the input device rather than a
       guess about screen size: a small laptop window keeps its compact controls,
       a phone gets thumbs-worth of target. */
+/* The gap between the phone breakpoint and a roomy desktop. An iPhone held
+   sideways is 844 to 932 points wide - all of it ABOVE the 760px phone
+   breakpoint - so it was getting the desktop nav, where the wordmark plus five
+   content-sized items came to 869px and ran Options 31px off the right edge.
+   Here the items may shrink and the chrome gives back some padding. */
+@media (max-width: 1000px) {
+  .topbar { padding-left: clamp(12px, 2.4vw, 20px); padding-right: clamp(12px, 2.4vw, 20px); }
+  .wordmark-sub { display: none; }
+  .topnav { min-width: 0; }
+  .topnav a, .topnav-btn { flex: 0 1 auto; min-width: 0; padding-left: 9px; padding-right: 9px; }
+}
+
 @supports (padding: env(safe-area-inset-left)) {
   /* Only the things that actually touch a screen edge, and only on their own
      padding - NOT on .topbar, whose horizontal padding the nav cancels with a
