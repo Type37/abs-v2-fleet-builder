@@ -66,9 +66,19 @@ test("reads a cost change, its cap and its scope", () => {
     { name: "Value", text: "Each unit in this fleet can use the Power to Engines command for 0 CMD once per Round." },
   ]);
   assert.equal(e.costChanges.length, 1);
+  // "Each unit in this fleet" IS the scope, and it is kept. This assertion used
+  // to omit it, because readScope dropped the clause for "carrying no
+  // information" - so the test agreed with the parser that a piece of a
+  // published rule could be thrown away, and the bug had a passing test over it.
   assert.deepEqual(
     { ...e.costChanges[0] },
-    { command: "Power to Engines", cost: 0, limit: "once per Round", source: "Value" },
+    {
+      command: "Power to Engines",
+      cost: 0,
+      limit: "once per Round",
+      scope: "Each unit in this fleet",
+      source: "Value",
+    },
   );
 
   const scoped = deriveCommandEffects([
@@ -77,6 +87,39 @@ test("reads a cost change, its cap and its scope", () => {
   assert.equal(scoped.costChanges[0]?.command, "Red Alert");
   assert.equal(scoped.costChanges[0]?.cost, 0);
   assert.equal(scoped.costChanges[0]?.scope, "Mass 0 units in this fleet");
+});
+
+// Three ways readScope used to silently delete part of a rule. Each one could
+// turn a conditional discount into an unconditional one on the printed sheet,
+// which is the worst failure this file has: a player reads a rule that does not
+// exist. Nothing here may ever drop text again.
+test("keeps the whole scope clause, however it is written", () => {
+  const long =
+    "Units in this fleet that began the round within 6\" of a friendly Jump Point can use the Red Alert command for 0 CMD.";
+  const e = deriveCommandEffects([{ name: "Long", text: long }]);
+  assert.equal(
+    e.costChanges[0]?.scope,
+    'Units in this fleet that began the round within 6" of a friendly Jump Point',
+    "a scope clause must not be dropped for being long (there was a 60-character cap here)",
+  );
+
+  const semi = deriveCommandEffects([
+    { name: "Semi", text: "Shields are ignored; Mass 0 units in this fleet can use the Red Alert command for 0 CMD." },
+  ]);
+  assert.equal(
+    semi.costChanges[0]?.scope,
+    "Shields are ignored; Mass 0 units in this fleet",
+    "a scope clause must not be cut at a semicolon",
+  );
+
+  const plain = deriveCommandEffects([
+    { name: "Plain", text: "Ships in this fleet can use the Red Alert command for 0 CMD tokens." },
+  ]);
+  assert.equal(
+    plain.costChanges[0]?.scope,
+    "Ships in this fleet",
+    "a scope clause must not be dropped for looking redundant",
+  );
 });
 
 test("splits a multi-command discount into one change each", () => {

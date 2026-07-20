@@ -117,20 +117,28 @@ const COST_USE =
 const COST_REDUCE = /reduces\s+the\s+cost\s+of\s+the\s+(.+?)\s+commands?\s+to\s+(\d+)\s*CMD/g;
 
 /**
- * Trim a scope clause down to who it applies to. The captured run-up is whatever
- * preceded "can use", which may be a sentence boundary's worth of other rule.
+ * The scope clause: who a cost change applies to. Whatever the rule says here is
+ * what gets printed, whitespace tidied and nothing else.
+ *
+ * This function used to throw text away three different ways, and every one of
+ * them could turn a conditional rule into an unconditional one on the printed
+ * sheet:
+ *
+ *   1. a 60-character cap, so any long qualifier vanished;
+ *   2. a strip of everything before the first semicolon, which ate a clause
+ *      whenever the rule happened to use one;
+ *   3. a filter that dropped "units in this fleet" as "carrying no information",
+ *      on the reasoning that the reader already knows whose fleet it is.
+ *
+ * The third is the most instructive: even when the judgement is right, making it
+ * here is wrong. This function reads published rules text. It does not get an
+ * opinion about which parts of a rule are worth printing. If a clause is
+ * genuinely redundant, that is a decision for whoever writes the rule, not for a
+ * regex in a parser. Do not add another filter here.
  */
 function readScope(raw: string): string | undefined {
-  const s = raw.replace(/^[\s\S]*?[.;]\s*/, "").trim();
-  // No length cap. There used to be one - anything over 60 characters was
-  // dropped - which silently deleted a qualifier from a published rule and
-  // printed the rest as though it applied unconditionally. A long clause is
-  // still the rule; length is not a correctness signal.
-  if (!s) return undefined;
-  // "Each unit in this fleet" / "Ships in this fleet" carry no information -
-  // that is just "your fleet", which the reader already knows.
-  if (/^(each\s+unit|units?|ships?)\s+in\s+this\s+fleet$/i.test(s)) return undefined;
-  return s;
+  const s = raw.trim().replace(/\s+/g, " ");
+  return s || undefined;
 }
 
 // A rule that changes how a core command resolves, or keys off it having been

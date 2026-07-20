@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.8.79",
+    date: "2026-07-20",
+    title: "The rules parser stops deleting parts of rules",
+    items: [
+      "The code that reads your faction's rules to work out which Commands you get was throwing away part of the rule in three different ways: any qualifying clause longer than sixty characters, anything before a semicolon, and any clause it judged to be stating the obvious. All three could turn a conditional discount into an unconditional one on the printed sheet, which means printing a rule that does not exist. Whatever the rule says is now what gets printed.",
+      "Two discounts had been printing without the units they apply to: Red Alert under the Unhinged Live-Streamer, and Power to Engines under Time Is Money. Both say who they are for again.",
+      "Added tests covering all three, because the old test agreed with the parser that a piece of a rule could be dropped.",
+    ],
+  },
+  {
     version: "0.8.78",
     date: "2026-07-19",
     title: "Mass is Ⓜ again, and the catalog rows are fixed",
