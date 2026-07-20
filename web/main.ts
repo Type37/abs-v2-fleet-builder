@@ -69,6 +69,46 @@ function syncDocumentTitle(): void {
   document.title = name ? `${name} - ${SITE_NAME}` : SITE_NAME;
 }
 
+// The control you just pressed keeps its position on screen across the repaint
+// that follows. Adding a ship grows the roster by a whole row; where the roster
+// sits above the catalogue (any width narrow enough for the two to stack) that
+// pushed every catalogue row down ~240px, so the list jumped under your cursor
+// at the moment you were clicking through it.
+//
+// The browser's own scroll anchoring does this, but only for growth ABOVE the
+// viewport - at the top of the page it has nothing to anchor to and gives up.
+// This does it from the pressed element itself, so it holds at any scroll
+// position, including 0.
+//
+// Recorded on pointerdown (before any state change) in the capture phase, so it
+// is captured even for controls that stop propagation.
+let pressAnchor: { key: string; top: number; route: string } | null = null;
+
+document.addEventListener(
+  "pointerdown",
+  (e) => {
+    const el = e.target instanceof Element ? e.target.closest("[data-action]") : null;
+    const key = el instanceof HTMLElement ? focusKey(el) : null;
+    pressAnchor =
+      el instanceof HTMLElement && key
+        ? { key, top: el.getBoundingClientRect().top, route: location.hash }
+        : null;
+  },
+  true,
+);
+
+function holdAnchor(): void {
+  const a = pressAnchor;
+  pressAnchor = null;
+  // Not across a navigation: a new view is supposed to start where it starts.
+  if (!a || a.route !== location.hash) return;
+  const el = [...root.querySelectorAll<HTMLElement>("[data-action]")].find((n) => focusKey(n) === a.key);
+  if (!el) return;
+  const delta = el.getBoundingClientRect().top - a.top;
+  // Sub-pixel drift is not a jump; correcting it would fight the browser.
+  if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+}
+
 function paint(): void {
   // Most text fields commit on `change` (blur), so typing does not re-render.
   // The compendium search is the exception: it filters live on `input`, so
@@ -108,6 +148,7 @@ function paint(): void {
   // eighteen templates keeps the skip link's target correct on all of them.
   const mainEl = root.querySelector("main");
   if (mainEl) mainEl.id = "main-content";
+  holdAnchor();
   syncDocumentTitle();
   enhanceNav();
   positionTour();
@@ -730,7 +771,14 @@ window.addEventListener("hashchange", () => {
   // view regardless of route, so an emblem picker left open followed the player
   // from the builder into Play Mode and sat on top of it - and, once the dialog
   // started locking body scroll, took the page's scrollbar with it.
-  store.setState((s) => ({ ...s, route: parseRoute(location.hash), ui: { ...s.ui, modal: undefined } }));
+  const next = parseRoute(location.hash);
+  // A new view starts at its top. Hash routing does not reset scroll, so
+  // navigating away from a page you had scrolled down dropped you into the
+  // middle of the next one. The exception is a route that names a target
+  // (#/learn/3/jump) - syncLearnAnchor scrolls to it after this paint, and
+  // fighting it here would show the page snapping twice.
+  if (!(next.view === "learn" && next.anchor)) window.scrollTo(0, 0);
+  store.setState((s) => ({ ...s, route: next, ui: { ...s.ui, modal: undefined } }));
 });
 
 wireActions(root);

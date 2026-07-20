@@ -897,13 +897,6 @@ button { font-family: inherit; }
    wide child (like the weapons table) pushes the row wider than its box,
    overlapping the ADD control instead of wrapping inside its own space. */
 .ship-row-body { min-width: 0; }
-/* Stands in for the weapons table on a class you already field, so the same
-   grid is not drawn twice on one screen. Quiet: it is a state note, not data. */
-.ship-row-owned {
-  display: flex; align-items: center; gap: 6px; margin: 0;
-  font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--blue);
-}
-.ship-row-owned-note { font-weight: 500; color: var(--ink-3); }
 .catalog-list > .ship-row:last-child { border-bottom: none; }
 .ship-row:hover { border-color: var(--color-line); border-left-color: var(--color-action); background: var(--blue-wash); }
 /* The glyph column is now sized for ship art (44px), so a mass-glyph icon

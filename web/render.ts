@@ -873,17 +873,18 @@ function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boole
       </div>
       <div class="ship-row-details">
         ${statChips(ship, true)}
-        ${
-          // The weapons table only appears here while this class is NOT in your
-          // fleet. Once it is, your roster is drawing the identical table a few
-          // hundred pixels away, and the same grid twice on one screen is the
-          // thing that made the builder feel like it was repeating itself.
-          // Nothing is hidden by this: the roster row is the copy, and it is the
-          // authoritative one, since it is your fleet rather than the catalogue.
-          owned > 0
-            ? `<p class="ship-row-owned">${icon("check", 13)} ${owned} in your fleet <span class="ship-row-owned-note">weapons on your roster</span></p>`
-            : weaponsTable(ship)
-        }
+        <!--
+          The weapons table is ALWAYS here, whether or not the class is already
+          in your fleet. It was briefly swapped for a "weapons on your roster"
+          line once you owned one, to stop the same grid being drawn twice on
+          one screen. That was a bad trade twice over: it took the stats off the
+          thing you were deciding whether to buy more of, and because the
+          substitute line is shorter than the table, the row COLLAPSED by ~50px
+          the instant you clicked ADD - so the catalogue jumped under your
+          cursor at the exact moment you were using it. A row must be the same
+          height before and after you press its button.
+        -->
+        ${weaponsTable(ship)}
       </div>
     </div>
     <span class="add-cue">${icon("plus", 15)}<span>Add</span></span>
