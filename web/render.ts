@@ -2747,7 +2747,21 @@ function learnFleetTable(): string {
     })
     .join("");
   return `<div class="lf-table-wrap"><table class="lf-table">
-    <thead><tr><th>Qty</th><th>Ship</th><th>Mass</th><th>Thrust</th><th>Sil</th><th>Shields</th><th>Weapons</th></tr></thead>
+    <thead><tr><th>Qty</th><th>Ship</th>
+      ${(
+        [
+          ["stat-mass", "Mass"],
+          ["stat-thrust", "Thrust"],
+          ["stat-silhouette", "Sil"],
+          ["stat-shields", "Shields"],
+        ] as const
+      )
+        // Symbol AND word in the header, in the stat's own colour, so the
+        // reader meets each glyph here attached to its name before running
+        // into it bare in a rule further down the walkthrough.
+        .map(([ico, label]) => `<th><span class="lf-h">${icon(ico, 14, `stat-ico stat-ico-${ico.replace("stat-", "")}`)}${label}</span></th>`)
+        .join("")}
+      <th>Weapons</th></tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
 }
@@ -2857,7 +2871,10 @@ function learnView(state: AppState): string {
       <p class="learn-lede">This is a sample fleet that can be used in the tutorials. Here&rsquo;s the ship and the relevant statistics:</p>
       ${learnFleetTable()}
       <div class="learn-stat-defs">
-        <p><b>Mass</b> is a broad measure of the size and bulk of a ship. Throughout the rules, when you see the icon ${icon("stat-mass", 14, "stat-ico")}, replace that with the value of the Mass of the unit&rsquo;s ship class. If a rule refers to the Combined Mass of ships, sum the ${icon("stat-mass", 14, "stat-ico")} of all the related individual ships to form a total.</p>
+        <p><b>Mass</b> is a broad measure of the size and bulk of a ship. Throughout the rules, when you see the icon ${icon("stat-mass", 15, "stat-ico stat-ico-mass")}, replace that with the value of the Mass of the unit&rsquo;s ship class. If a rule refers to the Combined Mass of ships, sum the ${icon("stat-mass", 15, "stat-ico stat-ico-mass")} of all the related individual ships to form a total.</p>
+        <p><b>Thrust</b> ${icon("stat-thrust", 15, "stat-ico stat-ico-thrust")} is the maximum number of inches this ship can travel in a single move.</p>
+        <p><b>Silhouette</b> ${icon("stat-silhouette", 15, "stat-ico stat-ico-silhouette")} is the highest die roll that hits this ship, and its starting HP.</p>
+        <p><b>Shields</b> ${icon("stat-shields", 15, "stat-ico stat-ico-shields")} is the damage this ship soaks from each hit.</p>
       </div>
     </div>`,
     // 2 - The table

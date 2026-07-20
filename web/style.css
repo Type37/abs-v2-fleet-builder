@@ -29,6 +29,16 @@
      clears 4.5:1 on both grounds. */
   --ink-3: #5c6472;
 
+  /* Per-stat colours, Okabe-Ito colourblind-safe palette, darkened for contrast
+     on white. Deliberately NOT a red/green pair. */
+  --stat-mass: #0b3d91;
+  --stat-thrust: #c25100;
+  --stat-sil: #00795a;
+  --stat-shields: #7b4397;
+  /* Motion: one curve, and it does not overshoot. Instruments settle onto a
+     value, they do not bounce past it and come back - that bounce is the thing
+     that reads as a consumer app rather than a control panel. */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
   --blue: #0b3d91;
   --blue-deep: #062a6b;
   --blue-wash: #eaf0fb;
@@ -326,7 +336,7 @@ button { font-family: inherit; }
   position: absolute; top: 6px; bottom: 6px; left: 0; width: 0; opacity: 0; z-index: 0;
   background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.36);
   transform: translateX(0); pointer-events: none;
-  transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1), width 0.2s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.16s ease;
+  transition: transform 0.2s var(--ease), width 0.2s var(--ease), opacity 0.16s ease;
 }
 .topnav a, .topnav-btn {
   position: relative; z-index: 1;
@@ -466,13 +476,13 @@ button { font-family: inherit; }
   padding: 15px 18px; border: 1px solid var(--hair); color: var(--ink); background: var(--paper);
   font-family: inherit; text-align: left; cursor: pointer;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
-  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.16s ease, border-color 0.16s;
+  transition: transform 0.16s var(--ease), filter 0.16s ease, border-color 0.16s;
 }
 .index-row::before {
   content: ""; position: absolute; inset: -2px -2px -2px -14px; z-index: -2;
   background: var(--blue); transform-origin: left;
   transform: translateX(-102%) skewX(-9deg);
-  transition: transform 0.3s cubic-bezier(0.16, 0.84, 0.44, 1);
+  transition: transform 0.3s var(--ease);
 }
 .index-row::after {
   content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 0; z-index: -1;
@@ -532,7 +542,7 @@ button { font-family: inherit; }
   display: flex; flex-direction: column; background: var(--paper);
   border: 1px solid var(--hair); border-top: 3px solid var(--blue);
   transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
-  animation: fleet-card-in 0.34s cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  animation: fleet-card-in 0.34s var(--ease) both;
   animation-delay: calc(var(--i, 0) * 45ms);
 }
 .fleet-card:hover {
@@ -918,7 +928,7 @@ button { font-family: inherit; }
   display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 22px; margin-top: 5px;
 }
 .ship-row-details .stat-chips { flex: 0 0 auto; }
-.ship-row-details .weap-table { flex: 1 1 260px; margin-top: 0; }
+.ship-row-details .weap-table { flex: 0 1 auto; margin-top: 0; }
 
 /* Weapons table: one row per weapon system, aligned columns for arc, dice,
    range and damage. Used in the catalog and the roster so weapons read the
@@ -935,15 +945,17 @@ button { font-family: inherit; }
 /* Every row - header, weapon, note - shares one template, so the columns line
    up down the whole table without the table being one big grid (which left the
    cells with no owning row for assistive tech). */
+/* max-content on the name column, not auto: auto absorbed all the free space in
+   the row, which is what opened the long empty gap between WEAPON and RANGE. */
 .wt-row {
-  display: grid; grid-template-columns: 52px minmax(80px, auto) 56px 46px 30px;
-  column-gap: 14px; align-items: baseline; margin-bottom: 3px;
+  display: grid; grid-template-columns: 52px minmax(80px, max-content) 54px 48px 34px;
+  column-gap: 12px; align-items: baseline; margin-bottom: 3px;
 }
 /* On desktop the column header names each figure, so the inline label would be
    saying it twice. */
 .wt-inline-lbl { display: none; }
 .weap-table .wt-h {
-  font-family: var(--sans); font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   color: var(--ink-3); padding-bottom: 3px; border-bottom: 1px solid var(--hair-soft); align-self: end;
 }
 /* Arc cell: the wedge icon plus a PRI / AUX abbreviation, so the firing arc
@@ -951,8 +963,10 @@ button { font-family: inherit; }
 .wt-arc { color: var(--blue); display: flex; align-items: center; gap: 4px; }
 /* Word first, then the wedge: the label is what you read, the glyph confirms it. */
 .wt-arc-abbr { font-size: 10px; font-weight: 800; letter-spacing: 0.03em; color: var(--ink-2); order: -1; }
-.wt-name { font-size: 12.5px; font-weight: 400; color: var(--ink); }
-.wt-num { font-size: 12px; font-weight: 700; color: var(--ink); text-align: right; white-space: nowrap; }
+.wt-name { font-size: 13.5px; font-weight: 400; color: var(--ink); }
+/* Left, like every other column. A table that mixes left and right alignment
+   makes the reader re-find the start of each figure on every row. */
+.wt-num { font-size: 13px; font-weight: 700; color: var(--ink); text-align: left; white-space: nowrap; }
 .wt-h.wt-num { font-weight: 700; }
 .wt-note { grid-column: 2 / -1; font-size: 11.5px; font-style: normal; color: var(--ink-2); }
 .weap-none { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
@@ -981,11 +995,19 @@ button { font-family: inherit; }
   .stat-lbl { min-width: 46px; }
 }
 .stat-chips-mini { gap: 3px 6px; }
-.stat-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--hair-soft); padding: 3px 8px 3px 6px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; column-gap: 5px; }
-.stat-chip-mini { gap: 4px; padding: 2px 6px 2px 5px; font-size: 11px; }
-.stat-chip-mini .stat-lbl { font-size: 8.5px; letter-spacing: 0.03em; }
+.stat-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--hair-soft); padding: 3px 8px 3px 6px; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; column-gap: 5px; }
+.stat-chip-mini { gap: 4px; padding: 2px 6px 2px 5px; font-size: 12px; }
+.stat-chip-mini .stat-lbl { font-size: 9.5px; letter-spacing: 0.03em; }
+/* One colour per stat, so a glance at a row tells you which figure is which
+   before you have read the label. Drawn from the Okabe-Ito colourblind-safe
+   palette and darkened for contrast on white: they stay distinguishable under
+   deuteranopia and protanopia, which a red/green pairing would not. */
 .stat-ico { color: var(--blue); }
-.stat-lbl { font-family: var(--narrow); font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.stat-ico-mass { color: var(--stat-mass); }
+.stat-ico-thrust { color: var(--stat-thrust); }
+.stat-ico-silhouette { color: var(--stat-sil); }
+.stat-ico-shields { color: var(--stat-shields); }
+.stat-lbl { font-family: var(--narrow); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
 .stat-val { color: var(--ink); }
 .ship-row .ship-weapons { font-size: 11.5px; line-height: 1.35; color: var(--ink-3); white-space: normal; }
 
@@ -2047,7 +2069,7 @@ button { font-family: inherit; }
 .switcher-thumb {
   position: absolute; inset: 0; width: calc(100% / var(--switcher-count)); background: var(--blue);
   transform: translateX(calc(var(--switcher-selected) * 100%));
-  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 0.18s var(--ease);
 }
 .switcher-opt {
   position: relative; z-index: 1; border: none; background: none; border-left: 1px solid var(--hair);
@@ -2527,7 +2549,8 @@ button { font-family: inherit; }
 /* Fleet table */
 .lf-table-wrap { overflow-x: auto; border: 1px solid var(--hair); margin-bottom: 18px; }
 .lf-table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 13.5px; font-variant-numeric: tabular-nums; }
-.lf-table thead th { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px; color: var(--ink-3); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--ink); background: var(--paper); }
+.lf-table thead th { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; color: var(--ink-3); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--ink); background: var(--paper); }
+.lf-h { display: inline-flex; align-items: center; gap: 5px; }
 .lf-table td { padding: 9px 12px; border-bottom: 1px solid var(--hair-soft); vertical-align: top; }
 .lf-table tbody tr:last-child td { border-bottom: 0; }
 .lf-qty { color: var(--red); font-weight: 800; }
@@ -2584,7 +2607,7 @@ button { font-family: inherit; }
 .learn-demo .ld-ship { fill: var(--blue); }
 .learn-demo .ld-cone { fill: var(--red); opacity: 0; transform-origin: 0 0; }
 .learn-demo .ld-label { fill: var(--ink-3); font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.03em; }
-.learn-demo .ld-unit { transform: translate(46px, 75px); animation: ld-move 4.2s cubic-bezier(.4,0,.2,1) infinite; }
+.learn-demo .ld-unit { transform: translate(46px, 75px); animation: ld-move 4.2s var(--ease) infinite; }
 .learn-demo .ld-cone { animation: ld-fire 4.2s ease-in-out infinite; }
 .learn-demo .ld-target { animation: ld-hit 4.2s ease-in-out infinite; }
 @keyframes ld-move {
@@ -2982,7 +3005,8 @@ a .icon,
 .learn-dg .dg-jp-ring { fill: none; stroke: var(--blue); stroke-width: 2; }
 
 @keyframes dg-roll { 0% { transform: translateY(-26px) rotate(-140deg); opacity: 0; } 55% { opacity: 1; } 70% { transform: translateY(3px) rotate(6deg); } 100% { transform: translateY(0) rotate(0); opacity: 1; } }
-@keyframes dg-pop { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+/* No 1.12 overshoot: it read as a toy. Straight to size. */
+@keyframes dg-pop { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes dg-grow { 0% { transform: scale(0.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes dg-ring { 0% { r: 9; opacity: 1; } 100% { r: 30; opacity: 0; } }
 @keyframes dg-pivot-then-run {
@@ -2999,17 +3023,17 @@ a .icon,
 @keyframes dg-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dg-fire { 0%, 40% { opacity: 0; stroke-dashoffset: 130; } 55% { opacity: 1; } 100% { opacity: 0.9; stroke-dashoffset: 0; } }
 
-.learn-dg .dg-die { animation: dg-roll 900ms cubic-bezier(.2,.8,.3,1) both; transform-box: fill-box; transform-origin: center; }
+.learn-dg .dg-die { animation: dg-roll 900ms var(--ease) both; transform-box: fill-box; transform-origin: center; }
 .learn-dg .dg-die-2 { animation-delay: 120ms; }
 .learn-dg .dg-die-3 { animation-delay: 240ms; }
 .learn-dg .dg-die-4 { animation-delay: 360ms; }
-.learn-dg .dg-token { animation: dg-pop 420ms cubic-bezier(.2,.8,.3,1) both; animation-delay: 700ms; transform-box: fill-box; transform-origin: center; }
+.learn-dg .dg-token { animation: dg-pop 420ms var(--ease) both; animation-delay: 700ms; transform-box: fill-box; transform-origin: center; }
 .learn-dg .dg-token-2 { animation-delay: 800ms; }
 .learn-dg .dg-token-3 { animation-delay: 900ms; }
 .learn-dg .dg-token-4 { animation-delay: 1000ms; }
-.learn-dg .dg-range-grow { animation: dg-grow 700ms cubic-bezier(.2,.8,.3,1) both; transform-box: fill-box; transform-origin: center; }
+.learn-dg .dg-range-grow { animation: dg-grow 700ms var(--ease) both; transform-box: fill-box; transform-origin: center; }
 .learn-dg .dg-jp-ring { animation: dg-ring 1800ms ease-out infinite; }
-.learn-dg .dg-arrive { animation: dg-pop 500ms cubic-bezier(.2,.8,.3,1) both; transform-box: fill-box; transform-origin: center; }
+.learn-dg .dg-arrive { animation: dg-pop 500ms var(--ease) both; transform-box: fill-box; transform-origin: center; }
 .learn-dg .dg-arrive-1 { animation-delay: 700ms; }
 .learn-dg .dg-arrive-2 { animation-delay: 900ms; }
 .learn-dg .dg-arrive-3 { animation-delay: 1100ms; }
@@ -3066,7 +3090,7 @@ a .icon,
 .learn-acc-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
 .learn-acc-title { font-family: var(--display); font-weight: 800; font-size: 16px; color: var(--ink); }
 .learn-acc-lede { font-family: var(--serif); font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
-.learn-acc-chev { flex: none; margin-top: 4px; color: var(--ink-3); transform: rotate(90deg); transition: transform 160ms cubic-bezier(.2,.8,.3,1); }
+.learn-acc-chev { flex: none; margin-top: 4px; color: var(--ink-3); transform: rotate(90deg); transition: transform 160ms var(--ease); }
 .learn-acc[open] .learn-acc-chev { transform: rotate(-90deg); }
 .learn-acc-body { padding: 2px 16px 18px 50px; }
 .learn-acc-body > :first-child { margin-top: 0 !important; }
@@ -3094,8 +3118,8 @@ a .icon,
    tutorial registers as movement instead of the text silently swapping. */
 @keyframes learn-page-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes learn-acc-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
-.learn-stage { animation: learn-page-in 340ms cubic-bezier(.2,.8,.3,1) both; }
-.learn-acc[open] > .learn-acc-body { animation: learn-acc-in 240ms cubic-bezier(.2,.8,.3,1) both; }
+.learn-stage { animation: learn-page-in 340ms var(--ease) both; }
+.learn-acc[open] > .learn-acc-body { animation: learn-acc-in 240ms var(--ease) both; }
 @media (prefers-reduced-motion: reduce) {
   .learn-stage, .learn-acc[open] > .learn-acc-body { animation: none; }
   .learn-acc-chev { transition: none; }

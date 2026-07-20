@@ -1,6 +1,6 @@
 import type { ShipClass, Weapon } from "../src/types.ts";
 import { DAMAGE_BY_DIE } from "../src/types.ts";
-import { creditsGlyph } from "./icons.ts";
+import { creditsGlyph, MASS_MARK } from "./icons.ts";
 
 // Project style rules: no abbreviations in anything user-visible, no monospace,
 // and a hard budget of one em-dash and one interpunct across the whole project
@@ -63,13 +63,15 @@ export function escapeHtml(s: string): string {
  * must survive a round-trip there).
  */
 export function ruleText(s: string): string {
-  // A circled M as inline SVG, not a bordered text box: the SVG text is centred
-  // exactly (text-anchor + dominant-baseline), which the CSS box could never do
-  // reliably because it centres the font em-box, not the visible M.
+  // The SAME drawing as the stat-mass icon, not a second one that happens to
+  // also be a circled M. It used to be an SVG <text> M here and a stroked M
+  // there, and the two did not match on the page - the letterform, the weight
+  // and the circle radius all differed.
   const mass =
-    '<svg class="mass-inline" viewBox="0 0 24 24" role="img" aria-label="Mass">' +
-    '<circle cx="12" cy="12" r="10.4" fill="none" stroke="currentColor" stroke-width="2"/>' +
-    '<text x="12" y="12" text-anchor="middle" dominant-baseline="central">M</text></svg>';
+    '<svg class="mass-inline" viewBox="0 0 24 24" role="img" aria-label="Mass"' +
+    ' fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square">' +
+    MASS_MARK +
+    "</svg>";
   return escapeHtml(s).replace(/Ⓜ/g, mass);
 }
 

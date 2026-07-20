@@ -3,6 +3,16 @@ import creditsRaw from "./Credits.svg?raw";
 // Geometric inline SVG icons. All stroke-based, inherit currentColor, drawn on
 // a 24-unit grid so they align with the type baseline. No icon fonts.
 
+/**
+ * The Mass mark: Ⓜ, the circled M, the game's own symbol. THE definition - it is
+ * used both as the `stat-mass` icon and, by `ruleText()` in format.ts, inline
+ * inside rules prose. Those were two separate drawings for a while (a stroked M
+ * here, an SVG <text> M there) and they did not match each other on the page.
+ * One mark, one place. Stroke-based, so it inherits icon()'s wrapper.
+ */
+export const MASS_MARK =
+  '<circle cx="12" cy="12" r="10.2"/><polyline points="7.4 16.6 7.4 7.4 12 12.8 16.6 7.4 16.6 16.6" stroke-linejoin="round"/>';
+
 const PATHS: Record<string, string> = {
   // wordmark companion: a planet disc with a single orbit line
   logo: '<circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="10" ry="3.4" transform="rotate(-18 12 12)"/>',
@@ -57,16 +67,15 @@ const PATHS: Record<string, string> = {
   image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8" fill="currentColor" stroke="none"/><path d="M4 18 9 12 13 16 16 13 20 18" fill="none"/>',
   die: '<rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.5" fill="currentColor" stroke="none"/>',
   // ship-stat glyphs, drawn on the 24 grid to sit inline with numbers
-  // Mass is Ⓜ - the circled M, the game's own symbol for it. It was a hexagon
-  // for a while, which is a shape the rulebook never uses for anything. The
-  // same mark is drawn inline inside rules prose by ruleText() in format.ts;
-  // if one changes, change the other.
-  "stat-mass":
-    '<circle cx="12" cy="12" r="10.2"/><polyline points="7.4 16.6 7.4 7.4 12 12.8 16.6 7.4 16.6 16.6" stroke-linejoin="round"/>',
+  "stat-mass": MASS_MARK,
   "stat-thrust":
     '<path fill="currentColor" stroke="none" d="m13.061 4.939l-2.122 2.122L15.879 12l-4.94 4.939l2.122 2.122L20.121 12z"/><path fill="currentColor" stroke="none" d="M6.061 19.061L13.121 12l-7.06-7.061l-2.122 2.122L8.879 12l-4.94 4.939z"/>',
-  "stat-silhouette": '<circle cx="12" cy="12" r="7"/><line x1="12" y1="1.5" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22.5" y2="12"/>',
-  "stat-shields": '<path d="M12 3 20 6 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V6 Z"/>',
+  // si:target-fill and solar:shield-bold, both as supplied: solid marks, so they
+  // carry their own fill and stroke:none and ignore icon()'s stroke wrapper.
+  "stat-silhouette":
+    '<g fill="currentColor" stroke="none"><path d="M12 15a3 3 0 1 0 0-6a3 3 0 0 0 0 6"/><path fill-rule="evenodd" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2S2 6.477 2 12s4.477 10 10 10m6-10a6 6 0 1 1-12 0a6 6 0 0 1 12 0" clip-rule="evenodd"/></g>',
+  "stat-shields":
+    '<path fill="currentColor" stroke="none" d="M11.25 2.073c-.606.113-1.318.357-2.412.732L8.265 3c-3.007 1.03-4.51 1.544-4.887 2.082C3.008 5.608 3 7.15 3 10.21l8.25-2.75zm0 6.967L3 11.79v.201c0 5.638 4.239 8.374 6.899 9.536c.51.223.84.367 1.351.432zm1.5 12.92V9.04L21 11.79v.201c0 5.638-4.239 8.374-6.899 9.536c-.51.223-.84.367-1.351.432m0-14.499V2.072c.606.113 1.318.357 2.412.732l.573.196c3.007 1.029 4.51 1.543 4.887 2.081c.37.526.378 2.068.378 5.127z"/>',
   // ship silhouettes by Mass class: filled geometric hulls, not stroked
   // Firing-arc glyphs. Both sit on the same short hull bar, which is what makes
   // them readable at 12px: the eye compares two shapes standing on a shared
@@ -191,8 +200,10 @@ export function statChips(
   // redundant - but a silhouette is not a numeral, so that removed the only
   // readable Mass value in the app. Those silhouettes are gone entirely now;
   // this chip is the whole story.
+  // Each glyph carries its own stat's colour class, so the four are told apart
+  // by shape AND hue before the label is read.
   const chip = (name: string, label: string, val: string) =>
-    `<span class="stat-chip ${compact ? "stat-chip-mini" : ""}">${icon(name, compact ? 12 : 14, "stat-ico")}<span class="stat-lbl">${label}</span><span class="stat-val">${val}</span></span>`;
+    `<span class="stat-chip ${compact ? "stat-chip-mini" : ""}">${icon(name, compact ? 13 : 15, `stat-ico stat-ico-${name.replace("stat-", "")}`)}<span class="stat-lbl">${label}</span><span class="stat-val">${val}</span></span>`;
   return `<span class="stat-chips ${compact ? "stat-chips-mini" : ""}">${chip("stat-mass", "Mass", String(s.mass))}${chip("stat-thrust", "Thrust", `${s.thrust}"`)}${chip("stat-silhouette", "Sil", String(s.silhouette))}${chip("stat-shields", "Shields", String(s.shields))}</span>`;
 }
 

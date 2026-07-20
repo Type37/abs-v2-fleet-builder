@@ -570,13 +570,10 @@ function handleClick(e: MouseEvent): void {
       const faction = findFaction(list.fleet.factionId, state.customFactions);
       const addedName = resolveShip(shipId, faction, state.customFactions)?.ship.name ?? "Unit";
       const held = stocking ? (list.fleet.units.find((u) => u.shipClassId === shipId)?.count ?? 0) + 1 : 1;
-      // Toast before the mutation, so the mutation's paint is the last one.
-      // This was load-bearing when a repaint replaced innerHTML wholesale and
-      // destroyed the animation the previous paint had just started. Rendering
-      // now morphs in place (web/morph.ts) and leaves running animations alone,
-      // so the order is no longer required - but toasting first still reads as
-      // "announce, then change", and reordering it buys nothing.
-      showToast(stocking ? `${addedName} ×${held} in the Shipyard` : `Added ${addedName}`);
+      // No toast on a successful add. The new roster row animates in and the
+      // count steps up in place, both of them where you are already looking;
+      // a message in the far corner of the screen announcing what you just
+      // watched happen was noise. Toasts are for things you CANNOT see.
       store.setState((s) =>
         updateFleet(s, id, (f) => {
           if (stocking) {
@@ -852,9 +849,12 @@ function handleClick(e: MouseEvent): void {
       const outfit = activeOutfit(state);
       const full = (outfit?.ships.length ?? 0) >= OUTFIT_MAX_SHIPS;
       const shipName = JUNKSPACE_SHIPS.find((s2) => s2.id === shipId)?.name ?? "Ship";
-      // Toast first - see add-unit: a later repaint would kill the add animation.
-      showToast(full ? `Outfit is full at ${OUTFIT_MAX_SHIPS} ships` : `Added ${shipName}`);
-      if (full) return;
+      // Only the refusal is announced. A successful add shows itself in the
+      // roster; being silently ignored because the outfit is full does not.
+      if (full) {
+        showToast(`Outfit is full at ${OUTFIT_MAX_SHIPS} ships`);
+        return;
+      }
       editOutfit((o) => ({
         ...o,
         ships: [...o.ships, { id: nextOutfitShipId(o), shipClassId: shipId, pilotClass: "Gunner" as PilotClass }],
