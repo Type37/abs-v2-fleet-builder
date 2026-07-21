@@ -129,6 +129,8 @@ export interface Faction {
   hvpMax?: number;
   /** One-line strengths/playstyle note from the faction page, for the picker UI. */
   playstyle?: string;
+  /** Freeform backstory / notes the player writes about this faction. */
+  backstory?: string;
 }
 
 // ---------------------------------------------------------------------------

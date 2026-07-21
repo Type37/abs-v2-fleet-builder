@@ -2202,6 +2202,8 @@ function foundryEditView(state: AppState, factionId: string): string {
           <input type="text" value="${escapeHtml(f.rule.name)}" data-action="cf-field" data-field="ruleName" /></label>
         <label class="field-block wide">Faction rule, written in full
           <textarea rows="3" data-action="cf-field" data-field="ruleText">${escapeHtml(f.rule.text)}</textarea></label>
+        <label class="field-block wide">Backstory / notes
+          <textarea rows="5" placeholder="Lore, tactics, origin, anything you want to remember about this faction…" data-action="cf-field" data-field="backstory">${escapeHtml(f.backstory ?? "")}</textarea></label>
       </div>
     </section>
 

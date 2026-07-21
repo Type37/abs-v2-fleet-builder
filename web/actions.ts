@@ -1728,6 +1728,8 @@ function handleChange(e: Event): void {
             return { ...f, rule: { ...f.rule, name: inputValue } };
           case "ruleText":
             return { ...f, rule: { ...f.rule, text: inputValue } };
+          case "backstory":
+            return { ...f, backstory: inputValue };
           default:
             return f;
         }
