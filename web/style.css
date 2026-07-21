@@ -1887,7 +1887,17 @@ button { font-family: inherit; }
     font-family: var(--display); font-weight: 800; font-size: 16px; white-space: normal; padding-bottom: 6px;
   }
   .dock-table .cell-emblem { padding-bottom: 6px; }
-  .dock-table .cell-actions { justify-content: flex-end; gap: 8px; padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--hair-soft); display: flex; }
+  /* Stacked card layout hides the <thead>, so each value carries its own label
+     here - otherwise the Ships and Personnel counts read as a bare "9" and "7". */
+  .dock-table td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-family: var(--sans); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); margin-right: 5px;
+  }
+  /* wrap, NOT nowrap: four actions (Duplicate / Copy / Download / Delete) are
+     wider than a 390px card, and with justify-content:flex-end the overflow ran
+     off the LEFT edge - "Duplicate" sat at x=-40 and could not be tapped. */
+  .dock-table .cell-actions { justify-content: flex-start; flex-wrap: wrap; gap: 8px; padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--hair-soft); display: flex; }
   .comp-weap { min-width: 0; }
   .comp-table tbody tr.comp-group td { position: static; }
 

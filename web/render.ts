@@ -1992,9 +1992,11 @@ function foundryListView(state: AppState): string {
       (f) => `
       <tr>
         <td class="cell-name"><a href="#/foundry/${f.id}">${escapeHtml(f.name)}</a></td>
-        <td>${f.era}</td>
-        <td class="cell-num">${f.ships.length}</td>
-        <td class="cell-num">${f.hvp.length}</td>
+        <!-- data-label carries the column name into the mobile card layout, where
+             the real <thead> is off-screen and "9" / "7" alone mean nothing. -->
+        <td data-label="Era">${f.era}</td>
+        <td class="cell-num" data-label="Ships">${f.ships.length}</td>
+        <td class="cell-num" data-label="Personnel">${f.hvp.length}</td>
         <td class="cell-actions">
           <button class="ghost-btn" data-action="clone-faction" data-source="${f.id}" title="Duplicate this faction">${icon("ix-duplicate", 16)} Duplicate</button>
           <button class="ghost-btn" data-action="copy-faction" data-id="${f.id}" title="Copy as JSON to share">${icon("scroll", 16)} Copy</button>
