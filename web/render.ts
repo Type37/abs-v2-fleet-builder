@@ -586,7 +586,7 @@ function fleetsView(state: AppState): string {
 
     ${
       lists.length === 0
-        ? `<p class="fleets-empty">No fleets built yet.<br /><span class="fleets-empty-sub">All fleets are saved to your browser's cache.</span></p>`
+        ? `<p class="fleets-empty">No fleets yet.</p>`
         : `<div class="fleet-cards">${cards}</div>`
     }
   </main>
@@ -1509,7 +1509,7 @@ function builderView(state: AppState): string {
               : `<p class="yard-status is-ok">${icon("check", 12)} Legal</p>`
         }
         <div class="mf-list">
-          ${unitRows || '<p class="mf-empty">No ships yet. Add them from the catalogue on the right.</p>'}
+          ${unitRows}
         </div>
 
 
@@ -2390,7 +2390,7 @@ function playFleetPanel(list: SavedList, faction: Faction | undefined, customs: 
     .join("");
   if (!rows) return "";
   return `<section class="play-fleet">
-    <h3 class="roster-section">Your fleet <span class="pf-hint">tick a box per point of damage</span></h3>
+    <h3 class="roster-section">Your fleet</h3>
     <div class="pf-list">${rows}</div>
   </section>`;
 }
@@ -2433,7 +2433,7 @@ function playShipyardTracker(list: SavedList, faction: Faction | undefined, cust
         )
         .join("")}</ul>
        <p class="sy-ledger-sum">Total requisitioned <span>${credits(totalSpent)}</span></p>`
-    : `<p class="sy-ledger-empty">No activity yet. Deploy a ship, jump it out to Reserves or back in, and every move is logged here.</p>`;
+    : "";
   const ledger = `<details class="sy-ledger" data-persist="sy-ledger">
       <summary class="sy-ledger-btn">${icon("scroll", 14)} Ledger <span class="sy-ledger-total">${credits(totalSpent)}</span></summary>
       <div class="sy-ledger-panel">${logHtml}</div>
@@ -2559,8 +2559,6 @@ function playView(state: AppState): string {
   const maxRound = list.mode === "management-training" ? 3 : 4;
   const isCredits = list.mode === "hypergrowth" || list.mode === "management-training";
   const scoreLabel = isCredits ? "Credits" : "Victory points";
-  const last = state.ui.lastRoll;
-
   const PHASES = phasesFor(list.mode);
   const currentPhase = PHASES[play.phase];
   const checks = play.checks ?? [];
@@ -2661,11 +2659,6 @@ function playView(state: AppState): string {
   const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
   const factionBlock = faction ? factionRuleBlock(faction, "compact") : "";
   const commandsPanel = playCommandsPanel(list, play.cmd, faction);
-  const rollResult =
-    last && last.table.startsWith("Initiative check")
-      ? `<div class="roll-result"><div class="roll-die">${last.value}</div><div class="roll-body"><p class="roll-table">${escapeHtml(last.table)}</p><p class="roll-headline">${escapeHtml(last.result)}</p>${last.detail ? `<p class="roll-detail">${escapeHtml(last.detail)}</p>` : ""}</div></div>`
-      : "";
-
   // This screen is used standing at a table mid-turn, so it has one job the rest
   // of the app doesn't: fit on the screen. Everything below is in service of
   // that, and the height came from three places.
@@ -2696,6 +2689,7 @@ function playView(state: AppState): string {
         <span class="round-value">${play.round}</span>
         <span class="play-bar-of">of ${maxRound}</span>
       </p>
+      <button class="ghost-btn play-bar-reset" data-action="play-reset">Reset</button>
     </header>
     <div class="phase-track">${phaseBtns}</div>
     ${
@@ -2709,7 +2703,6 @@ function playView(state: AppState): string {
         <div class="play-actions">
           <button class="cta-btn" data-action="play-next">${icon("chevronRight", 16)} Next phase</button>
         </div>
-        ${rollResult}
         <div class="play-counters">
           ${counter("CMD tokens", play.cmd, "play-cmd", 1, (n) => String(n), icon("cmd-delta", 15, "cmd-delta-glyph"))}
           ${counter(scoreLabel, play.vp, "play-vp", scoreStep, scoreFmt)}
@@ -2731,7 +2724,6 @@ function playView(state: AppState): string {
         <div class="play-actions">
           <button class="cta-btn" data-action="play-next">${icon("chevronRight", 16)} Next phase</button>
         </div>
-        ${rollResult}
         <div class="play-counters">
           ${counter("CMD tokens", play.cmd, "play-cmd", 1, (n) => String(n), icon("cmd-delta", 15, "cmd-delta-glyph"))}
           ${counter(scoreLabel, play.vp, "play-vp", scoreStep, scoreFmt)}
