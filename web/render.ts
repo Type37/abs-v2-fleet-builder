@@ -961,15 +961,17 @@ function shipyardShipRow(s: ShipClass, count: number): string {
 // square; at the three-chosen cap the remaining squares are aria-disabled so a
 // tap is visibly refused. The square is a fixed box whether it shows a plus or a
 // tick, so toggling it never changes the row's width.
-function shipyardHvpRow(h: Hvp, chosen: boolean, atCap: boolean): string {
+function shipyardHvpRow(h: Hvp, chosen: boolean, atCap: boolean, generic = false): string {
   const disabled = !chosen && atCap;
   const label = chosen
     ? `Remove ${h.name}`
     : disabled
       ? `${h.name} unavailable, three personnel already chosen`
       : `Choose ${h.name}`;
+  // Generics stay in the one flat list but read a touch quieter (slightly greyer,
+  // slightly smaller) so a faction's own HVP feel the more characterful pick.
   return `
-  <article class="sy-hvp ${chosen ? "is-chosen" : ""}" data-key="syhvp-${h.id}">
+  <article class="sy-hvp ${chosen ? "is-chosen" : ""} ${generic ? "is-generic" : ""}" data-key="syhvp-${h.id}">
     <div class="sy-hvp-body">
       <span class="sy-hvp-name">${escapeHtml(h.name)}</span>
       <span class="sy-hvp-rule">${ruleText(h.rule)}</span>
@@ -1040,15 +1042,14 @@ function shipyardView(state: AppState): string {
 
   // Ship list: every class in the faction, ascending mass. The pool holds a
   // count per class (zero when unowned). Unlimited Shipyards is not "cap lifted":
-  // the rules say do not construct a shipyard in advance at all, so the list is
-  // suppressed rather than shown with an infinite cap.
+  // Every class in the faction, ascending mass. No Limit does NOT hide the list:
+  // it just means every ship is available with no credit ceiling, so the whole
+  // list stays visible and you can still stock a pool if you want.
   const held = (shipId: string) => list.fleet.units.find((u) => u.shipClassId === shipId)?.count ?? 0;
   const ships = faction && !list.freePlay ? [...faction.ships].sort((a, b) => a.mass - b.mass) : [];
-  const shipList = unlimited
-    ? `<p class="sy-note">${icon("info", 15)} No Limit is on, so there is no ship list to build here.</p>`
-    : ships.length
-      ? ships.map((s) => shipyardShipRow(s, held(s.id))).join("")
-      : `<p class="mf-empty">Pick a faction to see its ships.</p>`;
+  const shipList = ships.length
+    ? ships.map((s) => shipyardShipRow(s, held(s.id))).join("")
+    : `<p class="mf-empty">Pick a faction to see its ships.</p>`;
 
   // Personnel: the seven faction HVP and the five generics, in ONE flat list (no
   // heading, no faction/generic split - the generics are always available and
@@ -1057,8 +1058,9 @@ function shipyardView(state: AppState): string {
   const hvpMax = faction?.hvpMax ?? 3;
   const chosen = new Set(list.fleet.hvp.map((h) => h.hvpId));
   const atCap = chosen.size >= hvpMax;
+  const genericIds = new Set(GENERIC_HVP.map((g) => g.id));
   const allHvp = [...(faction?.hvp ?? []), ...GENERIC_HVP];
-  const hvpRows = allHvp.map((h) => shipyardHvpRow(h, chosen.has(h.id), atCap)).join("");
+  const hvpRows = allHvp.map((h) => shipyardHvpRow(h, chosen.has(h.id), atCap, genericIds.has(h.id))).join("");
 
   return `
   ${topbar()}
@@ -2392,14 +2394,51 @@ function playFleetPanel(list: SavedList, faction: Faction | undefined, customs: 
 // Reserves), and Jump in (a unit in Reserves returns to play). yard = total in
 // the Shipyard still, play = in play, reserve = jumped out.
 function playShipyardTracker(list: SavedList, faction: Faction | undefined, customs: Faction[]): string {
-  // Aggregate the pool by ship class - the Shipyard holds classes, not units.
+  // No Limit: any ship in the faction can be requisitioned, in any quantity, so
+  // the tracker lists the whole faction with no Shipyard cap. Otherwise it lists
+  // the classes actually stocked in the Shipyard, capped at what you hold.
+  const unlimited = list.unlimitedShipyards === true;
   const byClass = new Map<string, number>();
   const order: string[] = [];
-  for (const u of list.fleet.units) {
-    if (!byClass.has(u.shipClassId)) order.push(u.shipClassId);
-    byClass.set(u.shipClassId, (byClass.get(u.shipClassId) ?? 0) + u.count);
+  if (unlimited && faction) {
+    for (const s of faction.ships) { order.push(s.id); byClass.set(s.id, Infinity); }
+  } else {
+    for (const u of list.fleet.units) {
+      if (!byClass.has(u.shipClassId)) order.push(u.shipClassId);
+      byClass.set(u.shipClassId, (byClass.get(u.shipClassId) ?? 0) + u.count);
+    }
   }
   const req = list.play?.req ?? {};
+
+  // Ledger: every requisition (deployed = in play + reserve, struck off the yard)
+  // and what it cost, plus the running total. Deploying a ship logs its cost here
+  // the instant you press Deploy, so you can always see what you have paid for.
+  const ledgerItems: { name: string; n: number; cost: number }[] = [];
+  let totalSpent = 0;
+  for (const cid of order) {
+    const r = resolveShip(cid, faction, customs);
+    if (!r) continue;
+    const deployed = (req[cid]?.play ?? 0) + (req[cid]?.reserve ?? 0);
+    if (deployed > 0) {
+      const cost = deployed * r.ship.cost;
+      ledgerItems.push({ name: r.ship.name, n: deployed, cost });
+      totalSpent += cost;
+    }
+  }
+  const ledger = `<details class="sy-ledger" data-persist="sy-ledger">
+      <summary class="sy-ledger-btn">${icon("scroll", 15)} Requisition ledger <span class="sy-ledger-total">${credits(totalSpent)}</span></summary>
+      <div class="sy-ledger-panel">
+        ${
+          ledgerItems.length
+            ? `<ul class="sy-ledger-list">${ledgerItems
+                .map((it) => `<li><span class="sy-ledger-n">${it.n}×</span> ${escapeHtml(it.name)} <span class="sy-ledger-cost">${credits(it.cost)}</span></li>`)
+                .join("")}</ul>
+               <p class="sy-ledger-sum">Total requisitioned <span>${credits(totalSpent)}</span></p>`
+            : `<p class="sy-ledger-empty">Nothing requisitioned yet. Deploy a ship and its cost is logged here.</p>`
+        }
+      </div>
+    </details>`;
+
   const rows = order
     .map((cid) => {
       const r = resolveShip(cid, faction, customs);
@@ -2408,19 +2447,20 @@ function playShipyardTracker(list: SavedList, faction: Faction | undefined, cust
       const total = byClass.get(cid) ?? 0;
       const inPlay = req[cid]?.play ?? 0;
       const reserve = req[cid]?.reserve ?? 0;
-      const yard = Math.max(0, total - inPlay - reserve);
+      const yard = total === Infinity ? Infinity : Math.max(0, total - inPlay - reserve);
       const btn = (act: string, label: string, on: boolean) =>
         `<button class="sy-req-btn" data-action="${act}" data-ship="${cid}" ${on ? "" : "disabled"}>${escapeHtml(label)}</button>`;
+      const yardLabel = yard === Infinity ? "∞" : String(yard);
       return `
       <article class="pf-unit sy-req" data-roster-key="req-${cid}">
         <header class="pf-head">
-          <span class="pf-name">${escapeHtml(ship.name)}${total > 1 ? ` <span class="pf-x">&times;${total}</span>` : ""}</span>
-          <span class="sy-req-tally"><span class="sy-req-yard">${yard}</span> yard <span class="sy-req-sep">·</span> ${inPlay} in play <span class="sy-req-sep">·</span> ${reserve} reserve</span>
+          <span class="pf-name">${escapeHtml(ship.name)} <span class="sy-req-cost">${credits(ship.cost)}</span>${total !== Infinity && total > 1 ? ` <span class="pf-x">&times;${total}</span>` : ""}</span>
+          <span class="sy-req-tally"><span class="sy-req-yard">${yardLabel}</span> yard <span class="sy-req-sep">·</span> ${inPlay} in play <span class="sy-req-sep">·</span> ${reserve} reserve</span>
         </header>
         <div class="pf-stats">${statChips(ship, true)}</div>
         ${weaponsTable(ship)}
         <div class="sy-req-acts">
-          ${btn("play-deploy", "Deploy", yard > 0)}
+          ${btn("play-deploy", `Deploy · ${credits(ship.cost)}`, yard > 0)}
           ${btn("play-jumpout", "Jumped out", inPlay > 0)}
           ${btn("play-jumpin", "Jump in", reserve > 0)}
         </div>
@@ -2430,6 +2470,7 @@ function playShipyardTracker(list: SavedList, faction: Faction | undefined, cust
   if (!rows) return "";
   return `<section class="play-fleet play-shipyard">
     <h3 class="roster-section">Your shipyard</h3>
+    ${ledger}
     <div class="pf-list sy-req-list">${rows}</div>
   </section>`;
 }

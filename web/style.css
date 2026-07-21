@@ -2220,6 +2220,12 @@ button { font-family: inherit; }
 .sy-hvp-body { min-width: 0; }
 .sy-hvp-name { display: block; font-family: var(--display); font-weight: 700; font-size: 14px; line-height: 1.2; }
 .sy-hvp-rule { display: block; font-family: var(--serif); font-size: 13px; line-height: 1.4; color: var(--ink-2); margin-top: 2px; }
+/* Generics read a touch quieter than a faction's own HVP: a shade greyer and a
+   hair smaller. Still in the same flat list, just slightly less appealing. A
+   chosen generic still turns blue like any chosen pick. */
+.sy-hvp.is-generic .sy-hvp-name { font-size: 13px; }
+.sy-hvp.is-generic:not(.is-chosen) .sy-hvp-name { color: var(--ink-2); }
+.sy-hvp.is-generic .sy-hvp-rule { color: var(--ink-3); font-size: 12.5px; }
 
 /* The faction picker drops out of the (non-sticky) masthead but has to cover the
    sticky budget bar below it, which owns z-index 30. Lift the open panel above. */
@@ -3521,6 +3527,25 @@ a .icon,
 /* The Deploy button (first) is the primary move: fill it so it reads as the CTA. */
 .sy-req-btn:first-child:not(:disabled) { background: var(--blue); border-color: var(--blue); color: #fff; }
 .sy-req-btn:first-child:not(:disabled):hover { background: var(--blue-deep); }
+/* Each class shows its unit cost by the name; Deploy repeats it on the button. */
+.sy-req-cost { font-family: var(--display); font-weight: 800; font-size: 13px; color: var(--blue); font-variant-numeric: tabular-nums; }
+
+/* Requisition ledger: a tap-to-open record of everything you have deployed and
+   what it cost. Not always on screen - a popover off its own button, so opening
+   it shifts nothing. Persists open across Deploys so the total climbs live. */
+.sy-ledger { position: relative; margin: 0 20px 10px; }
+.sy-ledger-btn { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--hair); background: var(--paper); font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--ink); }
+.sy-ledger-btn::-webkit-details-marker { display: none; }
+.sy-ledger[open] .sy-ledger-btn { border-color: var(--blue); color: var(--blue); }
+.sy-ledger-total { font-family: var(--display); font-weight: 800; color: var(--blue); font-variant-numeric: tabular-nums; }
+.sy-ledger-panel { position: absolute; z-index: 25; top: calc(100% + 6px); left: 0; width: max-content; max-width: min(340px, 88vw); background: var(--paper); border: 2px solid var(--hair); padding: 12px 14px; box-shadow: 0 12px 32px rgba(11, 22, 51, 0.18); }
+.sy-ledger-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sy-ledger-list li { display: flex; align-items: baseline; gap: 8px; font-family: var(--sans); font-size: 13px; color: var(--ink); }
+.sy-ledger-n { font-weight: 800; font-variant-numeric: tabular-nums; }
+.sy-ledger-cost { margin-left: auto; font-family: var(--display); font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sy-ledger-sum { display: flex; justify-content: space-between; gap: 12px; margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--hair-soft); font-family: var(--display); font-weight: 800; }
+.sy-ledger-sum span { color: var(--blue); font-variant-numeric: tabular-nums; }
+.sy-ledger-empty { margin: 0; font-family: var(--serif); font-size: 13px; line-height: 1.45; color: var(--ink-3); max-width: 240px; }
 
 /* Every view gets a ceiling, not just the three I did first. All of these are
    direct children of #app, so they need the id in the selector to outrank

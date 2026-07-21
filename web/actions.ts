@@ -1264,7 +1264,10 @@ function handleClick(e: MouseEvent): void {
         updateList(s, id, (l) => {
           const faction = findFaction(l.fleet.factionId, s.customFactions);
           const p = l.play ?? freshPlayState(faction);
-          const total = l.fleet.units.filter((u) => u.shipClassId === shipId).reduce((n, u) => n + u.count, 0);
+          // No Limit: any ship, any quantity - the yard never runs out.
+          const total = l.unlimitedShipyards
+            ? Infinity
+            : l.fleet.units.filter((u) => u.shipClassId === shipId).reduce((n, u) => n + u.count, 0);
           const req = { ...(p.req ?? {}) };
           const cur = req[shipId] ?? { play: 0, reserve: 0 };
           let { play, reserve } = cur;
