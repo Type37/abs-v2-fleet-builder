@@ -531,7 +531,7 @@ function animateNewRosterRows(): void {
  */
 let prevUnitCounts: Map<string, string> | null = null;
 function animateCountChanges(): void {
-  const rosterOnScreen = document.querySelector(".mf-manifest, .roster-sheet") !== null;
+  const rosterOnScreen = document.querySelector(".mf-manifest, .roster-sheet, .shipyard") !== null;
   const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-roster-key]"));
   if (!rosterOnScreen) {
     prevUnitCounts = null;
@@ -558,14 +558,22 @@ function animateCountChanges(): void {
     const before = seen.get(key);
     const after = current.get(key);
     if (before === undefined || after === undefined || before === after) continue;
-    if (Number(after) <= Number(before)) continue; // only celebrate going up
+    // Going up pops big and blue; going down gives a smaller, quieter settle so
+    // both the + and the - are acknowledged where the eye already is.
+    const up = Number(after) > Number(before);
     countEl.animate(
-      [
-        { transform: "scale(1)", color: "var(--ink)" },
-        { transform: "scale(1.5)", color: "var(--blue)", offset: 0.4 },
-        { transform: "scale(1)", color: "var(--ink)" },
-      ],
-      { duration: 340, easing: "cubic-bezier(.2,.9,.3,1.2)" },
+      up
+        ? [
+            { transform: "scale(1)", color: "var(--ink)" },
+            { transform: "scale(1.5)", color: "var(--blue)", offset: 0.4 },
+            { transform: "scale(1)", color: "var(--ink)" },
+          ]
+        : [
+            { transform: "scale(1)" },
+            { transform: "scale(0.72)", offset: 0.4 },
+            { transform: "scale(1)" },
+          ],
+      { duration: up ? 340 : 220, easing: "cubic-bezier(.2,.9,.3,1.2)" },
     );
   }
 }

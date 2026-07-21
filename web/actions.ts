@@ -544,6 +544,20 @@ function handleClick(e: MouseEvent): void {
       store.setState((s) => updateList(s, id, (l) => ({ ...l, unlimitedShipyards: !l.unlimitedShipyards })));
       break;
     }
+    // Shipyard cap is a plain two-way choice: ¢300bn (limited) or No Limit. Set
+    // the flag explicitly so the two buttons are real radio choices, not a toggle.
+    case "sy-cap-limited": {
+      const id = currentListId();
+      if (!id) return;
+      store.setState((s) => updateList(s, id, (l) => ({ ...l, unlimitedShipyards: false, fleet: { ...l.fleet, creditsLimit: 300 } })));
+      break;
+    }
+    case "sy-cap-nolimit": {
+      const id = currentListId();
+      if (!id) return;
+      store.setState((s) => updateList(s, id, (l) => ({ ...l, unlimitedShipyards: true })));
+      break;
+    }
     case "set-faction": {
       const id = currentListId();
       const factionId = target.dataset["faction"];
@@ -727,6 +741,69 @@ function handleClick(e: MouseEvent): void {
       const index = Number(target.dataset["index"]);
       if (!id || !Number.isInteger(index)) return;
       store.setState((s) => updateFleet(s, id, (f) => ({ ...f, hvp: f.hvp.filter((_, i) => i !== index) })));
+      break;
+    }
+    // Hypergrowth Shipyard: the pool holds a count per ship CLASS, not units.
+    // Both steppers key on the ship class (not a unit instance) so focus and the
+    // press anchor survive the 0<->1 boundary where a unit is created or dropped.
+    case "sy-inc": {
+      const id = currentListId();
+      const shipId = target.dataset["ship"];
+      if (!id || !shipId) return;
+      store.setState((s) =>
+        updateFleet(s, id, (f) => {
+          const idx = f.units.findIndex((u) => u.shipClassId === shipId);
+          if (idx >= 0) {
+            return {
+              ...f,
+              units: f.units.map((u, i) => (i === idx ? { ...u, count: Math.min(99, u.count + 1) } : u)),
+            };
+          }
+          return { ...f, units: [...f.units, { id: nextUnitIdFor(f), shipClassId: shipId, count: 1 }] };
+        }),
+      );
+      break;
+    }
+    case "sy-dec": {
+      const id = currentListId();
+      const shipId = target.dataset["ship"];
+      if (!id || !shipId) return;
+      store.setState((s) =>
+        updateFleet(s, id, (f) => {
+          const cur = f.units.find((u) => u.shipClassId === shipId);
+          if (!cur) return f;
+          // Stepping to zero drops the class from the pool entirely; the (-) is
+          // aria-disabled at zero so it never fires below one, but guard anyway.
+          if (cur.count <= 1) return { ...f, units: f.units.filter((u) => u.shipClassId !== shipId) };
+          return {
+            ...f,
+            units: f.units.map((u) => (u.shipClassId === shipId ? { ...u, count: u.count - 1 } : u)),
+          };
+        }),
+      );
+      break;
+    }
+    case "sy-hvp-toggle": {
+      // One square per person: choose or unchoose. An HVP is one or nothing, and
+      // only one of each type may be held, so the square is a pure toggle. The
+      // three-chosen ceiling is enforced HERE, not just by the disabled look: the
+      // over-cap control is aria-disabled and still fires (so a tap is visibly
+      // refused rather than silently swallowed), so the handler must refuse it.
+      const id = currentListId();
+      const hvpId = target.dataset["hvp"];
+      if (!id || !hvpId) return;
+      store.setState((s) => {
+        const list = s.lists.find((l) => l.id === id);
+        const faction = list ? findFaction(list.fleet.factionId, s.customFactions) : undefined;
+        const hvpMax = faction?.hvpMax ?? 3;
+        return updateFleet(s, id, (f) => {
+          if (f.hvp.some((h) => h.hvpId === hvpId)) {
+            return { ...f, hvp: f.hvp.filter((h) => h.hvpId !== hvpId) };
+          }
+          if (f.hvp.length >= hvpMax) return f;
+          return { ...f, hvp: [...f.hvp, { hvpId }] };
+        });
+      });
       break;
     }
     case "do-print": {
@@ -988,7 +1065,16 @@ function handleClick(e: MouseEvent): void {
       const limit = Number(target.dataset["limit"]);
       store.setState((s) =>
         s.ui.modal?.kind === "new-fleet"
-          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, limit, customOpen: false } } }
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, limit, customOpen: false, noLimit: false } } }
+          : s,
+      );
+      break;
+    }
+    case "nf-nolimit": {
+      // Hypergrowth's second choice: no credit ceiling at all.
+      store.setState((s) =>
+        s.ui.modal?.kind === "new-fleet"
+          ? { ...s, ui: { ...s.ui, modal: { ...s.ui.modal, noLimit: true, customOpen: false } } }
           : s,
       );
       break;
@@ -1025,6 +1111,8 @@ function handleClick(e: MouseEvent): void {
         m.era === "Armageddon" ? "armageddon" : m.era === "Age of Unity" ? "age-of-unity" : "hypergrowth";
       const list = createList(mode, m.factionId, false);
       list.fleet.creditsLimit = m.limit;
+      // No Limit (Hypergrowth): no credit ceiling at all.
+      if (m.noLimit) list.unlimitedShipyards = true;
       // A new fleet inherits its faction's emblem, if that faction has one set
       // (custom factions can carry an uploaded image or a library icon).
       const chosen = findFaction(m.factionId, state.customFactions);
@@ -1159,6 +1247,38 @@ function handleClick(e: MouseEvent): void {
           const checks = [...(p.checks ?? [])];
           checks[index] = !checks[index];
           return { ...l, play: { ...p, checks } };
+        }),
+      );
+      break;
+    }
+    // Hypergrowth requisition tracker. A ship moves Shipyard -> In play (Deploy),
+    // In play -> Reserves (Jumped out), and Reserves -> In play (Jump in). yard =
+    // total - play - reserve, and Deploy is one-way (struck off the Shipyard).
+    case "play-deploy":
+    case "play-jumpout":
+    case "play-jumpin": {
+      const id = currentListId();
+      const shipId = target.dataset["ship"];
+      if (!id || !shipId) return;
+      store.setState((s) =>
+        updateList(s, id, (l) => {
+          const faction = findFaction(l.fleet.factionId, s.customFactions);
+          const p = l.play ?? freshPlayState(faction);
+          const total = l.fleet.units.filter((u) => u.shipClassId === shipId).reduce((n, u) => n + u.count, 0);
+          const req = { ...(p.req ?? {}) };
+          const cur = req[shipId] ?? { play: 0, reserve: 0 };
+          let { play, reserve } = cur;
+          const yard = total - play - reserve;
+          if (action === "play-deploy" && yard > 0) play += 1;
+          else if (action === "play-jumpout" && play > 0) {
+            play -= 1;
+            reserve += 1;
+          } else if (action === "play-jumpin" && reserve > 0) {
+            reserve -= 1;
+            play += 1;
+          } else return l;
+          req[shipId] = { play, reserve };
+          return { ...l, play: { ...p, req } };
         }),
       );
       break;

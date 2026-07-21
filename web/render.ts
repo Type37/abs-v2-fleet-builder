@@ -673,17 +673,19 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
           <div class="modal-field">
             <span class="control-label">2 / Credits limit</span>
             <div class="nf-opts">
-              ${(m.era === "Hypergrowth" ? [300] : [300, 400, 500]).map(sizeBtn).join("")}
               ${
-                // Hypergrowth is "just 300, or Unlimited" - no custom cap here
-                // (you flip Unlimited Shipyards on in the builder). Other eras
-                // keep the click-to-open Custom field.
+                // Hypergrowth is just two choices: ¢300bn or No Limit. No custom
+                // cap, no explainer - No Limit means no credit ceiling at all.
                 m.era === "Hypergrowth"
-                  ? ""
-                  : !customIsPreset || m.customOpen
-                    ? `<label class="nf-custom on">Custom
+                  ? `<button class="nf-opt ${!m.noLimit && m.limit === 300 ? "on" : ""}" data-action="nf-size" data-limit="300">${credits(300)}</button>
+                     <button class="nf-opt ${m.noLimit ? "on" : ""}" data-action="nf-nolimit">No Limit</button>`
+                  : `${[300, 400, 500].map(sizeBtn).join("")}
+              ${
+                !customIsPreset || m.customOpen
+                  ? `<label class="nf-custom on">Custom
                 <input type="number" min="1" step="10" value="${!customIsPreset ? m.limit : ""}" placeholder="¢bn" data-action="nf-size-custom" autofocus /></label>`
-                    : `<button type="button" class="nf-custom nf-custom-btn" data-action="nf-size-custom-open">Custom</button>`
+                  : `<button type="button" class="nf-custom nf-custom-btn" data-action="nf-size-custom-open">Custom</button>`
+              }`
               }
             </div>
           </div>
@@ -814,47 +816,31 @@ function cardWeapons(ship: ShipClass): string {
 }
 
 export function weaponsTable(ship: ShipClass): string {
-  // Each weapon is wrapped in its own role="row". Previously the cells were
-  // direct children of the role="table" with no row between them, which is
-  // invalid ARIA - cells without an owning row get dropped or flattened, so the
-  // grid lost its structure entirely for anyone using a screen reader.
-  //
-  // The row wrapper also carries the responsive layout: five aligned columns on
-  // desktop, and on a phone the fixed columns plus gaps come to 184px of a
-  // ~196px track, leaving ~12px for the weapon name. There the row reflows -
-  // name on its own line, figures beneath it - and each figure shows the inline
-  // label that the column header carries on desktop. Nothing is dropped at
-  // either size; only which of the two labels is visible changes.
-  const row = (w: Weapon, arc: "primary" | "aux") => {
-    const arcLabel = arc === "primary" ? "Primary, 45 degree arc" : "Auxiliary, 180 degree arc";
-    const arcAbbr = arc === "primary" ? "PRI" : "AUX";
-    return `<div class="wt-row" role="row">
-      <span class="wt-arc" role="cell"><span class="visually-hidden">${arcLabel}</span><span class="wt-arc-abbr">${arcAbbr}</span>${icon(arc === "primary" ? "arc-primary" : "arc-aux", 14, "slot-arc")}</span>
-      <span class="wt-name" role="cell">${escapeHtml(w.name)}</span>
-      <span class="wt-num wt-rng" role="cell"><span class="wt-inline-lbl">Range </span>${w.rangeMin}-${w.rangeMax}"</span>
-      <span class="wt-num wt-atk" role="cell"><span class="wt-inline-lbl">Attack </span>${w.count}${w.die}</span>
-      <span class="wt-num wt-dmg" role="cell"><span class="wt-inline-lbl">DMG </span>${DAMAGE_BY_DIE[w.die]}</span>
-    </div>`;
-  };
-  const rows = [...ship.primary.map((w) => row(w, "primary")), ...ship.auxiliary.map((w) => row(w, "aux"))];
-  // Utility Bays / non-weapon fittings that are not in the weapon arrays.
-  const notes: string[] = [];
-  const pText = primarySlotText(ship);
-  const aText = auxSlotText(ship);
-  if (ship.primary.length === 0 && pText !== "None") notes.push(pText);
-  if (ship.auxiliary.length === 0 && aText !== "None") notes.push(aText);
-  if (rows.length === 0 && notes.length === 0) return '<p class="weap-none">No weapons</p>';
-  const noteRow = notes.length
-    ? `<div class="wt-row wt-noterow" role="row"><span class="wt-arc" role="cell"></span><span class="wt-note" role="cell">${notes
-        .map(escapeHtml)
-        .join(", ")}</span></div>`
-    : "";
-  return `<div class="weap-table" role="table" aria-label="Weapons">
-    <div class="wt-row wt-headrow" role="row">
-      <span class="wt-arc wt-h" role="columnheader">Arc</span><span class="wt-h" role="columnheader">Weapon</span><span class="wt-h wt-num" role="columnheader">Range</span><span class="wt-h wt-num" role="columnheader">Attack</span><span class="wt-h wt-num" role="columnheader">DMG</span>
-    </div>
-    ${rows.join("")}${noteRow}
-  </div>`;
+  // Plain lines, not a column table: the book's own notation is
+  //   Pri: Cruise Missiles [4D10, 18-36"]
+  // so each weapon is one line - an arc glyph, the Pri/Aux label, the name, and
+  // the dice and range in brackets. No column headers, no separate DMG column
+  // (damage is a fixed lookup from the die, never shown here). An empty slot is
+  // an em dash; a utility slot names itself.
+  const weaponLine = (w: Weapon, arc: "pri" | "aux") =>
+    `<p class="weap-line"><span class="wl-arc">${icon(arc === "pri" ? "arc-primary" : "arc-aux", 13, "slot-arc")}${arc === "pri" ? "Pri" : "Aux"}:</span> <span class="wl-name">${escapeHtml(w.name)}</span> <span class="wl-fig">[${w.count}${w.die}, ${w.rangeMin}–${w.rangeMax}"]</span></p>`;
+  const slotLine = (arc: "pri" | "aux", text: string) =>
+    `<p class="weap-line"><span class="wl-arc">${icon(arc === "pri" ? "arc-primary" : "arc-aux", 13, "slot-arc")}${arc === "pri" ? "Pri" : "Aux"}:</span> <span class="wl-name">${text}</span></p>`;
+
+  const lines: string[] = [];
+  // Primary
+  if (ship.primary.length) ship.primary.forEach((w) => lines.push(weaponLine(w, "pri")));
+  else {
+    const t = primarySlotText(ship);
+    lines.push(slotLine("pri", t === "None" ? "—" : escapeHtml(t)));
+  }
+  // Auxiliary
+  if (ship.auxiliary.length) ship.auxiliary.forEach((w) => lines.push(weaponLine(w, "aux")));
+  else {
+    const t = auxSlotText(ship);
+    lines.push(slotLine("aux", t === "None" ? "—" : escapeHtml(t)));
+  }
+  return `<div class="weap-lines">${lines.join("")}</div>`;
 }
 
 function catalogShipRow(ship: ShipClass, ownerFaction: Faction, composite: boolean, owned = 0): string {
@@ -933,7 +919,66 @@ function catalogChart(faction: Faction, stat: ChartStatKey): string {
 }
 
 
-function builderView(state: AppState): string {
+// ---------------------------------------------------------------------------
+// Hypergrowth Shipyard  (spec: HYPERGROWTH-SHIPYARD.md)
+// ---------------------------------------------------------------------------
+// A dedicated single-column screen, not the two-column Fleet-List builder. In
+// Hypergrowth you do not build a fleet: you buy a POOL of ships and form units
+// later, at requisition, at the table ("Construct Your Shipyard"). So there are
+// no units, no unit-size caps, no battlegroups here; ¢300bn is an OWNERSHIP cap,
+// not money spent (the Credits Tracker starts the game at zero, in play). Top to
+// bottom: masthead, faction block, sticky budget bar, ship list (every class,
+// ascending mass), personnel (7 faction + 5 generic, choose up to three).
+
+// One class in the pool: name and cost adjacent on the first line with the
+// quantity stepper, then every stat and both weapons always visible below. The
+// row is the same height whatever the count, so pressing a stepper never reflows
+// it (the stepper keys on the class, so focus survives the 0<->1 boundary too).
+function shipyardShipRow(s: ShipClass, count: number): string {
+  const zero = count < 1;
+  // data-roster-key (not data-key) so the count-change pop animation in main.ts
+  // picks these rows up, same as the fleet-list roster.
+  return `
+  <article class="sy-ship" data-roster-key="syship-${s.id}">
+    <div class="sy-ship-head">
+      <h4 class="sy-ship-name">${escapeHtml(s.name)}</h4>
+      <span class="sy-ship-cost">${credits(s.cost)}</span>
+      <span class="stepper sy-qty">
+        <button data-action="sy-dec" data-ship="${s.id}" ${zero ? 'aria-disabled="true"' : ""} aria-label="One fewer ${escapeHtml(s.name)}" title="One fewer">${icon("minus", 14)}</button>
+        <span class="stepper-count ${zero ? "is-zero" : ""}">${count}</span>
+        <button data-action="sy-inc" data-ship="${s.id}" aria-label="One more ${escapeHtml(s.name)}" title="One more">${icon("plus", 14)}</button>
+      </span>
+    </div>
+    <div class="sy-ship-data">
+      ${statChips(s, true)}
+      ${weaponsTable(s)}
+    </div>
+  </article>`;
+}
+
+// One person: the name and its verbatim rule, then a single square control on
+// the RIGHT (an HVP is one or nothing - not a stepper). Chosen rows fill the
+// square; at the three-chosen cap the remaining squares are aria-disabled so a
+// tap is visibly refused. The square is a fixed box whether it shows a plus or a
+// tick, so toggling it never changes the row's width.
+function shipyardHvpRow(h: Hvp, chosen: boolean, atCap: boolean): string {
+  const disabled = !chosen && atCap;
+  const label = chosen
+    ? `Remove ${h.name}`
+    : disabled
+      ? `${h.name} unavailable, three personnel already chosen`
+      : `Choose ${h.name}`;
+  return `
+  <article class="sy-hvp ${chosen ? "is-chosen" : ""}" data-key="syhvp-${h.id}">
+    <div class="sy-hvp-body">
+      <span class="sy-hvp-name">${escapeHtml(h.name)}</span>
+      <span class="sy-hvp-rule">${ruleText(h.rule)}</span>
+    </div>
+    <button class="sy-hvp-check ${chosen ? "is-on" : ""}" data-action="sy-hvp-toggle" data-hvp="${h.id}" aria-pressed="${chosen}" ${disabled ? 'aria-disabled="true"' : ""} aria-label="${escapeHtml(label)}" title="${chosen ? "Chosen" : "Choose"}">${icon(chosen ? "check" : "plus", 16)}</button>
+  </article>`;
+}
+
+function shipyardView(state: AppState): string {
   const list = activeList(state);
   if (!list)
     return `${topbar()}<main class="empty-state"><p>That fleet was not found.</p><p><a href="#/">Back to the register</a></p></main>`;
@@ -941,8 +986,143 @@ function builderView(state: AppState): string {
   const customs = state.customFactions;
   const faction = findFaction(list.fleet.factionId, customs);
   const { total, remaining } = listTotals(list, customs);
-  // Hypergrowth Shipyard can run uncapped ("Unlimited Shipyards" toggle).
-  const unlimited = list.mode === "hypergrowth" && list.unlimitedShipyards === true;
+  const cap = list.fleet.creditsLimit;
+  const unlimited = list.unlimitedShipyards === true;
+  const over = !unlimited && remaining < 0;
+  const pct = !unlimited && cap > 0 ? Math.min(100, (total / cap) * 100) : 0;
+
+  // Masthead chrome, the same pieces the Fleet-List builder uses.
+  const emblemPicker = `<button class="emblem-current-btn" data-action="open-emblem-modal" data-target="list" title="Choose an emblem">${listEmblem(list, 46)}${icon("pencil", 12, "emblem-edit-cue")}</button>`;
+  const moreMenu = `
+    <details class="mf-menu">
+      <summary class="mf-menu-btn" title="Fleet options: share, duplicate, delete" aria-label="Fleet options">${icon("more", 18)}</summary>
+      <div class="mf-menu-panel">
+        <button data-action="share-list" data-id="${list.id}">${icon("ix-share", 16)} Share link</button>
+        <button data-action="copy-list-text" data-id="${list.id}">${icon("scroll", 16)} Copy as text</button>
+        <button data-action="duplicate-list" data-id="${list.id}">${icon("ix-duplicate", 16)} Duplicate</button>
+        <button class="danger" data-action="delete-list" data-id="${list.id}">${icon("ix-trash", 16)} Delete fleet</button>
+      </div>
+    </details>`;
+
+  // Faction picker (identical to the builder's), so you can switch faction here.
+  const byEra = factionsByEra(customs);
+  const customIds = new Set(customs.map((c) => c.id));
+  const factionOption = (f: Faction) => `
+      <button class="faction-plaque ${f.id === list.fleet.factionId && !list.freePlay ? "selected" : ""}" data-action="set-faction" data-faction="${f.id}">
+        <span class="faction-plaque-name">${escapeHtml(f.name)}</span>
+        <span class="faction-plaque-rule">${escapeHtml(f.rule.name)}</span>
+      </button>`;
+  const factionSection = (label: string, fs: Faction[]) =>
+    fs.length
+      ? `<div class="faction-era-group"><p class="faction-era-label">${escapeHtml(label)}</p><div class="faction-plaques">${fs.map(factionOption).join("")}</div></div>`
+      : "";
+  const factionPickerBody =
+    ERA_ORDER.map((e) => factionSection(e, (byEra.get(e) ?? []).filter((f) => !customIds.has(f.id)))).join("") +
+    factionSection("Custom", allFactions(customs).filter((f) => customIds.has(f.id)));
+  const factionControl = list.freePlay
+    ? '<span class="freeplay-badge">All ships unlocked</span>'
+    : `<details class="faction-switch">
+        <summary>${faction ? escapeHtml(faction.name) : "Choose faction"}</summary>
+        <div class="faction-switch-panel">${factionPickerBody}</div>
+      </details>`;
+
+  // The cap is the control: click it for a popover with the only two choices,
+  // ¢300bn or No Limit. No explainer text - No Limit means no credit ceiling.
+  const capControl = `<details class="limit-switch sy-cap">
+      <summary>${unlimited ? "No Limit" : `of ${credits(cap)}`}</summary>
+      <div class="limit-switch-panel">
+        <div class="nf-opts">
+          <button class="nf-opt ${!unlimited ? "on" : ""}" data-action="sy-cap-limited">${credits(300)}</button>
+          <button class="nf-opt ${unlimited ? "on" : ""}" data-action="sy-cap-nolimit">No Limit</button>
+        </div>
+      </div>
+    </details>`;
+
+  // Ship list: every class in the faction, ascending mass. The pool holds a
+  // count per class (zero when unowned). Unlimited Shipyards is not "cap lifted":
+  // the rules say do not construct a shipyard in advance at all, so the list is
+  // suppressed rather than shown with an infinite cap.
+  const held = (shipId: string) => list.fleet.units.find((u) => u.shipClassId === shipId)?.count ?? 0;
+  const ships = faction && !list.freePlay ? [...faction.ships].sort((a, b) => a.mass - b.mass) : [];
+  const shipList = unlimited
+    ? `<p class="sy-note">${icon("info", 15)} No Limit is on, so there is no ship list to build here.</p>`
+    : ships.length
+      ? ships.map((s) => shipyardShipRow(s, held(s.id))).join("")
+      : `<p class="mf-empty">Pick a faction to see its ships.</p>`;
+
+  // Personnel: the seven faction HVP and the five generics, in ONE flat list (no
+  // heading, no faction/generic split - the generics are always available and
+  // the divider was noise). Choose up to three; assignment happens at
+  // requisition, not here. A small counter tracks the cap.
+  const hvpMax = faction?.hvpMax ?? 3;
+  const chosen = new Set(list.fleet.hvp.map((h) => h.hvpId));
+  const atCap = chosen.size >= hvpMax;
+  const allHvp = [...(faction?.hvp ?? []), ...GENERIC_HVP];
+  const hvpRows = allHvp.map((h) => shipyardHvpRow(h, chosen.has(h.id), atCap)).join("");
+
+  return `
+  ${topbar()}
+  <main class="shipyard ${over ? "is-over" : ""}">
+    <header class="sy-head">
+      <div class="sy-id">
+        <span class="mf-emblem">${emblemPicker}</span>
+        <input class="mf-name sy-name" type="text" value="${escapeHtml(list.fleet.name ?? "")}" placeholder="Untitled fleet" data-action="fleet-name" />
+        ${moreMenu}
+      </div>
+      <div class="sy-fac">
+        <span class="mf-fac">${factionControl}</span>
+        <span class="mf-era-badge" title="Era you are building for">Hypergrowth</span>
+      </div>
+    </header>
+
+    ${faction && !list.freePlay ? `<section class="sy-faction">${factionRuleBlock(faction, "full")}</section>` : ""}
+
+    <div class="sy-budget ${over ? "is-over" : ""}">
+      <div class="sy-budget-row">
+        <span class="sy-budget-now">${credits(total)}</span>
+        <span class="sy-budget-cap">${capControl}</span>
+        <span class="sy-budget-free">${
+          unlimited ? "No Limit" : over ? `${credits(-remaining)} over` : `${credits(remaining)} remaining`
+        }</span>
+      </div>
+      ${unlimited ? "" : `<div class="sy-meter"><span class="sy-meter-fill" style="width:${pct}%"></span></div>`}
+    </div>
+
+    <div class="sy-list sy-ship-list">${shipList}</div>
+
+    ${
+      faction && !list.freePlay
+        ? `<div class="sy-personnel">
+      <p class="sy-hvp-count">Personnel <span>${chosen.size} of ${hvpMax} chosen</span></p>
+      <div class="sy-hvp-list">${hvpRows}</div>
+    </div>`
+        : ""
+    }
+
+    <div class="sy-finish mf-finish">
+      <a class="mf-play-cta" href="#/play/${list.id}">${icon("flag", 18)} Enter Play Mode</a>
+      <a class="mf-print-cta" href="#/print/${list.id}">${icon("print", 18)} Print setup</a>
+    </div>
+  </main>
+  ${toast(state)}
+  ${footer()}`;
+}
+
+function builderView(state: AppState): string {
+  const list = activeList(state);
+  if (!list)
+    return `${topbar()}<main class="empty-state"><p>That fleet was not found.</p><p><a href="#/">Back to the register</a></p></main>`;
+
+  // Hypergrowth uses its own single-column Shipyard screen, not this two-column
+  // Fleet-List builder (see shipyardView and HYPERGROWTH-SHIPYARD.md).
+  if (list.mode === "hypergrowth") return shipyardView(state);
+
+  const customs = state.customFactions;
+  const faction = findFaction(list.fleet.factionId, customs);
+  const { total, remaining } = listTotals(list, customs);
+  // Hypergrowth (the only mode with the Unlimited Shipyards toggle) has its own
+  // screen now (shipyardView), so nothing that reaches this builder is uncapped.
+  const unlimited = false;
   // A Shipyard holds ship CLASSES with a quantity, never units - units are only
   // formed at requisition, in play. So the whole panel drops "unit" language.
   // Declared here because the roster rows below read it.
@@ -961,19 +1141,15 @@ function builderView(state: AppState): string {
     // Mode-specific relaxations: shipyard modes buy loose ships (no unit-size
     // limit at build time) and Management Training selects no HVP (p.65).
     const drop = new Set<string>();
-    if (list.mode === "hypergrowth" || list.mode === "management-training") {
+    // Management Training uses the Training Fleet as a Shipyard (p.65): loose
+    // ships, no unit-size limit at build time.
+    if (list.mode === "management-training") {
       drop.add("UNIT_SIZE_EXCEEDED");
     }
-    // Unlimited Shipyards lifts the credits cap entirely.
-    if (unlimited) drop.add("OVER_BUDGET");
-    // HVP is not chosen at build for the Shipyard modes (no HVP at all at build),
-    // nor for Age of Unity, where HVP are deferred until the missions are known
-    // and assigned in print/play. Only Armageddon requires HVP chosen pre-play.
-    if (
-      list.mode === "management-training" ||
-      list.mode === "hypergrowth" ||
-      list.mode === "age-of-unity"
-    ) {
+    // HVP is not chosen at build for Management Training (no HVP), nor for Age of
+    // Unity, where HVP are deferred until the missions are known and assigned in
+    // print/play. Only Armageddon requires HVP chosen pre-play.
+    if (list.mode === "management-training" || list.mode === "age-of-unity") {
       drop.add("HVP_COUNT");
     }
     // Combat Simulator does not let you pick personnel: the scenario issues
@@ -1198,7 +1374,9 @@ function builderView(state: AppState): string {
 
   const limitIsPreset = [300, 400, 500].includes(list.fleet.creditsLimit);
   const limitCustomOpen = state.ui.limitCustomOpen === true;
-  const isHyper = list.mode === "hypergrowth";
+  // Hypergrowth (the only mode offering Unlimited Shipyards and a fixed ¢300 cap)
+  // has its own screen; this builder serves the fleet-list / training modes.
+  const isHyper = false;
   // The cap lives inline as "/500" in the tally itself, not a standing row of
   // buttons — click the cap to change it in a popover. The popover mirrors the
   // New Fleet modal: the same nf-opt preset buttons and a click-to-open Custom.
@@ -1358,12 +1536,10 @@ function builderView(state: AppState): string {
             : `<div class="mf-list">${catalogHtml || '<p class="mf-empty">Pick a faction to see its ships.</p>'}</div>`
         }
         ${
-          // Hypergrowth is a Shipyard: no HVP are chosen at build. Age of Unity
-          // defers HVP until the missions are known, so they are optional here
-          // and assigned later. Armageddon requires them pre-play.
-          list.mode === "hypergrowth"
-            ? ""
-            : `<h3 class="mf-h">High-Value Personnel <span class="mf-h-count">${hvpCount}</span></h3>
+          // Age of Unity defers HVP until the missions are known, so they are
+          // optional here and assigned later. Armageddon requires them pre-play.
+          // (Hypergrowth, the only mode with no HVP at build, has its own screen.)
+          `<h3 class="mf-h">High-Value Personnel <span class="mf-h-count">${hvpCount}</span></h3>
         ${list.mode === "age-of-unity" ? '<p class="mf-hvp-note">Optional now. In Age of Unity you assign HVP after the missions are generated.</p>' : ""}
         <div class="mf-list personnel-grid">${personnelCatalog}</div>`
         }
@@ -2044,48 +2220,100 @@ function foundryEditView(state: AppState, factionId: string): string {
 // player uses the Roll button below, since that's an unambiguous 1:1 link;
 // everything else is self-reported, because this is a physical miniatures
 // game and the app cannot see the table.
+/** A checklist step: the line to tick, plus an optional italic aside. */
+interface PhaseStep {
+  text: string;
+  note?: string;
+}
+/** A reference bullet (no checkbox), with optional nested sub-bullets. */
+interface PhaseRef {
+  text: string;
+  sub?: string[];
+}
 interface PhaseGuide {
   name: string;
-  steps: string[];
+  /** Tickable checklist steps. */
+  steps?: PhaseStep[];
+  /** A no-checkbox reference block: a lead line and bullets you read, not tick. */
+  intro?: string;
+  reference?: PhaseRef[];
+  /** True on the End Phase, where the mode's scoring reminders belong. */
+  scoring?: boolean;
 }
-const PHASES: PhaseGuide[] = [
-  {
-    name: "Command Phase",
-    steps: [
-      "Gain your faction's CMD tokens for the round.",
-      "Roll your Initiative Check.",
-      "Compare successes — the winner picks who has Initiative this round.",
-      "Everyone who didn't win Initiative gains 1 extra CMD token.",
-    ],
-  },
-  {
-    name: "Jump Phase",
-    steps: [
-      "Starting with whoever has Initiative, take turns clockwise.",
-      "On your turn: open a Jump Point, Jump In a unit from Reserve, or pass.",
-      "Once everyone has passed in a row, the phase ends.",
-    ],
-  },
-  {
-    name: "Tactical Phase",
-    steps: [
-      "Starting with whoever has Initiative, take turns clockwise.",
-      'Drag to Select a battlegroup: a lead unit, plus any unactivated friendly units within 6" of it (Combined Mass 10 or less).',
-      "Activate every unit in that battlegroup, then pass to the next player.",
-      "The phase ends once every unit in play has activated.",
-    ],
-  },
-  {
-    name: "End Phase",
-    steps: [
-      "Check your mission(s) for anything you scored this round.",
-      "Clear every Activated token.",
-      "Resolve any other End Phase effects your mission or faction calls for.",
-      "Discard any unused CMD tokens.",
-      "Start the next round.",
-    ],
-  },
-];
+
+// Command Phase, verbatim (A and B). The +1-CMD-for-losers line is not in the
+// player's transcription, so it is not invented back in here.
+const COMMAND_PHASE: PhaseGuide = {
+  name: "Command Phase",
+  steps: [
+    {
+      text: "You gain a number of CMD tokens determined by your faction (if you are using the Training Fleet, you gain 7 CMD tokens).",
+      note: "Unspent CMD tokens are discarded at the end of the round.",
+    },
+    {
+      text: "All players make an Initiative Check. Roll a number of D6 equal to your faction's Initiative value. Each roll of a 2 or 3 counts as one success; each roll of a 1 counts as two successes. The player that rolls the most successes wins the Initiative Check and chooses which player has the Initiative for this round.",
+    },
+  ],
+};
+
+// Jump Phase for the Shipyard modes: reference text, not a checklist, because
+// requisitioning happens repeatedly on your turns, not once. Verbatim.
+const JUMP_PHASE_SHIPYARD: PhaseGuide = {
+  name: "Jump Phase",
+  intro:
+    "In the Jump Phase, players take turns, clockwise from the player with Initiative. On your turn, you do one of the following:",
+  reference: [
+    {
+      text: 'Open a Jump Point: Take a jump point from the supply and place it into play, anywhere you like at least 9" outside of any planetoids. (Some missions have other restrictions.) You have access to 3 jump points +1 if there are 3 sectors.',
+    },
+    {
+      text: "Requisition (1 CMD): When it is your turn, spend 1 CMD token to form a new unit using ships in your Shipyard, paying their cost in credits. Move the appropriate miniatures into your Reserves area and then jump them into play. Once you have requisitioned a particular ship, strike it off your Shipyard Roster – you cannot requisition it again.",
+      sub: [
+        "When you requisition a unit, you can additionally requisition Squadron units, without spending additional CMD tokens, if they can all be carried by the first unit.",
+      ],
+    },
+    {
+      text: "Jump In a Unit - If you have any units in your Reserves (IE If units Jumped Out) you may have the Jump In without paying a command token or their cost in credits.",
+    },
+  ],
+};
+
+// Jump Phase for the Fleet-List modes: a short checklist (no requisition).
+const JUMP_PHASE_DEFAULT: PhaseGuide = {
+  name: "Jump Phase",
+  steps: [
+    { text: "Starting with whoever has Initiative, take turns clockwise." },
+    { text: "On your turn: open a Jump Point, Jump In a unit from Reserve, or pass." },
+    { text: "Once everyone has passed in a row, the phase ends." },
+  ],
+};
+
+const TACTICAL_PHASE: PhaseGuide = {
+  name: "Tactical Phase",
+  steps: [
+    { text: "Starting with whoever has Initiative, take turns clockwise." },
+    { text: 'Drag to Select a battlegroup: a lead unit, plus any unactivated friendly units within 6" of it (Combined Mass 10 or less).' },
+    { text: "Activate every unit in that battlegroup, then pass to the next player." },
+    { text: "The phase ends once every unit in play has activated." },
+  ],
+};
+
+const END_PHASE: PhaseGuide = {
+  name: "End Phase",
+  scoring: true,
+  steps: [
+    { text: "Check your mission(s) for anything you scored this round." },
+    { text: "Clear every Activated token." },
+    { text: "Resolve any other End Phase effects your mission or faction calls for." },
+    { text: "Discard any unused CMD tokens." },
+    { text: "Start the next round." },
+  ],
+};
+
+function phasesFor(mode: GameMode): PhaseGuide[] {
+  const shipyard = MODE_BUILDER_SHAPE[mode] === "shipyard";
+  return [COMMAND_PHASE, shipyard ? JUMP_PHASE_SHIPYARD : JUMP_PHASE_DEFAULT, TACTICAL_PHASE, END_PHASE];
+}
 
 /** End Phase scoring reminders by mode, from the relevant rules pages. */
 const SCORING_NOTES: Partial<Record<GameMode, string[]>> = {
@@ -2157,6 +2385,55 @@ function playFleetPanel(list: SavedList, faction: Faction | undefined, customs: 
   </section>`;
 }
 
+// Hypergrowth's Play Mode fleet panel: not a damage tracker (nothing is printed
+// here) but a live Shipyard. Every class you own is always visible, with its
+// stats and weapons, and three moves per class: Deploy (requisition one out of
+// the Shipyard, struck off for good), Jumped out (a unit in play retreats to
+// Reserves), and Jump in (a unit in Reserves returns to play). yard = total in
+// the Shipyard still, play = in play, reserve = jumped out.
+function playShipyardTracker(list: SavedList, faction: Faction | undefined, customs: Faction[]): string {
+  // Aggregate the pool by ship class - the Shipyard holds classes, not units.
+  const byClass = new Map<string, number>();
+  const order: string[] = [];
+  for (const u of list.fleet.units) {
+    if (!byClass.has(u.shipClassId)) order.push(u.shipClassId);
+    byClass.set(u.shipClassId, (byClass.get(u.shipClassId) ?? 0) + u.count);
+  }
+  const req = list.play?.req ?? {};
+  const rows = order
+    .map((cid) => {
+      const r = resolveShip(cid, faction, customs);
+      if (!r) return "";
+      const ship = r.ship;
+      const total = byClass.get(cid) ?? 0;
+      const inPlay = req[cid]?.play ?? 0;
+      const reserve = req[cid]?.reserve ?? 0;
+      const yard = Math.max(0, total - inPlay - reserve);
+      const btn = (act: string, label: string, on: boolean) =>
+        `<button class="sy-req-btn" data-action="${act}" data-ship="${cid}" ${on ? "" : "disabled"}>${escapeHtml(label)}</button>`;
+      return `
+      <article class="pf-unit sy-req" data-roster-key="req-${cid}">
+        <header class="pf-head">
+          <span class="pf-name">${escapeHtml(ship.name)}${total > 1 ? ` <span class="pf-x">&times;${total}</span>` : ""}</span>
+          <span class="sy-req-tally"><span class="sy-req-yard">${yard}</span> yard <span class="sy-req-sep">·</span> ${inPlay} in play <span class="sy-req-sep">·</span> ${reserve} reserve</span>
+        </header>
+        <div class="pf-stats">${statChips(ship, true)}</div>
+        ${weaponsTable(ship)}
+        <div class="sy-req-acts">
+          ${btn("play-deploy", "Deploy", yard > 0)}
+          ${btn("play-jumpout", "Jumped out", inPlay > 0)}
+          ${btn("play-jumpin", "Jump in", reserve > 0)}
+        </div>
+      </article>`;
+    })
+    .join("");
+  if (!rows) return "";
+  return `<section class="play-fleet play-shipyard">
+    <h3 class="roster-section">Your shipyard</h3>
+    <div class="pf-list sy-req-list">${rows}</div>
+  </section>`;
+}
+
 function playCommandsPanel(list: SavedList, cmdLeft: number, faction: Faction | undefined): string {
   const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
   const effects = commandEffectsFor(list, faction);
@@ -2199,8 +2476,12 @@ function playCommandsPanel(list: SavedList, cmdLeft: number, faction: Faction | 
             .map((n) => `<span class="pc-cmd-from">${ruleText(n.text)} — ${escapeHtml(n.source)}</span>`)
             .join("");
           const costLabel = c.change ? `<s>${c.base}</s> ${c.cost} CMD` : `${c.cost} CMD`;
+          // Commands are never greyed out: you can always choose to spend on any
+          // command, and faction/HVP rules can change what you can afford, so the
+          // list stays fully live rather than dimming ones the raw CMD count
+          // cannot cover this instant.
           return `
-        <article class="pc-cmd ${cmdLeft >= c.cost ? "" : "is-short"} ${c.change ? "is-discounted" : ""}">
+        <article class="pc-cmd ${c.change ? "is-discounted" : ""}">
           <header class="pc-cmd-head">
             <h4 class="pc-cmd-name">${escapeHtml(c.name)}</h4>
             <span class="pc-cmd-cost">${costLabel}</span>
@@ -2235,10 +2516,14 @@ function playView(state: AppState): string {
   const scoreLabel = isCredits ? "Credits" : "Victory points";
   const last = state.ui.lastRoll;
 
+  const PHASES = phasesFor(list.mode);
   const currentPhase = PHASES[play.phase];
   const checks = play.checks ?? [];
+  const stepCount = currentPhase?.steps?.length ?? 0;
   const doneCount = checks.filter(Boolean).length;
-  const phaseDone = currentPhase !== undefined && doneCount === currentPhase.steps.length;
+  // A reference phase (e.g. the Shipyard Jump Phase) has nothing to tick, so it
+  // is never "done" via the checklist and shows no count or checkmark.
+  const phaseDone = stepCount > 0 && doneCount === stepCount;
 
   // A bespoke instance of the switcher pattern (one bordered track, a
   // sliding highlight) rather than the plain switcher() helper, since this
@@ -2255,20 +2540,37 @@ function playView(state: AppState): string {
     ).join("")}
   </div>`;
 
-  const checklistHtml = (currentPhase?.steps ?? [])
-    .map(
-      (step, i) => `
+  // Each phase renders either as a tickable checklist (steps, with an optional
+  // italic aside) or as a read-only reference block (a lead line and bullets you
+  // do not tick, because the action repeats on every turn).
+  const checklistHtml = currentPhase?.reference
+    ? `<div class="phase-ref">
+        ${currentPhase.intro ? `<p class="phase-ref-lead">${ruleText(currentPhase.intro)}</p>` : ""}
+        <ul class="phase-ref-list">
+          ${currentPhase.reference
+            .map(
+              (r) => `<li>${ruleText(r.text)}${
+                r.sub ? `<ul class="phase-ref-sub">${r.sub.map((s) => `<li>${ruleText(s)}</li>`).join("")}</ul>` : ""
+              }</li>`,
+            )
+            .join("")}
+        </ul>
+      </div>`
+    : (currentPhase?.steps ?? [])
+        .map(
+          (step, i) => `
     <label class="phase-check ${checks[i] ? "done" : ""}">
       <input type="checkbox" data-action="play-check-step" data-index="${i}" ${checks[i] ? "checked" : ""} />
-      <span>${ruleText(step)}</span>
+      <span>${ruleText(step.text)}${step.note ? `<em class="phase-check-note">${ruleText(step.note)}</em>` : ""}</span>
     </label>`,
-    )
-    .join("");
+        )
+        .join("");
 
-  // Scores in the credit modes are counted in ¢bn and awarded in twenties
-  // ("¢20bn per Sector you control"), so they step by ten and read as money.
+  // Management Training scores in ¢20bn awards ("¢20bn per Sector"), so it steps
+  // by ten. Hypergrowth credits are the granular cost of requisitioning ships
+  // (¢4bn, ¢8bn, ¢25bn...), so they step by one - single digits, not tens.
   // Victory points step by one and read as a bare number.
-  const scoreStep = isCredits ? 10 : 1;
+  const scoreStep = list.mode === "management-training" ? 10 : 1;
   const scoreFmt = (n: number) => (isCredits ? credits(n) : String(n));
   const counter = (
     label: string,
@@ -2276,25 +2578,57 @@ function playView(state: AppState): string {
     action: string,
     step = 1,
     fmt: (n: number) => string = (n) => String(n),
+    glyph = "",
   ) => `
     <div class="play-counter">
       <span class="control-label">${label}</span>
       <div class="round-control">
         <button class="stepper-btn" data-action="${action}" data-delta="${-step}" aria-label="Decrease ${escapeHtml(label)}" title="Decrease ${escapeHtml(label)}">${icon("minus", 16)}</button>
-        <span class="round-value ${value < 0 ? "is-debt" : ""}">${fmt(value)}</span>
+        <span class="round-value ${value < 0 ? "is-debt" : ""}">${glyph}${fmt(value)}</span>
         <button class="stepper-btn" data-action="${action}" data-delta="${step}" aria-label="Increase ${escapeHtml(label)}" title="Increase ${escapeHtml(label)}">${icon("plus", 16)}</button>
       </div>
     </div>`;
 
-  const notes = (SCORING_NOTES[list.mode] ?? []).map((n) => `<li>${ruleText(n)}</li>`).join("");
+  // Scoring reminders live in the End Phase only now (that is when you score),
+  // not in a standing block that repeated on every phase.
+  const scoringNotes = currentPhase?.scoring
+    ? (SCORING_NOTES[list.mode] ?? []).map((n) => `<li>${ruleText(n)}</li>`).join("")
+    : "";
 
   const checklistBlock = `<div class="phase-checklist">
-      <div class="phase-checklist-head">
+      ${
+        stepCount > 0
+          ? `<div class="phase-checklist-head">
         <!-- No phase name here: the switcher immediately above is already showing it. -->
-        <span class="phase-checklist-count">${doneCount} of ${currentPhase?.steps.length ?? 0} done</span>
-      </div>
+        <span class="phase-checklist-count">${doneCount} of ${stepCount} done</span>
+      </div>`
+          : ""
+      }
       ${checklistHtml}
+      ${scoringNotes ? `<div class="phase-scoring"><ul class="rule-list">${scoringNotes}</ul></div>` : ""}
     </div>`;
+
+  // Hypergrowth is played from a Shipyard, so its Play Mode is laid out
+  // differently: the faction ability and the Commands sit together (commands
+  // right under the ability), and the right column is the live Shipyard where
+  // you Deploy ships, always visible, rather than a damage tracker.
+  const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
+  const factionBlock = faction ? factionRuleBlock(faction, "compact") : "";
+  const commandsPanel = playCommandsPanel(list, play.cmd, faction);
+  const rollResult =
+    last && last.table.startsWith("Initiative check")
+      ? `<div class="roll-result"><div class="roll-die">${last.value}</div><div class="roll-body"><p class="roll-table">${escapeHtml(last.table)}</p><p class="roll-headline">${escapeHtml(last.result)}</p>${last.detail ? `<p class="roll-detail">${escapeHtml(last.detail)}</p>` : ""}</div></div>`
+      : "";
+  const arcsBlock =
+    play.phase === 2
+      ? `<div class="play-arcs">
+           <p class="play-arc-line"><span class="lf-arc lf-arc-pri">${icon("arc-primary", 15, "slot-arc")}PRI</span> narrow 45&deg; cone dead ahead</p>
+           <p class="play-arc-line"><span class="lf-arc lf-arc-aux">${icon("arc-aux", 15, "slot-arc")}AUX</span> full 180&deg; front arc</p>
+         </div>`
+      : "";
+  const debtNote = isShipyard
+    ? `<p class="play-debt-note">${ruleText("You start with 0 credits, and recover that expenditure by earning credits from the objectives.")}</p>`
+    : "";
 
   // This screen is used standing at a table mid-turn, so it has one job the rest
   // of the app doesn't: fit on the screen. Everything below is in service of
@@ -2328,61 +2662,59 @@ function playView(state: AppState): string {
       </p>
     </header>
     <div class="phase-track">${phaseBtns}</div>
-    <!--
-      Left column is what you are doing, right column is what you are spending.
-      The command list on the right runs taller than the checklist on the left
-      (four to seven cards vs a five-step tickbox), so the scoring notes and the
-      faction rule sit at the bottom of the LEFT column and fill that gap. Both
-      are fixed-height and phase-independent, so parking them under the buttons
-      cannot make the buttons move.
-    -->
-    <div class="play-cols">
+    ${
+      isShipyard
+        ? // Shipyard layout: left column is what you're doing PLUS the faction
+          // ability with the Commands right underneath it; right column is the
+          // live Shipyard, always in view, and the counters above it.
+          `<div class="play-cols">
       <div class="play-col play-col-do">
         ${checklistBlock}
         <div class="play-actions">
           <button class="cta-btn" data-action="play-next">${icon("chevronRight", 16)} Next phase</button>
           <button class="ghost-btn" data-action="play-initiative" data-dice="${faction ? escapeHtml(faction.initiative) : "3D6"}">${icon("die", 15)} Roll ${faction ? escapeHtml(faction.initiative) : "3D6"}</button>
         </div>
-        ${
-          last && last.table.startsWith("Initiative check")
-            ? `<div class="roll-result"><div class="roll-die">${last.value}</div><div class="roll-body"><p class="roll-table">${escapeHtml(last.table)}</p><p class="roll-headline">${escapeHtml(last.result)}</p>${last.detail ? `<p class="roll-detail">${escapeHtml(last.detail)}</p>` : ""}</div></div>`
-            : ""
-        }
-        ${notes || faction ? `<div class="play-notes">${notes ? `<ul class="rule-list">${notes}</ul>` : ""}${faction ? factionRuleBlock(faction, "compact") : ""}</div>` : ""}
-        ${
-          play.phase === 2
-            ? `<div class="play-arcs">
-                 <p class="play-arc-line"><span class="lf-arc lf-arc-pri">PRI</span> narrow 45&deg; cone dead ahead</p>
-                 <p class="play-arc-line"><span class="lf-arc lf-arc-aux">AUX</span> full 180&deg; front arc</p>
-               </div>`
-            : ""
-        }
+        ${rollResult}
+        ${factionBlock ? `<div class="play-notes">${factionBlock}</div>` : ""}
+        ${commandsPanel}
+        ${arcsBlock}
       </div>
 
       <div class="play-col play-col-spend">
         <div class="play-counters">
-          ${counter("CMD tokens", play.cmd, "play-cmd")}
+          ${counter("CMD tokens", play.cmd, "play-cmd", 1, (n) => String(n), icon("cmd-delta", 15, "cmd-delta-glyph"))}
           ${counter(scoreLabel, play.vp, "play-vp", scoreStep, scoreFmt)}
           ${counter("Opponent " + scoreLabel.toLowerCase(), play.oppVp, "play-oppvp", scoreStep, scoreFmt)}
         </div>
-        ${
-          // Hypergrowth alone runs a debt: you requisition out of your Shipyard
-          // before you have earned anything, so the counter goes below zero and
-          // the rule that says so is quoted here rather than paraphrased.
-          list.mode === "hypergrowth"
-            ? `<p class="play-debt-note">${ruleText("You start with 0 credits, and recover that expenditure by earning credits from the objectives.")}</p>`
-            : ""
-        }
-        ${
-          // Your fleet ABOVE the command reference. The commands are a long block
-          // of rules text you consult occasionally; the fleet is what you look at
-          // constantly. Below them it landed 1803px down the page on a phone -
-          // past two full screens - which is what "can't see your fleet" meant.
-          playFleetPanel(list, faction, customs)
-        }
-        ${playCommandsPanel(list, play.cmd, faction)}
+        ${debtNote}
+        ${playShipyardTracker(list, faction, customs)}
       </div>
-    </div>
+    </div>`
+        : // Fleet-List layout (unchanged): left is the checklist and faction rule,
+          // right is the counters, the fleet with its damage tracker, then commands.
+          `<div class="play-cols">
+      <div class="play-col play-col-do">
+        ${checklistBlock}
+        <div class="play-actions">
+          <button class="cta-btn" data-action="play-next">${icon("chevronRight", 16)} Next phase</button>
+          <button class="ghost-btn" data-action="play-initiative" data-dice="${faction ? escapeHtml(faction.initiative) : "3D6"}">${icon("die", 15)} Roll ${faction ? escapeHtml(faction.initiative) : "3D6"}</button>
+        </div>
+        ${rollResult}
+        ${factionBlock ? `<div class="play-notes">${factionBlock}</div>` : ""}
+        ${arcsBlock}
+      </div>
+
+      <div class="play-col play-col-spend">
+        <div class="play-counters">
+          ${counter("CMD tokens", play.cmd, "play-cmd", 1, (n) => String(n), icon("cmd-delta", 15, "cmd-delta-glyph"))}
+          ${counter(scoreLabel, play.vp, "play-vp", scoreStep, scoreFmt)}
+          ${counter("Opponent " + scoreLabel.toLowerCase(), play.oppVp, "play-oppvp", scoreStep, scoreFmt)}
+        </div>
+        ${playFleetPanel(list, faction, customs)}
+        ${commandsPanel}
+      </div>
+    </div>`
+    }
 
   </main>
   ${toast(state)}

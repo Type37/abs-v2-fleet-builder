@@ -20,6 +20,14 @@ export interface PlayState {
   /** Which of the current phase's checklist steps are ticked. Reset every
    * time the phase changes - it is a per-phase walkthrough, not a log. */
   checks?: boolean[];
+  /**
+   * Hypergrowth requisition tracker, keyed by ship-class id: how many of that
+   * class are currently in play and how many sit in Reserves (jumped out). The
+   * rest of the class's total are still in the Shipyard (yard = total - play -
+   * reserve). Once deployed a ship is struck from the Shipyard for good, so the
+   * yard figure only ever falls.
+   */
+  req?: Record<string, { play: number; reserve: number }>;
 }
 
 export interface SavedList {

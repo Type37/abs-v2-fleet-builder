@@ -41,6 +41,9 @@ const PATHS: Record<string, string> = {
     '<path fill="currentColor" stroke="none" fill-opacity=".16" d="M8.4 14H5.6A1.6 1.6 0 0 0 4 15.6v2.8A1.6 1.6 0 0 0 5.6 20h2.8a1.6 1.6 0 0 0 1.6-1.6v-2.8A1.6 1.6 0 0 0 8.4 14m10-10h-2.8A1.6 1.6 0 0 0 14 5.6v2.8a1.6 1.6 0 0 0 1.6 1.6h2.8A1.6 1.6 0 0 0 20 8.4V5.6A1.6 1.6 0 0 0 18.4 4"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5" d="M14 17h6m-3 3v-6M5.6 4h2.8A1.6 1.6 0 0 1 10 5.6v2.8A1.6 1.6 0 0 1 8.4 10H5.6A1.6 1.6 0 0 1 4 8.4V5.6A1.6 1.6 0 0 1 5.6 4m0 10h2.8a1.6 1.6 0 0 1 1.6 1.6v2.8A1.6 1.6 0 0 1 8.4 20H5.6A1.6 1.6 0 0 1 4 18.4v-2.8A1.6 1.6 0 0 1 5.6 14m10-10h2.8A1.6 1.6 0 0 1 20 5.6v2.8a1.6 1.6 0 0 1-1.6 1.6h-2.8A1.6 1.6 0 0 1 14 8.4V5.6A1.6 1.6 0 0 1 15.6 4"/>',
   plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
   minus: '<line x1="5" y1="12" x2="19" y2="12"/>',
+  // Static filled command-token delta (the final shape of commandToken, no
+  // animation) - used beside the CMD count so the token reads as its own glyph.
+  "cmd-delta": '<path fill="currentColor" stroke="none" d="M12 4 21.25 20 2.75 20Z"/>',
   close: '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
   check: '<polyline points="5 13 10 18 19 7"/>',
   warning: '<path d="M12 3 22 20 2 20 Z"/><line x1="12" y1="9.5" x2="12" y2="14.5"/><line x1="12" y1="17" x2="12" y2="17.01"/>',
@@ -91,17 +94,15 @@ const PATHS: Record<string, string> = {
     '<g fill="currentColor" stroke="none"><path d="M12 15a3 3 0 1 0 0-6a3 3 0 0 0 0 6"/><path fill-rule="evenodd" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2S2 6.477 2 12s4.477 10 10 10m6-10a6 6 0 1 1-12 0a6 6 0 0 1 12 0" clip-rule="evenodd"/></g>',
   "stat-shields":
     '<path fill="currentColor" stroke="none" d="M11.25 2.073c-.606.113-1.318.357-2.412.732L8.265 3c-3.007 1.03-4.51 1.544-4.887 2.082C3.008 5.608 3 7.15 3 10.21l8.25-2.75zm0 6.967L3 11.79v.201c0 5.638 4.239 8.374 6.899 9.536c.51.223.84.367 1.351.432zm1.5 12.92V9.04L21 11.79v.201c0 5.638-4.239 8.374-6.899 9.536c-.51.223-.84.367-1.351.432m0-14.499V2.072c.606.113 1.318.357 2.412.732l.573.196c3.007 1.029 4.51 1.543 4.887 2.081c.37.526.378 2.068.378 5.127z"/>',
-  // ship silhouettes by Mass class: filled geometric hulls, not stroked
-  // Firing-arc glyphs. Both sit on the same short hull bar, which is what makes
-  // them readable at 12px: the eye compares two shapes standing on a shared
-  // baseline instead of two blue blobs of unknown orientation. A narrow spike
-  // is the 45 degree cone dead ahead; a dome is the full 180. The angles are
-  // drawn true - the cone is 42 degrees of the 45, the dome a real half-disc -
-  // so the picture is not lying about coverage.
+  // Firing-arc glyphs, redrawn to the hand sketch: PRIMARY is a narrow filled
+  // wedge (the 45 degree cone) rising out of a thin dome outline (the 180 it is
+  // a slice of), poking through the crown; AUXILIARY is that same dome, filled
+  // solid, for the full 180. Both share the baseline at y=18 so the eye compares
+  // two shapes on one ground line rather than two blue blobs.
   "arc-primary":
-    '<g fill="currentColor" stroke="none"><path d="M12 18.4 7.9 7.9A11.2 11.2 0 0 1 16.1 7.9Z"/><rect x="8.9" y="18.4" width="6.2" height="2.8"/></g>',
+    '<path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 18A11 9 0 0 1 22 18"/><path fill="currentColor" stroke="none" d="M12 18 10.2 4.4 13.8 4.4Z"/>',
   "arc-aux":
-    '<g fill="currentColor" stroke="none"><path d="M1.6 18.4A10.4 10.4 0 0 1 22.4 18.4Z"/><rect x="8.9" y="18.4" width="6.2" height="2.8"/></g>',
+    '<path fill="currentColor" stroke="none" d="M2 18A11 9 0 0 1 22 18Z"/>',
 };
 
 // Fleet emblems: crisp geometric insignia on the 24 grid. Filled where a bold

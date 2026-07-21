@@ -995,14 +995,29 @@ button { font-family: inherit; }
 /* fit-content so the table is only as wide as its content, not stretched to a
    fixed 420px that leaves a big empty gap between a short weapon name and the
    figures. The name column is auto (sized to the longest name) rather than 1fr. */
+/* Weapons as plain lines (book notation) instead of a column table:
+   "Pri: Cruise Missiles [4D10, 18-36"]". Takes its own full-width line inside
+   any flex row (stats above it), so it never has to share a track. */
+.weap-lines { margin-top: 5px; display: flex; flex-direction: column; gap: 3px; flex-basis: 100%; }
+.weap-line { margin: 0; font-family: var(--sans); font-size: 13px; line-height: 1.45; color: var(--ink); }
+.wl-arc { color: var(--blue); font-weight: 800; white-space: nowrap; }
+.wl-arc svg { vertical-align: -2px; margin-right: 3px; }
+.wl-name { font-weight: 600; }
+.wl-fig { color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
 .weap-table { width: fit-content; max-width: 100%; margin-top: 6px; font-variant-numeric: tabular-nums; }
 /* Every row - header, weapon, note - shares one template, so the columns line
    up down the whole table without the table being one big grid (which left the
    cells with no owning row for assistive tech). */
 /* max-content on the name column, not auto: auto absorbed all the free space in
    the row, which is what opened the long empty gap between WEAPON and RANGE. */
+/* The name column is 1fr, not max-content: the table is width:fit-content so it
+   sizes to the longest weapon name, and every row then shares identical column
+   stops - which is what makes RANGE / ATTACK / DMG line up down the whole table
+   and with the header. max-content sized each row's name column to its OWN text,
+   so the figures landed at a different x on every row ("the dice are all off"). */
 .wt-row {
-  display: grid; grid-template-columns: 52px minmax(80px, max-content) 54px 48px 34px;
+  display: grid; grid-template-columns: 52px minmax(80px, 1fr) 54px 48px 34px;
   column-gap: 12px; align-items: baseline; margin-bottom: 3px;
 }
 /* On desktop the column header names each figure, so the inline label would be
@@ -2104,6 +2119,114 @@ button { font-family: inherit; }
 .nf-unlimited-toggle input:checked + .nf-unlimited-box { background: var(--blue); border-color: var(--blue); color: #fff; }
 .nf-unlimited-toggle input:focus-visible + .nf-unlimited-box { outline: 2px solid var(--red); outline-offset: 2px; }
 .nf-unlimited-hint { display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
+
+/* ===========================================================================
+   HYPERGROWTH SHIPYARD  (spec: HYPERGROWTH-SHIPYARD.md)
+   A single reading column, phone-first: masthead, faction block, a sticky
+   budget bar, the ship list (every class, ascending mass, an inline quantity),
+   then personnel. You buy a pool of ships; ¢300bn is an ownership cap, not
+   money spent, so the copy never says "spent". No layout shift, no clipping,
+   no horizontal scroll at any width.
+   =========================================================================== */
+.shipyard { max-width: 820px; margin: 0 auto; padding: 0 clamp(14px, 3vw, 28px) 72px; }
+
+/* Masthead: what this fleet IS (emblem, name, the menu that acts on it) over
+   what it is BUILT FROM (faction, era). Two stacked groups, each wrapping as a
+   whole. Reuses the builder's .mf-name / .mf-fac / .mf-era-badge / .mf-menu. */
+.sy-head { padding: 12px 0 8px; }
+.sy-id { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.sy-name { flex: 1 1 auto; }
+.sy-fac { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; margin-top: 6px; }
+
+/* Faction block: the faction rule verbatim with Initiative and CMD/round. */
+.sy-faction { padding: 10px 0; border-top: 1px solid var(--hair-soft); }
+
+/* Budget bar: sticky, so the figure you check while scanning ships stays in
+   view. A figures line (now / of cap / remaining) over a thin filled meter -
+   "a filled bar plus the remaining figure" as one unit. Overspending is shown
+   in red, never blocked. */
+.sy-budget {
+  position: sticky; top: 0; z-index: 30; background: var(--paper);
+  padding: 9px 0 10px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink);
+}
+.sy-budget-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; font-family: var(--display); font-variant-numeric: tabular-nums; }
+.sy-budget-now { font-size: clamp(24px, 5vw, 32px); font-weight: 900; color: var(--ink); }
+.sy-budget-cap { font-weight: 800; }
+.sy-budget-cap .limit-switch > summary { font-size: 15px; font-weight: 700; color: var(--ink-2); border-bottom-width: 1px; }
+.sy-budget-free { margin-left: auto; font-size: 15px; font-weight: 900; color: var(--go); }
+.shipyard.is-over .sy-budget-now, .shipyard.is-over .sy-budget-free { color: var(--red-deep); }
+.sy-meter { margin-top: 9px; height: 8px; background: var(--ground); border: 1px solid var(--hair-soft); }
+.sy-meter-fill { display: block; height: 100%; background: var(--blue); transition: width 0.18s var(--ease); }
+.shipyard.is-over .sy-meter-fill { background: var(--red); }
+
+/* No section headings: the ship list and the personnel list are told apart by
+   their own shape (steppers vs a single square + rule prose), not a label. */
+.sy-list { display: flex; flex-direction: column; }
+.sy-ship-list { margin-top: 4px; }
+
+/* Ship row. Tight. Head is a grid: name grows and may wrap, cost and the stepper
+   hold the top-right and never wrap under it (the quantity stays on the name
+   line). Data (stat chips + weapons) below, always full, hard left. Row height
+   is constant whatever the count, so a stepper press never reflows it. */
+.sy-ship { border-top: 1px solid var(--hair-soft); padding: 7px 0; }
+.sy-ship:first-child { border-top: none; }
+.sy-ship-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 2px 12px; }
+.sy-ship-name { font-family: var(--display); font-weight: 700; font-size: clamp(15px, 3.4vw, 17px); letter-spacing: -0.01em; line-height: 1.15; margin: 0; min-width: 0; }
+.sy-ship-cost { font-family: var(--display); font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--blue); white-space: nowrap; }
+.sy-qty { flex-shrink: 0; }
+.sy-qty button { min-width: 32px; min-height: 30px; align-items: center; justify-content: center; transition: transform 0.08s var(--ease), background 0.1s ease; }
+.sy-qty button:not([aria-disabled="true"]):active { transform: scale(0.86); }
+.sy-qty .stepper-count { line-height: 30px; min-width: 18px; text-align: center; }
+.sy-qty .stepper-count.is-zero { color: var(--ink-3); }
+.sy-ship-data { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 16px; margin-top: 5px; }
+.sy-ship-data .stat-chips { flex: 0 0 auto; }
+/* Size to content, do NOT stretch: a stretched table let the 1fr name column
+   open a wide gap before RANGE/ATTACK/DMG. Fit-content keeps the figures tight
+   to the name and hard left, while 1fr still lines the columns up across rows. */
+.sy-ship-data .weap-table { flex: 0 1 auto; margin-top: 0; min-width: 0; }
+
+/* A note replacing the list when No Limit is on (no shipyard is built in
+   advance, so there is nothing to pre-buy). */
+.sy-note { display: flex; gap: 9px; align-items: flex-start; font-family: var(--serif); font-size: 14px; line-height: 1.5; color: var(--ink-2); padding: 8px 0 12px; }
+.sy-note .icon { flex-shrink: 0; color: var(--blue); margin-top: 2px; }
+
+/* Personnel. One flat list (faction + generic together, no divider). Each row:
+   name and verbatim rule on the left, a single fixed square on the RIGHT (plus
+   -> tick). No card box. Chosen shows the filled square and a blue name; at the
+   three-chosen cap the rest go inert. The square is the same box either way, so
+   toggling it never reflows the row. */
+.sy-personnel { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--ink); }
+.sy-hvp-count { display: flex; align-items: baseline; gap: 8px; font-family: var(--display); font-weight: 800; font-size: 14px; margin: 0 0 6px; }
+.sy-hvp-count span { font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.sy-hvp-list { display: flex; flex-direction: column; }
+.sy-hvp {
+  display: grid; grid-template-columns: minmax(0, 1fr) 32px; gap: 12px; align-items: center;
+  padding: 7px 0; border-top: 1px solid var(--hair-soft);
+}
+.sy-hvp:first-child { border-top: none; }
+.sy-hvp.is-chosen .sy-hvp-name { color: var(--blue); }
+.sy-hvp-check {
+  width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--hair); background: var(--paper); color: var(--blue); cursor: pointer;
+  transition: transform 0.08s var(--ease), background 0.1s ease;
+}
+.sy-hvp-check:not([aria-disabled="true"]):active { transform: scale(0.86); }
+.sy-hvp-check:hover { border-color: var(--blue); background: var(--blue-wash); }
+.sy-hvp-check.is-on { background: var(--blue); border-color: var(--blue); color: #fff; }
+.sy-hvp-check.is-on:hover { background: var(--blue-deep); }
+.sy-hvp-check[aria-disabled="true"] { color: var(--hair-soft); border-color: var(--hair-soft); cursor: default; background: var(--paper); }
+.sy-hvp-check[aria-disabled="true"]:hover { background: var(--paper); }
+.sy-hvp-check:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.sy-hvp-body { min-width: 0; }
+.sy-hvp-name { display: block; font-family: var(--display); font-weight: 700; font-size: 14px; line-height: 1.2; }
+.sy-hvp-rule { display: block; font-family: var(--serif); font-size: 13px; line-height: 1.4; color: var(--ink-2); margin-top: 2px; }
+
+/* The faction picker drops out of the (non-sticky) masthead but has to cover the
+   sticky budget bar below it, which owns z-index 30. Lift the open panel above. */
+.sy-fac .faction-switch[open] { z-index: 60; }
+.sy-fac .faction-switch-panel { z-index: 60; }
+
+.sy-finish { margin-top: 28px; }
 
 /* body: two flush regions, one quiet vertical rule between; no cards. The
    masthead's border is the one heavy divider on this page - everything below
@@ -3357,6 +3480,48 @@ a .icon,
   .play-cols { grid-template-columns: 1fr; }
 }
 
+/* Counter figure: keep the ¢ glyph and the number on one centred line so the
+   minus / value / plus stay level. Without nowrap "¢50bn" broke under its own
+   glyph and threw the two steppers out of line (image 4). */
+.play-counters .round-control { min-width: 0; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 0; }
+.play-counters .round-value { display: inline-flex; align-items: center; justify-content: center; gap: 2px; white-space: nowrap; line-height: 1; }
+.play-counters .round-value svg { flex: none; }
+.play-counters .round-value .cmd-delta-glyph { color: var(--blue); margin-right: 1px; }
+.play-counters .stepper-btn { width: 36px; height: 36px; flex: none; }
+
+/* Phase reference block: a lead line then bullets you READ, not tick (the
+   Shipyard Jump Phase). Verbatim, with nested sub-bullets. */
+.phase-ref { font-family: var(--serif); font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+.phase-ref-lead { margin: 0 0 8px; }
+.phase-ref-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+.phase-ref-list > li { padding-left: 2px; }
+.phase-ref-sub { margin: 6px 0 0; padding-left: 16px; }
+.phase-ref-sub > li { color: var(--ink-2); }
+/* The italic aside under a checklist step (e.g. "Unspent CMD tokens are
+   discarded..."). Its own line, quieter than the step. */
+.phase-check-note { display: block; margin-top: 2px; font-style: italic; color: var(--ink-3); }
+.phase-scoring { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hair-soft); }
+.phase-scoring .rule-list { margin: 0; padding-left: 18px; font-family: var(--serif); font-size: 13px; line-height: 1.45; color: var(--ink-2); display: flex; flex-direction: column; gap: 6px; }
+
+/* Hypergrowth Shipyard tracker (Play Mode). Every class always visible, a live
+   yard/play/reserve tally, and Deploy / Jumped out / Jump in on their own row. */
+.sy-req .pf-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; justify-content: space-between; }
+.sy-req-tally { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink-3); text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.sy-req-yard { color: var(--blue); font-weight: 800; }
+.sy-req-sep { color: var(--hair-soft); }
+.sy-req-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sy-req-btn {
+  flex: 1 1 auto; min-height: 34px; padding: 6px 10px; border: 1px solid var(--hair); background: var(--paper);
+  font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink); cursor: pointer;
+  transition: transform 0.08s var(--ease), background 0.1s ease, color 0.1s ease;
+}
+.sy-req-btn:not(:disabled):hover { background: var(--blue); border-color: var(--blue); color: #fff; }
+.sy-req-btn:not(:disabled):active { transform: scale(0.94); }
+.sy-req-btn:disabled { color: var(--hair-soft); border-color: var(--hair-soft); cursor: default; }
+/* The Deploy button (first) is the primary move: fill it so it reads as the CTA. */
+.sy-req-btn:first-child:not(:disabled) { background: var(--blue); border-color: var(--blue); color: #fff; }
+.sy-req-btn:first-child:not(:disabled):hover { background: var(--blue-deep); }
+
 /* Every view gets a ceiling, not just the three I did first. All of these are
    direct children of #app, so they need the id in the selector to outrank
    "#app > * { max-width: 100% }" - a bare class silently loses to it.
@@ -3367,6 +3532,9 @@ a .icon,
 #app > .foundry-main { max-width: 1100px; margin-left: auto; margin-right: auto; }
 #app > .compendium { max-width: 1320px; margin-left: auto; margin-right: auto; }
 #app > .builder { max-width: 1280px; margin-left: auto; margin-right: auto; }
+/* The Hypergrowth shipyard is a single reading column, so it is capped much
+   narrower than the two-column builder. Needs the #app id to beat #app > *. */
+#app > .shipyard { max-width: 820px; margin-left: auto; margin-right: auto; }
 
 /* Gravity well and jump strain. */
 .learn-dg .dg-well { fill: var(--red); fill-opacity: 0.07; stroke: var(--red); stroke-width: 1; stroke-dasharray: 4 4; }

@@ -19,7 +19,9 @@ Nothing is mid-flight. Known deferred items, in rough priority order:
 
 | Mode | You build a… | Ships | HVPs (High-Value Personnel) |
 |---|---|---|---|
-| **Hypergrowth** | **Shipyard** | Ship types with a quantity. Cap is **300bn only**, or an **"Unlimited Shipyards"** switch (OFF by default) lifts it entirely. No 400/500/custom. | **None at build** — HVP section hidden. |
+| **Hypergrowth** | **Shipyard** (own single-column screen, `shipyardView` in render.ts — NOT the two-column `builderView`; see `HYPERGROWTH-SHIPYARD.md`) | Ship types with a quantity (stepper on the right of the name line). Cap is a **two-button choice: ¢300bn / No Limit** (`sy-cap-limited` / `sy-cap-nolimit`; No Limit = `unlimitedShipyards`, suppresses the ship list, no ∞, no explainer). Also in the New Fleet modal (`nf-nolimit`). | **Choose up to 3** (7 faction + 5 generic in ONE flat list, no headings/cards, check on the right), no assignment here. |
+
+**Hypergrowth Play Mode** is its own layout (`isShipyard` branch in `playView`): faction ability with the Commands directly under it (left col); the right col is the live **Shipyard requisition tracker** (`playShipyardTracker`) — every class always visible with Deploy / Jumped out / Jump in and a yard·play·reserve tally (`play.req[classId]={play,reserve}`, actions `play-deploy`/`play-jumpout`/`play-jumpin`), NOT the damage-box tracker. Phase content is verbatim and mode-aware (`phasesFor(mode)`): Command Phase = checkboxes A/B; shipyard Jump Phase = a no-checkbox reference block (Open Jump Point / Requisition / Jump In); scoring reminders render in the **End Phase only**. Arc glyphs (`arc-primary` wedge + dome outline, `arc-aux` filled dome) and the left-aligned weapons table (`.wt-row` name col = `1fr`) are global, all modes.
 | **Armageddon** | **Fleet List** | Discrete units. | **Chosen + assigned pre-play** (enforced). |
 | **Age of Unity** | **Fleet List** | Discrete units. | **Deferred.** Optional at build (with a note); print shows ALL available HVP plus a write-in slot per ship. |
 

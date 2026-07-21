@@ -202,7 +202,7 @@ export interface AppState {
     limitCustomOpen?: boolean;
     /** An open modal dialog. */
     modal?:
-      | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean; customOpen?: boolean }
+      | { kind: "new-fleet"; era: Era; limit: number; factionId?: string; showAll: boolean; customOpen?: boolean; noLimit?: boolean }
       | {
           kind: "emblem";
           target: "list" | "faction" | "outfit";
