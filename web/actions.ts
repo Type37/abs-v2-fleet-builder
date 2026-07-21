@@ -1298,47 +1298,6 @@ function handleClick(e: MouseEvent): void {
       );
       break;
     }
-    case "play-initiative": {
-      const spec = target.dataset["dice"] ?? "3D6";
-      const m = /(\d+)\s*D6/i.exec(spec);
-      const n = m ? Math.max(1, Number(m[1])) : 3;
-      const rolls: number[] = [];
-      let successes = 0;
-      for (let i = 0; i < n; i++) {
-        const v = d(6);
-        rolls.push(v);
-        if (v === 1) successes += 2;
-        else if (v === 2 || v === 3) successes += 1;
-      }
-      store.setState((s) => ({
-        ...s,
-        ui: {
-          ...s.ui,
-          lastRoll: {
-            table: `Initiative check (${n}D6)`,
-            value: successes,
-            result: `${successes} ${successes === 1 ? "success" : "successes"}`,
-            detail: `Rolled ${rolls.join(", ")}. A 2 or 3 is one success; a 1 is two successes.`,
-          },
-        },
-      }));
-      // Ties the roll to its checklist step (index 1: "Roll your Initiative
-      // Check"), but only while actually in the Command Phase - this button
-      // is always on screen, this checklist item only means something there.
-      const id = currentListId();
-      if (id) {
-        store.setState((s) =>
-          updateList(s, id, (l) => {
-            if (!l.play || l.play.phase !== 0) return l;
-            const checks = [...(l.play.checks ?? [])];
-            checks[1] = true;
-            return { ...l, play: { ...l.play, checks } };
-          }),
-        );
-      }
-      break;
-    }
-
     // ---- Foundry ----------------------------------------------------------
     case "new-faction": {
       const faction: Faction = {
