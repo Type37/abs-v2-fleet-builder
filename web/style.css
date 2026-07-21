@@ -2178,12 +2178,12 @@ button { font-family: inherit; }
 .sy-qty button:not([aria-disabled="true"]):active { transform: scale(0.86); }
 .sy-qty .stepper-count { line-height: 30px; min-width: 18px; text-align: center; }
 .sy-qty .stepper-count.is-zero { color: var(--ink-3); }
-.sy-ship-data { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 16px; margin-top: 5px; }
+/* Stats on the left, weapon lines to the RIGHT of them (they wrap below only on
+   a genuinely narrow phone). The global .weap-lines is flex-basis:100%, so it is
+   overridden here to sit alongside the stat block instead of under it. */
+.sy-ship-data { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 22px; margin-top: 5px; }
 .sy-ship-data .stat-chips { flex: 0 0 auto; }
-/* Size to content, do NOT stretch: a stretched table let the 1fr name column
-   open a wide gap before RANGE/ATTACK/DMG. Fit-content keeps the figures tight
-   to the name and hard left, while 1fr still lines the columns up across rows. */
-.sy-ship-data .weap-table { flex: 0 1 auto; margin-top: 0; min-width: 0; }
+.sy-ship-data .weap-lines { flex: 1 1 auto; flex-basis: auto; margin-top: 0; min-width: 200px; }
 
 /* A note replacing the list when No Limit is on (no shipyard is built in
    advance, so there is nothing to pre-buy). */

@@ -1264,6 +1264,7 @@ function handleClick(e: MouseEvent): void {
         updateList(s, id, (l) => {
           const faction = findFaction(l.fleet.factionId, s.customFactions);
           const p = l.play ?? freshPlayState(faction);
+          const ship = resolveShip(shipId, faction, s.customFactions)?.ship;
           // No Limit: any ship, any quantity - the yard never runs out.
           const total = l.unlimitedShipyards
             ? Infinity
@@ -1271,9 +1272,15 @@ function handleClick(e: MouseEvent): void {
           const req = { ...(p.req ?? {}) };
           const cur = req[shipId] ?? { play: 0, reserve: 0 };
           let { play, reserve } = cur;
+          let vp = p.vp;
           const yard = total - play - reserve;
-          if (action === "play-deploy" && yard > 0) play += 1;
-          else if (action === "play-jumpout" && play > 0) {
+          // Deploying (Requisition) pays the ship's Credit cost - Credits drop,
+          // usually into debt. Jumping out to Reserves or back In costs nothing
+          // more; you already paid when you requisitioned.
+          if (action === "play-deploy" && yard > 0) {
+            play += 1;
+            vp -= ship?.cost ?? 0;
+          } else if (action === "play-jumpout" && play > 0) {
             play -= 1;
             reserve += 1;
           } else if (action === "play-jumpin" && reserve > 0) {
@@ -1281,7 +1288,7 @@ function handleClick(e: MouseEvent): void {
             play += 1;
           } else return l;
           req[shipId] = { play, reserve };
-          return { ...l, play: { ...p, req } };
+          return { ...l, play: { ...p, req, vp } };
         }),
       );
       break;

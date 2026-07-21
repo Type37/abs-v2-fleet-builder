@@ -99,7 +99,7 @@ const PATHS: Record<string, string> = {
   // ahead; AUXILIARY is a full 180 degree half-disc. Filled (not outlined) so
   // they still read as distinct shapes at 13px.
   "arc-primary":
-    '<path fill="currentColor" stroke="none" d="M12 20 L7.5 7 A13.76 13.76 0 0 1 16.5 7 Z"/>',
+    '<path fill="currentColor" stroke="none" opacity="0.22" d="M1 20 A11 11 0 0 1 23 20 Z"/><path fill="currentColor" stroke="none" d="M12 20 L7.79 9.84 A11 11 0 0 1 16.21 9.84 Z"/>',
   "arc-aux":
     '<path fill="currentColor" stroke="none" d="M1 20 A11 11 0 0 1 23 20 Z"/>',
 };

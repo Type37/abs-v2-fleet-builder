@@ -2448,6 +2448,9 @@ function playShipyardTracker(list: SavedList, faction: Faction | undefined, cust
       const inPlay = req[cid]?.play ?? 0;
       const reserve = req[cid]?.reserve ?? 0;
       const yard = total === Infinity ? Infinity : Math.max(0, total - inPlay - reserve);
+      // `html` is trusted markup (a rendered glyph); `label` is plain text and
+      // gets escaped. The Deploy button carries the credits glyph, so it uses the
+      // html form - escaping it was printing the raw <svg> source on the button.
       const btn = (act: string, label: string, on: boolean) =>
         `<button class="sy-req-btn" data-action="${act}" data-ship="${cid}" ${on ? "" : "disabled"}>${escapeHtml(label)}</button>`;
       const yardLabel = yard === Infinity ? "∞" : String(yard);
@@ -2460,7 +2463,7 @@ function playShipyardTracker(list: SavedList, faction: Faction | undefined, cust
         <div class="pf-stats">${statChips(ship, true)}</div>
         ${weaponsTable(ship)}
         <div class="sy-req-acts">
-          ${btn("play-deploy", `Deploy · ${credits(ship.cost)}`, yard > 0)}
+          <button class="sy-req-btn" data-action="play-deploy" data-ship="${cid}" ${yard > 0 ? "" : "disabled"}>Deploy · ${credits(ship.cost)}</button>
           ${btn("play-jumpout", "Jumped out", inPlay > 0)}
           ${btn("play-jumpin", "Jump in", reserve > 0)}
         </div>
