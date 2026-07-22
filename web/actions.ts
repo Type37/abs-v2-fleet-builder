@@ -885,6 +885,24 @@ function handleClick(e: MouseEvent): void {
       location.hash = routeHash({ view: "solo-outfit", outfitId: outfit.id });
       break;
     }
+    case "solo-new-outfit-open":
+      store.setState((s) => ({ ...s, ui: { ...s.ui, soloNewOutfitOpen: true } }));
+      break;
+    case "solo-new-outfit-cancel":
+      store.setState((s) => ({ ...s, ui: { ...s.ui, soloNewOutfitOpen: undefined } }));
+      break;
+    case "solo-new-outfit-create": {
+      const nameInput = target.closest(".new-outfit-form")?.querySelector<HTMLInputElement>(".new-outfit-name");
+      const name = (nameInput?.value ?? "").trim();
+      const outfit = { ...createOutfit(), name };
+      store.setState((s) => {
+        const outfits = [...s.outfits, outfit];
+        persistOutfits(outfits);
+        return { ...s, outfits, ui: { ...s.ui, soloNewOutfitOpen: undefined, soloTab: "outfit" } };
+      });
+      location.hash = routeHash({ view: "solo-outfit", outfitId: outfit.id });
+      break;
+    }
     case "duplicate-outfit": {
       const id = target.dataset["id"];
       const src = state.outfits.find((o) => o.id === id);
@@ -1896,6 +1914,14 @@ export function wireActions(root: HTMLElement): void {
   // through the same click path so the core "add to fleet" action is reachable
   // without a mouse. Native controls handle their own keys and are left alone.
   root.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const t = e.target as HTMLElement | null;
+      if (t?.classList.contains("new-outfit-name")) {
+        e.preventDefault();
+        (t.closest(".new-outfit-form")?.querySelector<HTMLButtonElement>('[data-action="solo-new-outfit-create"]'))?.click();
+        return;
+      }
+    }
     if (e.key !== "Enter" && e.key !== " ") return;
     const el = (e.target as HTMLElement | null)?.closest<HTMLElement>('[role="button"][data-action]');
     if (!el || el.tagName === "BUTTON" || el.tagName === "A") return;

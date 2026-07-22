@@ -198,6 +198,8 @@ export interface AppState {
     shipFilter?: ShipFilter;
     /** The Create-army panel is open on the Fleets page. */
     showCreate?: boolean;
+    /** Solo: the new-outfit setup form is open. */
+    soloNewOutfitOpen?: boolean;
     /** Builder credits popover: the Custom amount field is revealed. */
     limitCustomOpen?: boolean;
     /** An open modal dialog. */

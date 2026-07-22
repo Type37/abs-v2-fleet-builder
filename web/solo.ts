@@ -94,7 +94,17 @@ export function soloListView(state: AppState): string {
     <section class="commission-panel">
       <div class="solo-panel-head">
         <h2 class="panel-title">Your outfits</h2>
-        <button class="cta-btn" data-action="new-outfit">${icon("plus", 18)} Start a new outfit</button>
+        ${
+          state.ui.soloNewOutfitOpen
+            ? `<div class="new-outfit-form">
+                <input class="new-outfit-name" type="text" placeholder="Outfit name" autocomplete="off" data-action="solo-new-outfit-name" />
+                <div class="new-outfit-acts">
+                  <button class="cta-btn" data-action="solo-new-outfit-create">${icon("plus", 15)} Start</button>
+                  <button class="ghost-btn" data-action="solo-new-outfit-cancel">Cancel</button>
+                </div>
+              </div>`
+            : `<button class="cta-btn" data-action="solo-new-outfit-open">${icon("plus", 18)} Start a new outfit</button>`
+        }
       </div>
       ${
         outfits.length === 0

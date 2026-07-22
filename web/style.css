@@ -1642,7 +1642,10 @@ button { font-family: inherit; }
 .solo-primer { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--ink-2); }
 .solo-primer strong { color: var(--ink); }
 .solo-tagline { font-family: var(--serif); font-size: 16px; line-height: 1.55; color: var(--ink-2); max-width: 70ch; margin: 6px 0 0; }
-.solo-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.solo-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.new-outfit-form { display: flex; flex-direction: column; gap: 8px; }
+.new-outfit-name { width: 220px; max-width: 100%; }
+.new-outfit-acts { display: flex; gap: 8px; align-items: center; }
 .solo-empty { margin-top: 10px; display: flex; flex-direction: column; gap: 16px; max-width: 70ch; color: var(--ink-2); font-size: 14px; }
 /* Outfit cards: campaign status at a glance - a debt progress bar, games left. */
 .outfit-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
@@ -1804,9 +1807,6 @@ button { font-family: inherit; }
   .ru-details .stat-chips {
     gap: 0 9px;
   }
-  /* Via .stat-chips, not the container alone: `.builder .stat-chip` is declared
-     later in this file at the same specificity and would otherwise win on
-     order. Three classes beats two. */
   .builder .stat-chips .stat-chip,
   .ship-row .stat-chips .stat-chip,
   .roster-unit .stat-chips .stat-chip,
@@ -2372,10 +2372,6 @@ button { font-family: inherit; }
 .personnel-row.is-full { opacity: 0.55; }
 .owned-tag { font-family: var(--display); font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--go); white-space: nowrap; }
 
-/* stat chips lose their boxes here: a heavy black tabular stat line */
-.builder .stat-chip { border: none; padding: 0 7px 0 0; gap: 4px; font-size: 14px; font-weight: 800; }
-.builder .stat-val { color: var(--ink); font-weight: 800; }
-.builder .stat-lbl { color: var(--ink); font-weight: 800; }
 /* data text stays black and readable, never gray-and-thin */
 .builder .ship-weapons, .builder .ru-weap { color: var(--ink); font-size: 13px; font-weight: 500; line-height: 1.4; }
 .builder .ru-sub { color: var(--ink); font-weight: 600; }
