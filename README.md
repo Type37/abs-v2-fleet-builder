@@ -29,7 +29,7 @@ default name for any fleet from three parts:
 
 ```
 [ordinal] [adjective] [faction title-noun]
-   3rd      Ravening        Shoal
+   3rd      Crushing        Horde
 ```
 
 The **ordinal** counts up per faction (1st, 2nd, 3rd Fleet…), the **title** is a
@@ -39,36 +39,39 @@ from a bank themed to the faction's character.
 ```ts
 import { fleetName, randomFleetName } from "./src/fleet-names.ts";
 
-fleetName("vyke", 1);              // "1st Ravening Shoal"   (deterministic)
-fleetName("gen-omega", 7);         // "7th Vengeful Crusade"
+fleetName("vyke", 1);              // "1st Crushing Horde"   (deterministic)
+fleetName("gen-omega", 7);         // "7th Pitiless Crusade"
 randomFleetName("megamart", 4);    // e.g. "4th Doorstep Convoy"
 randomFleetName("megamart", 4, 12345); // seeded → reproducible
 fleetName("my-homebrew", 1);       // "1st Wandering Fleet"  (default fallback)
 ```
 
 `fleetName()` is deterministic (the Nth fleet of a faction always gets the same
-name); `randomFleetName()` picks any adjective, optionally seeded. Each faction's
-vocabulary — title noun + adjective bank:
+name); `randomFleetName()` picks any adjective, optionally seeded.
 
-| Faction (id) | Title | Sample adjectives |
-| --- | --- | --- |
-| The Vyke (`vyke`) | **Shoal** | Ravening · Boiling · Seething · Voracious · Teeming |
-| AEGIS (`aegis`) | **Wardens** | Sanctioned · Hardened · Vigilant · Encrypted · Failsafe |
-| Gen Ω (`gen-omega`) | **Crusade** | Ascendant · Martyred · Wrathful · Undying · Sacred |
-| The Alliance (`alliance`) | **Coalition** | Fractious · Manifold · Sovereign · Discordant · Myriad |
-| Golem Mega-Systems (`golem-mega-systems`) | **Swarm** | Harvesting · Grinding · Tireless · Strip · Consuming |
-| The Discord (`the-discord`) | **Armada** | Ace · Screaming · Renegade · Maverick · Hotshot |
-| The Ordinate (`the-ordinate`) | **Communion** | Foreseen · Ordained · Calculated · Prophetic · Anointed |
-| The Unity (`the-unity`) | **Vanguard** | United · Onward · Marching · Steadfast · Resolute |
-| Galactic Credit (`galactic-credit`) | **Venture** | Liquidation · Leveraged · Compound · Hostile · Dividend |
-| Heavy Industries (`heavy-industries`) | **Combine** | Ironclad · Forged · Riveted · Tempered · Reinforced |
-| Megamart (`megamart`) | **Convoy** | Doorstep · Same-Day · Express · Bulk · Rush |
-| News Inc. (`news-inc`) | **Dispatch** | Breaking · Live · Primetime · Headline · Viral |
-| *unknown / custom* | **Fleet** | Wandering · Roaming · Questing · Ranging · Errant |
+Where an ABS faction maps cleanly onto an *Endless Space 2* faction, the title
+noun **and** adjective bank are lifted straight from ES2 (the **ES2 source**
+column below). The rest keep bespoke banks.
 
-Each bank holds ten adjectives; the table shows the first five. To add or tweak a
-faction, edit `FLEET_NAME_BANKS` in `src/fleet-names.ts` (key it by the faction's
-`id`). Covered by `test/fleet-names.test.ts`.
+| Faction (id) | Title | ES2 source | Sample adjectives |
+| --- | --- | --- | --- |
+| The Vyke (`vyke`) | **Horde** | Cravers (zerg swarm) | Crushing · Burning · Ravaging · Slaughtering · Devouring |
+| AEGIS (`aegis`) | **Wardens** | Riftborn (defence AI) | Void · Dark · Zero · Eternal · Logical |
+| Gen Ω (`gen-omega`) | **Crusade** | Vodyani (zealots) | Noble · Glorious · Vengeful · Remorseless · Merciless |
+| The Alliance (`alliance`) | **Coalition** | — | Fractious · Manifold · Sovereign · Discordant · Myriad |
+| Golem Mega-Systems (`golem-mega-systems`) | **Swarm** | — | Harvesting · Grinding · Tireless · Strip · Consuming |
+| The Discord (`the-discord`) | **Embers** | Unfallen (rebellion) | Glowing · Flaming · Blazing · Scorching · Ardent |
+| The Ordinate (`the-ordinate`) | **Communion** | — | Foreseen · Ordained · Calculated · Prophetic · Anointed |
+| The Unity (`the-unity`) | **Navy** | United Empire (the Empire) | Heroes · Patriots · Saviors · Defenders · Conquerors |
+| Galactic Credit (`galactic-credit`) | **Venture** | Lumeris (finance) | Liquidation · Acquisition · Takeover · Leverage · Seizure |
+| Heavy Industries (`heavy-industries`) | **Hammer** | Hissho (metals/alloys) | Iron · Steel · Lead · Cobalt · Gold |
+| Megamart (`megamart`) | **Convoy** | Lumeris (title only) | Doorstep · Same-Day · Express · Bulk · Rush |
+| News Inc. (`news-inc`) | **Dispatch** | — | Breaking · Live · Primetime · Headline · Viral |
+| *unknown / custom* | **Fleet** | — | Wandering · Roaming · Questing · Ranging · Errant |
+
+Each bank holds ten adjectives; the table shows five. To add or tweak a faction,
+edit `FLEET_NAME_BANKS` in `src/fleet-names.ts` (key it by the faction's `id`).
+Covered by `test/fleet-names.test.ts`.
 
 ## Running locally
 

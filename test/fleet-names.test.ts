@@ -27,7 +27,7 @@ test("toOrdinal handles ones, teens, and twenties", () => {
 test("fleetName is deterministic and well-formed", () => {
   assert.equal(fleetName("vyke", 1), fleetName("vyke", 1));
   const name = fleetName("vyke", 1);
-  assert.match(name, /^1st \S.* Shoal$/);
+  assert.match(name, /^1st \S.* Horde$/);
 });
 
 test("fleetName cycles the adjective bank and keeps counting ordinals", () => {

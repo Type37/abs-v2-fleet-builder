@@ -20,9 +20,9 @@
 //
 //   // Deterministic: the Nth fleet you raise for a faction always gets the
 //   // same name. Great for stable, repeatable rosters and tests.
-//   fleetName("vyke", 1);   // -> "1st Ravening Shoal"
-//   fleetName("vyke", 2);   // -> "2nd Boiling Shoal"
-//   fleetName("aegis", 1);  // -> "1st Sanctioned Wardens"
+//   fleetName("vyke", 1);   // -> "1st Crushing Horde"
+//   fleetName("vyke", 2);   // -> "2nd Burning Horde"
+//   fleetName("aegis", 1);  // -> "1st Void Wardens"
 //
 //   // Random: pick any adjective from the faction's bank. Pass a seed for a
 //   // reproducible-but-shuffled result, or omit it for true randomness.
@@ -63,38 +63,52 @@ export function toOrdinal(n: number): string {
 
 /**
  * Per-faction fleet vocabularies, keyed by faction id (see
- * src/data/factions/*). Each title/adjective set is themed to the faction's
- * rules text and flavour.
+ * src/data/factions/*).
+ *
+ * Where an ABS faction maps cleanly onto an Endless Space 2 faction, we lift
+ * ES2's title noun AND its adjective bank wholesale (marked "ES2:" below):
+ *
+ *   Vyke (zerg swarm)        -> Cravers  "Horde"
+ *   The Unity (the Empire)   -> United Empire "Navy"
+ *   Gen Omega (zealots)      -> Vodyani  "Crusade"
+ *   AEGIS (defence AI)       -> Riftborn "Wardens"
+ *   Galactic Credit (finance)-> Lumeris  "Venture"
+ *   Heavy Industries (metal) -> Hissho   "Hammer"
+ *   The Discord (rebellion)  -> Unfallen "Embers"
+ *   Megamart (logistics)     -> Lumeris  "Convoy"  (title only; Lumeris'
+ *                               Convoy adjectives are proper names, so we keep
+ *                               retail-themed adjectives instead)
+ *
+ * The remaining factions have no clean ES2 analog and keep bespoke banks.
  */
 export const FLEET_NAME_BANKS: Record<string, FleetNameBank> = {
   // --- Armageddon era ---------------------------------------------------
   vyke: {
-    // Overwhelm: swarming aquatic predators.
-    title: "Shoal",
+    // Overwhelm: zerg-like swarm. ES2: Cravers.
+    title: "Horde",
     adjectives: [
-      "Ravening", "Boiling", "Seething", "Voracious", "Teeming",
-      "Frenzied", "Swarming", "Gnashing", "Writhing", "Engulfing",
+      "Crushing", "Burning", "Ravaging", "Slaughtering", "Consuming",
+      "Harvesting", "Slaying", "Thrashing", "Devouring", "Ruining",
     ],
   },
   aegis: {
-    // Protocol Shards: cold, networked AI defence grid. "Wardens" (cf. ES2's
-    // Riftborn) reads as a guarding formation.
+    // Protocol Shards: cold, networked AI defence grid. ES2: Riftborn.
     title: "Wardens",
     adjectives: [
-      "Sanctioned", "Hardened", "Vigilant", "Encrypted", "Failsafe",
-      "Sentinel", "Recursive", "Absolute", "Unyielding", "Zero-Fault",
+      "Void", "Dark", "Zero", "Eternal", "Logical",
+      "Forever", "Null", "Vacuum", "Binary", "Transcendental",
     ],
   },
   "gen-omega": {
-    // Martyrs' Fury: doomed zealot generation.
+    // Martyrs' Fury: doomed zealot generation. ES2: Vodyani (Crusade).
     title: "Crusade",
     adjectives: [
-      "Ascendant", "Martyred", "Wrathful", "Undying", "Immolate",
-      "Sacred", "Vengeful", "Rapturous", "Doomsworn", "Final",
+      "Noble", "Glorious", "Vengeful", "Remorseless", "Implacable",
+      "Unyielding", "Pitiless", "Merciless", "Ruthless", "Virtuous",
     ],
   },
   alliance: {
-    // Fractious Coalition of non-human worlds.
+    // Fractious Coalition of non-human worlds. No clean ES2 analog.
     title: "Coalition",
     adjectives: [
       "Fractious", "Manifold", "Sovereign", "Discordant", "Allied",
@@ -104,7 +118,7 @@ export const FLEET_NAME_BANKS: Record<string, FleetNameBank> = {
 
   // --- Age of Unity era -------------------------------------------------
   "golem-mega-systems": {
-    // Drone Swarms: strip-mining automata.
+    // Drone Swarms: strip-mining automata. No clean ES2 analog.
     title: "Swarm",
     adjectives: [
       "Harvesting", "Grinding", "Tireless", "Strip", "Rendering",
@@ -112,15 +126,15 @@ export const FLEET_NAME_BANKS: Record<string, FleetNameBank> = {
     ],
   },
   "the-discord": {
-    // Aces and Heroes: hotshot fighter jocks.
-    title: "Armada",
+    // Aces and Heroes: the rebellion. ES2: Unfallen (Embers).
+    title: "Embers",
     adjectives: [
-      "Ace", "Screaming", "Renegade", "Daredevil", "Maverick",
-      "Reckless", "Gilded", "Hotshot", "Legendary", "Fearless",
+      "Glowing", "Flaming", "Blazing", "Transient", "Scorching",
+      "Gleaming", "Burning", "Incandescent", "Ardent", "Dying",
     ],
   },
   "the-ordinate": {
-    // Predictive Algorithms: technocratic prophets.
+    // Predictive Algorithms: technocratic prophets. No clean ES2 analog.
     title: "Communion",
     adjectives: [
       "Foreseen", "Ordained", "Calculated", "Prophetic", "Certain",
@@ -128,34 +142,34 @@ export const FLEET_NAME_BANKS: Record<string, FleetNameBank> = {
     ],
   },
   "the-unity": {
-    // Mobile Force: fast-moving unified column.
-    title: "Vanguard",
+    // Mobile Force: the Empire. ES2: United Empire (Navy).
+    title: "Navy",
     adjectives: [
-      "United", "Onward", "Marching", "Steadfast", "Resolute",
-      "Bannered", "Foremost", "Rallied", "Unbroken", "Advancing",
+      "Heroes", "Patriots", "Saviors", "Defenders", "Paragons",
+      "Conquerors", "Victors", "Protectors", "Vanquishers", "Peoples",
     ],
   },
 
   // --- Hypergrowth era (corporate factions) -----------------------------
   "galactic-credit": {
-    // Credit Control: predatory finance. "Venture" mirrors ES2's Lumeris.
+    // Credit Control: predatory finance. ES2: Lumeris (Venture).
     title: "Venture",
     adjectives: [
-      "Liquidation", "Leveraged", "Compound", "Foreclosure", "Aggregate",
-      "Blue-Chip", "Hostile", "Prime", "Dividend", "Insolvent",
+      "Liquidation", "Acquisition", "Takeover", "Leverage", "Repossession",
+      "Requisition", "Seizure", "Procurement", "Arrogation", "Possession",
     ],
   },
   "heavy-industries": {
-    // Tough: heavy industrial combine.
-    title: "Combine",
+    // Tough: heavy industry. ES2: Hissho (Hammer) - a bank of metals/alloys.
+    title: "Hammer",
     adjectives: [
-      "Ironclad", "Forged", "Riveted", "Tempered", "Overbuilt",
-      "Blastproof", "Load-Bearing", "Reinforced", "Cast-Iron", "Unbreakable",
+      "Iron", "Steel", "Lead", "Cobalt", "Bronze",
+      "Nickel", "Kovar", "Invar", "Melchior", "Gold",
     ],
   },
   megamart: {
-    // Time Is Money: hyper-efficient retail logistics. "Convoy" mirrors ES2's
-    // Lumeris and fits a supply fleet.
+    // Time Is Money: retail logistics. ES2: Lumeris "Convoy" (title only; the
+    // Lumeris Convoy adjectives are proper names, so we keep retail flavour).
     title: "Convoy",
     adjectives: [
       "Doorstep", "Same-Day", "Express", "Bulk", "Discount",
@@ -163,8 +177,8 @@ export const FLEET_NAME_BANKS: Record<string, FleetNameBank> = {
     ],
   },
   "news-inc": {
-    // Live News Feeds: 24/7 media war machine. "Dispatch" doubles as a news
-    // dispatch and a fleet sent out on assignment.
+    // Live News Feeds: 24/7 media war machine. No clean ES2 analog. "Dispatch"
+    // doubles as a news dispatch and a fleet sent out on assignment.
     title: "Dispatch",
     adjectives: [
       "Breaking", "Live", "Primetime", "Headline", "Exclusive",
