@@ -1617,7 +1617,7 @@ button { font-family: inherit; }
    the full width above the two-column body. */
 .solo-head { grid-column: 1 / -1; }
 .solo-head .panel-note { max-width: 72ch; margin-bottom: 0; }
-.solo-main { align-items: start; }
+.solo-main { align-items: start; grid-template-columns: 1fr; max-width: 760px; }
 /* Pilot class: a prominent three-way icon picker, not a dropdown. The class
    art is white (drawn for dark grounds), so each icon sits on a dark chip that
    stays dark even when its option is selected, keeping the art legible. */
@@ -1649,7 +1649,12 @@ button { font-family: inherit; }
 .solo-empty { margin-top: 10px; display: flex; flex-direction: column; gap: 16px; max-width: 70ch; color: var(--ink-2); font-size: 14px; }
 /* Outfit cards: campaign status at a glance - a debt progress bar, games left. */
 .outfit-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
-.outfit-card { border: 1px solid var(--hair); background: var(--paper); display: flex; flex-direction: column; }
+.outfit-card {
+  border: 1px solid var(--hair); border-top: 3px solid var(--blue); background: var(--paper); display: flex; flex-direction: column;
+  animation: fleet-card-in 0.34s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+@media (prefers-reduced-motion: reduce) { .outfit-card { animation: none; } }
 .outfit-card-main { display: flex; align-items: center; gap: 12px; padding: 14px 16px 10px; text-decoration: none; color: inherit; }
 .outfit-card-main:hover .outfit-card-name { color: var(--blue); }
 .outfit-card-emblem { flex-shrink: 0; color: var(--blue); }

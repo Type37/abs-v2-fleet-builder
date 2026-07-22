@@ -12,24 +12,11 @@ import {
   PILOT_PERKS,
 } from "../src/data/junkspace.ts";
 
-// Each pilot class's starting ability (Gunner "Hot Shot", etc.) - the base
-// perk, not the campaign unlocks in PERKS_BY_CLASS.
+// Each pilot class's starting ability (Gunner "Hot Shot", etc.).
 const BASE_PERK: Record<string, { perkName: string; text: string }> = Object.fromEntries(
   PILOT_PERKS.map((p) => [p.class, { perkName: p.perkName, text: p.text }]),
 );
-import {
-  JUNKSPACE_JOBS,
-  JUNKSPACE_PIRATES,
-  PIRATE_RULE,
-  RANDOM_BEHAVIOUR,
-  GLITCH_BLIP,
-  BEHAVIOUR_ROUTINES,
-  SOLO_PHASES,
-  SOLO_SETUP_STEPS,
-  SOLO_ALERT_RULES,
-  SOLO_BLIP_RULES,
-  PERKS_BY_CLASS,
-} from "../src/data/junkspace-solo.ts";
+import { SOLO_PHASES, SOLO_ALERT_RULES, PERKS_BY_CLASS } from "../src/data/junkspace-solo.ts";
 import { escapeHtml, formatDate, ruleText } from "./format.ts";
 import { icon, statChips } from "./icons.ts";
 import { emblemView, weaponsTable } from "./render.ts";
@@ -58,13 +45,13 @@ export function outfitCost(o: SavedOutfit): number {
 export function soloListView(state: AppState): string {
   const outfits = [...state.outfits].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const cards = outfits
-    .map((o) => {
+    .map((o, i) => {
       const cleared = o.debtK <= 0;
       const paid = Math.max(0, STARTING_DEBT_K - Math.max(0, o.debtK));
       const debtPct = Math.round((paid / STARTING_DEBT_K) * 100);
       const gamesLeft = Math.max(0, DEBT_CLEAR_GAMES - o.gamesPlayed);
       return `
-      <article class="outfit-card">
+      <article class="outfit-card" style="--i:${i}">
         <a class="outfit-card-main" href="#/solo/${o.id}">
           <span class="outfit-card-emblem">${emblemView(o, 44)}</span>
           <span class="outfit-card-id">
@@ -122,7 +109,7 @@ export function soloListView(state: AppState): string {
 function tabBar(o: SavedOutfit, tab: SoloTab): string {
   const t = (id: SoloTab, label: string) =>
     `<button class="solo-tab ${tab === id ? "selected" : ""}" data-action="solo-tab" data-tab="${id}">${label}</button>`;
-  return `<nav class="solo-tabs">${t("outfit", "Outfit")}${t("play", "Play & Roller")}${t("campaign", "Campaign")}${t("reference", "Reference")}</nav>`;
+  return `<nav class="solo-tabs">${t("outfit", "Outfit")}${t("play", "Play & Roller")}${t("campaign", "Campaign")}</nav>`;
 }
 
 function soloShipCatalog(): string {
@@ -341,67 +328,6 @@ function campaignTab(o: SavedOutfit): string {
   </div>`;
 }
 
-// --- Reference tab ----------------------------------------------------------
-
-function referenceTab(): string {
-  const steps = SOLO_SETUP_STEPS.map((s) => `<li><strong>${escapeHtml(s.name)}.</strong> ${ruleText(s.text)}</li>`).join("");
-  const phases = SOLO_PHASES.map((p) => `<li><strong>${escapeHtml(p.name)}.</strong> ${ruleText(p.text)}</li>`).join("");
-  const blips = SOLO_BLIP_RULES.map((r) => `<li>${ruleText(r)}</li>`).join("");
-  const behaviour = BEHAVIOUR_ROUTINES.map((r) => `<li>${ruleText(r)}</li>`).join("");
-  const rollRows = (rows: typeof RANDOM_BEHAVIOUR) =>
-    rows.map((r) => `<tr><td class="cell-num">${r.roll}</td><td>${ruleText(r.result)}${r.detail ? `<br><span class="muted">${ruleText(r.detail)}</span>` : ""}</td></tr>`).join("");
-  const jobs = JUNKSPACE_JOBS.map(
-    (j) => `<article class="ref-item"><h4>${j.key}. ${escapeHtml(j.name)}</h4><p>${ruleText(j.text)}</p></article>`,
-  ).join("");
-  const pirates = JUNKSPACE_PIRATES.map(
-    (p) => `<tr><td class="cell-num">${p.blip}</td><td>${escapeHtml(p.name)}</td><td>${p.mass}</td><td>${p.thrust}"</td><td>${p.silhouette}</td><td>${p.shields}</td><td>${escapeHtml(p.primary)}</td><td>${escapeHtml(p.auxiliary)}</td></tr>`,
-  ).join("");
-  const perkBlock = (name: string, list: readonly { n: number; name: string; text: string }[]) =>
-    `<h4 class="ref-sub">${name}</h4><ul class="rule-list small">${list.map((p) => `<li><strong>${p.n}. ${escapeHtml(p.name)}:</strong> ${ruleText(p.text)}</li>`).join("")}</ul>`;
-
-  return `
-  <div class="reference">
-    <section class="ref-section">
-      <h3 class="sheet-section">Getting set up</h3>
-      <ul class="rule-list">${steps}</ul>
-    </section>
-    <section class="ref-section">
-      <h3 class="sheet-section">The round</h3>
-      <ul class="rule-list">${phases}</ul>
-    </section>
-    <section class="ref-section">
-      <h3 class="sheet-section">Alert Level</h3>
-      <ul class="rule-list">${SOLO_ALERT_RULES.map((r) => `<li>${ruleText(r)}</li>`).join("")}</ul>
-    </section>
-    <section class="ref-section">
-      <h3 class="sheet-section">Blips</h3>
-      <ul class="rule-list">${blips}</ul>
-      <div class="ref-tables">
-        <div><h4 class="ref-sub">Random behaviour (D6)</h4><table class="ref-table"><tbody>${rollRows(RANDOM_BEHAVIOUR)}</tbody></table></div>
-        <div><h4 class="ref-sub">Glitch a Blip (D6)</h4><table class="ref-table"><tbody>${rollRows(GLITCH_BLIP)}</tbody></table></div>
-      </div>
-    </section>
-    <section class="ref-section">
-      <h3 class="sheet-section">Hostile behaviour routines</h3>
-      <ul class="rule-list">${behaviour}</ul>
-    </section>
-    <section class="ref-section">
-      <h3 class="sheet-section">Aggressors</h3>
-      <div class="table-scroll"><table class="ref-table pirates"><thead><tr><th>Blip</th><th>Class</th><th>Mass</th><th>Thrust</th><th>Sil</th><th>Shields</th><th>Primary</th><th>Auxiliary</th></tr></thead><tbody>${pirates}</tbody></table></div>
-      <p class="print-note">${ruleText(PIRATE_RULE)}</p>
-    </section>
-    <section class="ref-section">
-      <h3 class="sheet-section">The Jobs</h3>
-      <div class="ref-jobs">${jobs}</div>
-    </section>
-    <section class="ref-section">
-      <h3 class="sheet-section">Pilot perks</h3>
-      ${perkBlock("Gunner", PERKS_BY_CLASS.Gunner)}
-      ${perkBlock("Hauler", PERKS_BY_CLASS.Hauler)}
-      ${perkBlock("Junker", PERKS_BY_CLASS.Junker)}
-    </section>
-  </div>`;
-}
 
 export function soloOutfitView(state: AppState): string {
   const o = activeOutfit(state);
@@ -411,8 +337,7 @@ export function soloOutfitView(state: AppState): string {
   let body = "";
   if (tab === "outfit") body = outfitTab(o);
   else if (tab === "play") body = `<main class="solo-body">${playTab(state, o)}</main>`;
-  else if (tab === "campaign") body = `<main class="solo-body">${campaignTab(o)}</main>`;
-  else body = `<main class="solo-body">${referenceTab()}</main>`;
+  else body = `<main class="solo-body">${campaignTab(o)}</main>`;
 
   return `
   <section class="setup-band">

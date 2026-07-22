@@ -234,7 +234,7 @@ function readEmblemImage(file: File): Promise<string> {
       const img = new Image();
       img.onerror = () => reject(new Error("decode failed"));
       img.onload = () => {
-        const size = 240;
+        const size = 480;
         const canvas = document.createElement("canvas");
         canvas.width = size;
         canvas.height = size;
