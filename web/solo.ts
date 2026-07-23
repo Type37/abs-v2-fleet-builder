@@ -215,7 +215,7 @@ function rollerPanel(state: AppState): string {
   return `
   <section class="solo-card">
     <h3 class="roster-section">The roller</h3>
-    <p class="panel-note">Roll for the automated enemy and setup. Each roll shows the exact rule.</p>
+    <p class="panel-note">Roll for the automated enemy and setup.</p>
     <div class="roller-buttons">
       ${btn("behaviour", "Hostile behaviour (D6)")}
       ${btn("glitch", "Glitch a Blip (D6)")}

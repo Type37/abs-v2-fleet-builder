@@ -467,7 +467,7 @@ function tutorialCallout(state: AppState): string {
   <aside class="onboard">
     <div class="onboard-main">
       <p class="onboard-title">New to A Billion Suns?</p>
-      <p class="onboard-note">Basic Training loads a ready-made fleet and walks you through a game, step by step. Start with the Combat Simulator.</p>
+      <p class="onboard-note">Start with the Combat Simulator.</p>
       <div class="onboard-options">
         <button class="onboard-opt" data-action="new-training" data-mode="combat-simulator">
           <span class="oo-name">${icon("book", 15)} Combat Simulator</span>
@@ -2922,7 +2922,7 @@ function shipsView(state: AppState): string {
   <main class="compendium">
     <header class="comp-head">
       <h1 class="page-title">Ship Compendium</h1>
-      <p class="panel-note">Every ship in the game. Grouped by faction, or sort by any stat to compare across the whole galaxy.</p>
+      <p class="panel-note">Every ship in the game.</p>
     </header>
 
     <div class="comp-filters">
@@ -3226,7 +3226,7 @@ function learnView(state: AppState): string {
     // 1 - Your fleet
     `<div class="learn-screen">
       <h1 class="learn-title">The Training Fleet</h1>
-      <p class="learn-lede">This is a sample fleet that can be used in the tutorials. Here&rsquo;s the ship and the relevant statistics:</p>
+      <p class="learn-lede">This is a sample fleet that can be used in the tutorials.</p>
       ${learnFleetTable()}
       <div class="learn-stat-defs">
         <p><b>Mass</b> is a broad measure of the size and bulk of a ship. Throughout the rules, when you see the icon ${icon("stat-mass", 15, "stat-ico stat-ico-mass")}, replace that with the value of the Mass of the unit&rsquo;s ship class. If a rule refers to the Combined Mass of ships, sum the ${icon("stat-mass", 15, "stat-ico stat-ico-mass")} of all the related individual ships to form a total.</p>
