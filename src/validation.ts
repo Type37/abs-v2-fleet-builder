@@ -212,8 +212,8 @@ export function validateFleet(fleet: Fleet, catalog: Catalog = defaultCatalog): 
       severity: "error",
       message:
         hvpMin === hvpMax
-          ? `A fleet must select exactly ${hvpMin} HVP (got ${fleet.hvp.length}).`
-          : `${faction.name} must select between ${hvpMin} and ${hvpMax} HVP (got ${fleet.hvp.length}).`,
+          ? `This fleet has the wrong number of High-Value Personnel.`
+          : `${faction.name} has the wrong number of High-Value Personnel.`,
     });
   }
 

@@ -490,9 +490,8 @@ function tutorialCallout(state: AppState): string {
 function homeView(state: AppState): string {
   // Rows are links, except when an action is given (Learn to Play launches a
   // guided tutorial battle rather than routing to a dead page).
-  const row = (n: string, href: string, name: string, desc: string, action?: string, extra = "") => {
+  const row = (href: string, name: string, desc: string, action?: string, extra = "") => {
     const inner = `
-      <span class="index-num">${n}</span>
       <span class="index-main">
         <span class="index-name">${name}</span>
         <span class="index-desc">${desc}</span>
@@ -517,11 +516,11 @@ function homeView(state: AppState): string {
     <div class="index-col">
       ${tutorialCallout(state)}
       <nav class="index">
-        ${row("01", "#/fleets", "Fleets", "Build, save, print, and share army lists for any faction and era.")}
-        ${row("02", "#/solo", "Solo Play", "Play the Junkspace in solo/campaign mode.")}
-        ${row("03", "#/ships", "Ship Compendium", "Compare all ships and stats.")}
-        ${row("04", "#/learn", "Learn to Play", "A guided walkthrough of the rules.")}
-        ${row("05", "#/foundry", "Custom Rules", "Design your own factions, ship classes, and personnel.")}
+        ${row("#/fleets", "Fleets", "Build, save, print, and share army lists for any faction and era.")}
+        ${row("#/solo", "Solo Play", "Play the Junkspace in solo/campaign mode.")}
+        ${row("#/ships", "Ship Compendium", "Compare all ships and stats.")}
+        ${row("#/learn", "Learn to Play", "A guided walkthrough of the rules.")}
+        ${row("#/foundry", "Custom Rules", "Design your own factions, ship classes, and personnel.")}
       </nav>
     </div>
     <aside class="index-book">
@@ -569,7 +568,7 @@ function fleetsView(state: AppState): string {
           <span class="fleet-card-actions">
             <button class="card-act" data-action="duplicate-list" data-id="${l.id}" title="Duplicate this fleet" aria-label="Duplicate this fleet">${icon("ix-duplicate", 18)}</button>
             <button class="card-act" data-action="share-list" data-id="${l.id}" title="Copy a share link" aria-label="Copy a share link">${icon("ix-share", 18)}</button>
-            <button class="card-act is-danger" data-action="delete-list" data-id="${l.id}" title="Delete this fleet" aria-label="Delete this fleet">${icon("ix-trash", 18)}</button>
+            <button class="card-act card-act-labeled is-danger" data-action="delete-list" data-id="${l.id}" title="Delete this fleet" aria-label="Delete this fleet">${icon("ix-trash", 18)}<span class="card-act-text">Delete</span></button>
           </span>
         </div>
       </article>`;
@@ -2024,7 +2023,7 @@ function foundryListView(state: AppState): string {
   ${topbar()}
   <main class="foundry-main">
     <h1 class="page-title">Custom Rules</h1>
-    <p class="panel-note">You can use this section to <strong>create your own factions</strong>. It may be easiest to just take an existing faction and rename certain elements; for example, taking the Unity and renaming them to "The Empire."</p>
+    <p class="panel-note">It may be easiest to just take an existing faction and rename certain elements; for example, taking the Unity and renaming them to "The Empire."</p>
     <div class="foundry-actions">
       <details class="cf-new-picker">
         <summary class="cta-btn">${icon("plus", 18)} Forge a new faction</summary>
@@ -3241,7 +3240,6 @@ function learnView(state: AppState): string {
     // 0 - Mission brief
     `<div class="learn-screen">
       <h1 class="learn-title">Your first battle</h1>
-      <p class="learn-lede">This step-by-step guide will explain to you the basics of playing &ldquo;A Billion Suns.&rdquo; You can read through the basics to get a feel for it, then dive in to the &ldquo;Combat Simulator&rdquo; at the end by going to the &ldquo;Battle&rdquo; section up top.</p>
     </div>`,
     // 1 - Your fleet
     `<div class="learn-screen">

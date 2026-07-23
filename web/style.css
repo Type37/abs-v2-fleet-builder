@@ -4,9 +4,32 @@
    International Typographic Style, pushed hard. White ground, commanding
    blocks of NASA insignia blue (#0b3d91) and rocket red (#fc3d21), thin black
    Swiss rules, a strict grid. Type: Archivo (heavy grotesque) for display,
-   Libre Franklin for interface, Source Serif 4 for rules prose. Square
+   Libre Franklin for interface, Spectral for rules prose. Square
    corners, flat, no gradients, no drop shadows, no monospace, no gray mush.
    =========================================================================== */
+
+/* All faces are self-hosted (woff2, ./fonts), so nothing renders-blocks on a
+   third-party CDN and a cold visitor arriving from a shared fleet link gets the
+   real type on first paint. Weights are exactly the ones the app uses, no more:
+   Archivo 600-900 (display), Libre Franklin 400-800 + italics (interface),
+   Spectral 400/600 + italic (rules prose and flavour). All three are OFL.
+   font-display: swap everywhere - a flash of fallback beats invisible text. */
+@font-face { font-family: "Archivo"; src: url("./fonts/archivo-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Archivo"; src: url("./fonts/archivo-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Archivo"; src: url("./fonts/archivo-800.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Archivo"; src: url("./fonts/archivo-900.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; }
+
+@font-face { font-family: "Libre Franklin"; src: url("./fonts/libre-franklin-regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Libre Franklin"; src: url("./fonts/libre-franklin-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Libre Franklin"; src: url("./fonts/libre-franklin-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Libre Franklin"; src: url("./fonts/libre-franklin-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Libre Franklin"; src: url("./fonts/libre-franklin-800.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Libre Franklin"; src: url("./fonts/libre-franklin-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Libre Franklin"; src: url("./fonts/libre-franklin-600italic.woff2") format("woff2"); font-weight: 600; font-style: italic; font-display: swap; }
+
+@font-face { font-family: "Spectral"; src: url("./fonts/spectral-regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Spectral"; src: url("./fonts/spectral-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Spectral"; src: url("./fonts/spectral-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 
 /* Terminal Grotesque Open (Velvetyne / Studio Triple, OFL): used only for the
    WarLore signature in the footer credit. */
@@ -65,7 +88,7 @@
   --sans: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
   /* Condensed face for dense labels (stat chips), so a word costs little width. */
   --narrow: "Archivo Narrow", "Roboto Condensed", "Liberation Sans Narrow", "Arial Narrow", var(--sans);
-  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
   /* Easy, common, friendly: the fleet-name field only, not the whole app's type system. */
   --ios: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
@@ -98,7 +121,7 @@
    across two voices depending on the screen. */
 .ship-cost, .roster-unit-cost, .readout-value, .cell-num, .comp-num, .comp-cost,
 .print-stats td, .pr-num, .pr-cost, .round-value, .roll-die, .debt-figure,
-.segment button, .limit-input, .stepper-count, .alert-value, .index-num {
+.segment button, .limit-input, .stepper-count, .alert-value {
   font-variant-numeric: tabular-nums;
 }
 /* Prominent money/quantity figures share one voice (Archivo) everywhere they
@@ -543,7 +566,7 @@ button { font-family: inherit; }
    like a plain button. */
 .index-row {
   position: relative; isolation: isolate; overflow: hidden; width: 100%;
-  display: grid; grid-template-columns: 60px 1fr 36px; align-items: center; gap: 16px;
+  display: grid; grid-template-columns: 1fr 36px; align-items: center; gap: 16px;
   padding: 15px 18px; border: 1px solid var(--hair); color: var(--ink); background: var(--paper);
   font-family: inherit; text-align: left; cursor: pointer;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
@@ -566,14 +589,6 @@ button { font-family: inherit; }
 }
 .index-row:hover::before { transform: translateX(0) skewX(-9deg); }
 .index-row:hover::after { width: 7px; }
-.index-num {
-  display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px;
-  border: 2px solid var(--line-2, #c8ccd3);
-  font-family: var(--display); font-weight: 900; font-size: 22px; color: var(--red);
-  font-variant-numeric: tabular-nums;
-  transition: color 0.16s, background 0.16s, border-color 0.16s;
-}
-.index-row:hover .index-num { color: var(--blue); background: #fff; border-color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   /* Do NOT null the transform here. The ::before fill is parked off-screen BY a
      transform (translateX(-102%)), so "transform: none" slid it over every card
@@ -585,7 +600,6 @@ button { font-family: inherit; }
   .index-row::before, .index-row::after { display: none; }
   .index-row:hover { background: var(--blue); color: #fff; }
   .index-row:hover .index-desc { color: #cfe0fb; }
-  .index-row:hover .index-num { color: var(--blue); background: #fff; border-color: #fff; }
 }
 .index-main { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .index-name { font-family: var(--display); font-weight: 800; font-size: clamp(20px, 3vw, 30px); letter-spacing: -0.01em; line-height: 1.02; text-transform: uppercase; }
@@ -641,9 +655,11 @@ button { font-family: inherit; }
 .fleet-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px 8px 16px; border-top: 1px solid var(--hair-soft); margin-top: auto; }
 .fleet-card-date { font-family: var(--sans); font-size: 11px; font-weight: 600; color: var(--ink-3); }
 .fleet-card-actions { display: inline-flex; gap: 4px; flex-wrap: nowrap; }
-/* Icon-only on the card: three actions everyone already knows, in a strip
-   where three bordered text buttons were most of the card's furniture. Each
-   carries a title and an aria-label, so the name is still available. */
+/* Duplicate and Share stay icon-only: two safe, familiar actions, each with a
+   title and aria-label so the name is still available. Delete does NOT - it is
+   irreversible and sits in the same row, so on a touchscreen (no hover to reveal
+   intent before the tap) an 18px trash glyph is not warning enough. It carries a
+   visible "Delete" label and a standing red keyline instead. See .card-act-labeled. */
 .card-act {
   display: inline-flex; align-items: center; justify-content: center;
   width: 34px; height: 34px; padding: 0; cursor: pointer;
@@ -653,6 +669,10 @@ button { font-family: inherit; }
 .card-act:hover { color: var(--blue); border-color: var(--hair); background: var(--blue-wash); }
 .card-act.is-danger:hover { color: var(--red); border-color: var(--red); background: transparent; }
 .card-act:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+/* The labelled Delete: auto width for the word, a red keyline at rest so the
+   action reads as destructive before it is hovered or tapped. */
+.card-act-labeled { width: auto; gap: 6px; padding: 0 11px; border-color: var(--red-wash); color: var(--red-deep); }
+.card-act-text { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
 
 .fleets-empty { margin-top: 26px; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 3vw, 26px); color: var(--ink); line-height: 1.25; }
 .fleets-empty-sub { font-family: var(--sans); font-size: 13.5px; font-weight: 500; color: var(--ink-2); }
@@ -1926,8 +1946,7 @@ button { font-family: inherit; }
 
   .foundry-main, .compendium, .solo-body { padding-left: 14px; padding-right: 14px; }
 
-  .index-row { grid-template-columns: 44px 1fr 22px; gap: 12px; padding: 16px 14px; }
-  .index-num { width: 40px; height: 40px; font-size: 18px; }
+  .index-row { grid-template-columns: 1fr 22px; gap: 12px; padding: 16px 14px; }
 }
 
 @media (max-width: 420px) {

@@ -9,14 +9,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#0b3d91" />
-    <link rel="icon" href="data:," />
+    <!-- The delta from the wordmark, in brand blue. An SVG favicon so it stays
+         crisp at every tab size instead of a blank data:, placeholder. -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%230b3d91' fill-rule='evenodd' d='M7.134 2.995L2.217 11.5a1 1 0 0 0 .866 1.5h9.834a1 1 0 0 0 .866-1.5L8.866 2.995a1 1 0 0 0-1.732 0m3.03-.751c-.962-1.665-3.366-1.665-4.329 0L.918 10.749c-.963 1.666.24 3.751 2.165 3.751h9.834c1.925 0 3.128-2.085 2.164-3.751z' clip-rule='evenodd'/></svg>" />
+
     <title>A Billion Suns 2e Shipyard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Social / link-unfurl metadata. The fleet a share link carries lives
+         entirely in the URL hash (#s=/#z=), which never reaches a server or a
+         link scraper, so a per-fleet card is impossible without a prerender
+         service. Every shared link therefore unfurls to this one branded card -
+         which is the right outcome: a titled, described, illustrated card
+         instead of the blank one an empty <head> produced. -->
+    <meta name="description" content="Build, save, print, and share A Billion Suns 2E fleets for any faction and era. A fleet builder, ship compendium, solo-play tracker, and custom-faction forge for the tabletop game." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="A Billion Suns 2e Shipyard" />
+    <meta property="og:title" content="A Billion Suns 2e Shipyard" />
+    <meta property="og:description" content="Build, save, print, and share A Billion Suns 2E fleets for any faction and era." />
+    <meta property="og:url" content="https://type37.github.io/a-billion-suns-shipyard/" />
+    <meta property="og:image" content="https://type37.github.io/a-billion-suns-shipyard/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A Billion Suns — Second Edition. Interstellar Fleet Battles. Fleet builder and shipyard." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="A Billion Suns 2e Shipyard" />
+    <meta name="twitter:description" content="Build, save, print, and share A Billion Suns 2E fleets for any faction and era." />
+    <meta name="twitter:image" content="https://type37.github.io/a-billion-suns-shipyard/og-image.png" />
+
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
