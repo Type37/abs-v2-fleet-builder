@@ -585,7 +585,7 @@ function fleetsView(state: AppState): string {
 
     ${
       lists.length === 0
-        ? `<p class="fleets-empty">No fleets built yet.<br /><span class="fleets-empty-sub">All fleets are saved to your browser's cache.</span></p>`
+        ? `<p class="fleets-empty">No fleets yet.</p>`
         : `<div class="fleet-cards">${cards}</div>`
     }
   </main>
@@ -1075,6 +1075,7 @@ function shipyardView(state: AppState): string {
       <div class="sy-id">
         <span class="mf-emblem">${emblemPicker}</span>
         <input class="mf-name sy-name" type="text" value="${escapeHtml(list.fleet.name ?? "")}" placeholder="Untitled fleet" data-action="fleet-name" />
+        <button class="mf-name-gen" data-action="gen-fleet-name" title="Roll a fleet name" aria-label="Roll a fleet name">${icon("die", 18)}</button>
         ${moreMenu}
       </div>
       <div class="sy-fac">
@@ -1472,6 +1473,7 @@ function builderView(state: AppState): string {
         <div class="mf-grp mf-grp-id">
           <span class="mf-emblem">${emblemPicker}</span>
           <input class="mf-name" type="text" value="${escapeHtml(list.fleet.name ?? "")}" placeholder="Untitled fleet" data-action="fleet-name" />
+          <button class="mf-name-gen" data-action="gen-fleet-name" title="Roll a fleet name" aria-label="Roll a fleet name">${icon("die", 18)}</button>
           ${moreMenu}
         </div>
         <div class="mf-grp mf-grp-fac">
@@ -1508,7 +1510,7 @@ function builderView(state: AppState): string {
               : `<p class="yard-status is-ok">${icon("check", 12)} Legal</p>`
         }
         <div class="mf-list">
-          ${unitRows || '<p class="mf-empty">No ships yet. Add them from the catalogue on the right.</p>'}
+          ${unitRows}
         </div>
 
 
@@ -2380,8 +2382,7 @@ function playFleetPanel(list: SavedList, faction: Faction | undefined, customs: 
         <header class="pf-head">
           <span class="pf-name">${escapeHtml(title)}${u.count > 1 ? ` <span class="pf-x">&times;${u.count}</span>` : ""}</span>
         </header>
-        <div class="pf-stats">${statChips(ship, true)}</div>
-        ${weaponsTable(ship)}
+        <div class="pf-data">${statChips(ship, true)}${weaponsTable(ship)}</div>
         ${carried.length ? `<p class="pf-carry">Carrying: ${escapeHtml(carried.join("; "))}</p>` : ""}
         <div class="pf-track">${Array.from(
           { length: u.count },
@@ -2392,7 +2393,7 @@ function playFleetPanel(list: SavedList, faction: Faction | undefined, customs: 
     .join("");
   if (!rows) return "";
   return `<section class="play-fleet">
-    <h3 class="roster-section">Your fleet <span class="pf-hint">tick a box per point of damage</span></h3>
+    <h3 class="roster-section">Your fleet</h3>
     <div class="pf-list">${rows}</div>
   </section>`;
 }
@@ -2435,7 +2436,7 @@ function playShipyardTracker(list: SavedList, faction: Faction | undefined, cust
         )
         .join("")}</ul>
        <p class="sy-ledger-sum">Total requisitioned <span>${credits(totalSpent)}</span></p>`
-    : `<p class="sy-ledger-empty">No activity yet. Deploy a ship, jump it out to Reserves or back in, and every move is logged here.</p>`;
+    : "";
   const ledger = `<details class="sy-ledger" data-persist="sy-ledger">
       <summary class="sy-ledger-btn">${icon("scroll", 14)} Ledger <span class="sy-ledger-total">${credits(totalSpent)}</span></summary>
       <div class="sy-ledger-panel">${logHtml}</div>
@@ -2462,8 +2463,7 @@ function playShipyardTracker(list: SavedList, faction: Faction | undefined, cust
           <span class="pf-name">${escapeHtml(ship.name)} <span class="sy-req-cost">${credits(ship.cost)}</span>${total !== Infinity && total > 1 ? ` <span class="pf-x">&times;${total}</span>` : ""}</span>
           <span class="sy-req-tally"><span class="sy-req-yard">${yardLabel}</span> yard <span class="sy-req-sep">·</span> ${inPlay} in play <span class="sy-req-sep">·</span> ${reserve} reserve</span>
         </header>
-        <div class="pf-stats">${statChips(ship, true)}</div>
-        ${weaponsTable(ship)}
+        <div class="pf-data">${statChips(ship, true)}${weaponsTable(ship)}</div>
         <div class="sy-req-acts">
           <button class="sy-req-btn" data-action="play-deploy" data-ship="${cid}" ${yard > 0 ? "" : "disabled"}>Deploy · ${credits(ship.cost)}</button>
           ${btn("play-jumpout", "Jumped out", inPlay > 0)}
@@ -2562,8 +2562,6 @@ function playView(state: AppState): string {
   const maxRound = list.mode === "management-training" ? 3 : 4;
   const isCredits = list.mode === "hypergrowth" || list.mode === "management-training";
   const scoreLabel = isCredits ? "Credits" : "Victory points";
-  const last = state.ui.lastRoll;
-
   const PHASES = phasesFor(list.mode);
   const currentPhase = PHASES[play.phase];
   const checks = play.checks ?? [];
@@ -2664,17 +2662,6 @@ function playView(state: AppState): string {
   const isShipyard = MODE_BUILDER_SHAPE[list.mode] === "shipyard";
   const factionBlock = faction ? factionRuleBlock(faction, "compact") : "";
   const commandsPanel = playCommandsPanel(list, play.cmd, faction);
-  const rollResult =
-    last && last.table.startsWith("Initiative check")
-      ? `<div class="roll-result"><div class="roll-die">${last.value}</div><div class="roll-body"><p class="roll-table">${escapeHtml(last.table)}</p><p class="roll-headline">${escapeHtml(last.result)}</p>${last.detail ? `<p class="roll-detail">${escapeHtml(last.detail)}</p>` : ""}</div></div>`
-      : "";
-  const arcsBlock =
-    play.phase === 2
-      ? `<div class="play-arcs">
-           <p class="play-arc-line"><span class="lf-arc lf-arc-pri">${icon("arc-primary", 15, "slot-arc")}PRI</span> narrow 45&deg; cone dead ahead</p>
-           <p class="play-arc-line"><span class="lf-arc lf-arc-aux">${icon("arc-aux", 15, "slot-arc")}AUX</span> full 180&deg; front arc</p>
-         </div>`
-      : "";
   // This screen is used standing at a table mid-turn, so it has one job the rest
   // of the app doesn't: fit on the screen. Everything below is in service of
   // that, and the height came from three places.
@@ -2705,6 +2692,7 @@ function playView(state: AppState): string {
         <span class="round-value">${play.round}</span>
         <span class="play-bar-of">of ${maxRound}</span>
       </p>
+      <button class="ghost-btn play-bar-reset" data-action="play-reset">Reset</button>
     </header>
     <div class="phase-track">${phaseBtns}</div>
     ${
@@ -2717,20 +2705,17 @@ function playView(state: AppState): string {
         ${checklistBlock}
         <div class="play-actions">
           <button class="cta-btn" data-action="play-next">${icon("chevronRight", 16)} Next phase</button>
-          <button class="ghost-btn" data-action="play-initiative" data-dice="${faction ? escapeHtml(faction.initiative) : "3D6"}">${icon("die", 15)} Roll ${faction ? escapeHtml(faction.initiative) : "3D6"}</button>
         </div>
-        ${rollResult}
-        ${factionBlock ? `<div class="play-notes">${factionBlock}</div>` : ""}
-        ${commandsPanel}
-        ${arcsBlock}
-      </div>
-
-      <div class="play-col play-col-spend">
         <div class="play-counters">
           ${counter("CMD tokens", play.cmd, "play-cmd", 1, (n) => String(n), icon("cmd-delta", 15, "cmd-delta-glyph"))}
           ${counter(scoreLabel, play.vp, "play-vp", scoreStep, scoreFmt)}
           ${counter("Opponent " + scoreLabel.toLowerCase(), play.oppVp, "play-oppvp", scoreStep, scoreFmt)}
         </div>
+        ${factionBlock ? `<div class="play-notes">${factionBlock}</div>` : ""}
+        ${commandsPanel}
+      </div>
+
+      <div class="play-col play-col-spend">
         ${playShipyardTracker(list, faction, customs)}
       </div>
     </div>`
@@ -2741,19 +2726,16 @@ function playView(state: AppState): string {
         ${checklistBlock}
         <div class="play-actions">
           <button class="cta-btn" data-action="play-next">${icon("chevronRight", 16)} Next phase</button>
-          <button class="ghost-btn" data-action="play-initiative" data-dice="${faction ? escapeHtml(faction.initiative) : "3D6"}">${icon("die", 15)} Roll ${faction ? escapeHtml(faction.initiative) : "3D6"}</button>
         </div>
-        ${rollResult}
-        ${factionBlock ? `<div class="play-notes">${factionBlock}</div>` : ""}
-        ${arcsBlock}
-      </div>
-
-      <div class="play-col play-col-spend">
         <div class="play-counters">
           ${counter("CMD tokens", play.cmd, "play-cmd", 1, (n) => String(n), icon("cmd-delta", 15, "cmd-delta-glyph"))}
           ${counter(scoreLabel, play.vp, "play-vp", scoreStep, scoreFmt)}
           ${counter("Opponent " + scoreLabel.toLowerCase(), play.oppVp, "play-oppvp", scoreStep, scoreFmt)}
         </div>
+        ${factionBlock ? `<div class="play-notes">${factionBlock}</div>` : ""}
+      </div>
+
+      <div class="play-col play-col-spend">
         ${playFleetPanel(list, faction, customs)}
         ${commandsPanel}
       </div>

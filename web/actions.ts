@@ -3,6 +3,7 @@ import { maxUnitSize } from "../src/validation.ts";
 import { MODE_BUILDER_SHAPE } from "../src/types.ts";
 import { JUNKSPACE_SHIPS, OUTFIT_MAX_SHIPS } from "../src/data/junkspace.ts";
 import { w } from "../src/data/_helpers.ts";
+import { randomFleetName } from "../src/fleet-names.ts";
 import { announce } from "./announce.ts";
 import { findFaction, isCustom } from "./catalog.ts";
 import { resolveShip } from "./render.ts";
@@ -344,6 +345,21 @@ function handleClick(e: MouseEvent): void {
         return { ...s, lists, ui: { ...s.ui, modal: undefined } };
       });
       location.hash = routeHash({ view: "builder", listId: list.id });
+      break;
+    }
+    case "gen-fleet-name": {
+      const id = currentListId();
+      if (!id) return;
+      const source = state.lists.find((l) => l.id === id);
+      if (!source) return;
+      const factionId = source.fleet.factionId;
+      // Ordinal = this fleet's position among your fleets of the same faction,
+      // so the 3rd Vyke list you own reads "3rd ... Horde". Adjective is rolled
+      // fresh each click, so the button re-rolls a new name.
+      const sameFaction = state.lists.filter((l) => l.fleet.factionId === factionId);
+      const ordinal = Math.max(1, sameFaction.findIndex((l) => l.id === id) + 1);
+      const name = randomFleetName(factionId, ordinal);
+      store.setState((s) => updateFleet(s, id, (f) => ({ ...f, name })));
       break;
     }
     case "duplicate-list": {
@@ -1316,47 +1332,6 @@ function handleClick(e: MouseEvent): void {
       );
       break;
     }
-    case "play-initiative": {
-      const spec = target.dataset["dice"] ?? "3D6";
-      const m = /(\d+)\s*D6/i.exec(spec);
-      const n = m ? Math.max(1, Number(m[1])) : 3;
-      const rolls: number[] = [];
-      let successes = 0;
-      for (let i = 0; i < n; i++) {
-        const v = d(6);
-        rolls.push(v);
-        if (v === 1) successes += 2;
-        else if (v === 2 || v === 3) successes += 1;
-      }
-      store.setState((s) => ({
-        ...s,
-        ui: {
-          ...s.ui,
-          lastRoll: {
-            table: `Initiative check (${n}D6)`,
-            value: successes,
-            result: `${successes} ${successes === 1 ? "success" : "successes"}`,
-            detail: `Rolled ${rolls.join(", ")}. A 2 or 3 is one success; a 1 is two successes.`,
-          },
-        },
-      }));
-      // Ties the roll to its checklist step (index 1: "Roll your Initiative
-      // Check"), but only while actually in the Command Phase - this button
-      // is always on screen, this checklist item only means something there.
-      const id = currentListId();
-      if (id) {
-        store.setState((s) =>
-          updateList(s, id, (l) => {
-            if (!l.play || l.play.phase !== 0) return l;
-            const checks = [...(l.play.checks ?? [])];
-            checks[1] = true;
-            return { ...l, play: { ...l.play, checks } };
-          }),
-        );
-      }
-      break;
-    }
-
     // ---- Foundry ----------------------------------------------------------
     case "new-faction": {
       const faction: Faction = {

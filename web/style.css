@@ -2069,6 +2069,17 @@ button { font-family: inherit; }
 .mf-name:hover { border-bottom-color: var(--ink-3); }
 .mf-name:focus { outline: none; border-bottom-style: solid; border-bottom-color: var(--blue); }
 
+/* Dice button beside the fleet name: rolls a faction-flavoured default name
+   (see web/actions.ts "gen-fleet-name" and src/fleet-names.ts). */
+.mf-name-gen {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; padding: 0; border: none; border-radius: 7px;
+  background: none; color: var(--ink-3); cursor: pointer;
+}
+.mf-name-gen:hover { background: var(--hair-soft); color: var(--ink); }
+.mf-name-gen:active { transform: rotate(-18deg); }
+.mf-name-gen:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+
 /* Budget sits at the right end of the one-line header (margin-left:auto pushes
    it past the faction/era), with the Actions button after it. */
 .mf-budget { margin-left: auto; flex-shrink: 0; }
@@ -2228,9 +2239,9 @@ button { font-family: inherit; }
 /* Stats on the left, weapon lines to the RIGHT of them (they wrap below only on
    a genuinely narrow phone). The global .weap-lines is flex-basis:100%, so it is
    overridden here to sit alongside the stat block instead of under it. */
-.sy-ship-data { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 22px; margin-top: 5px; }
+.sy-ship-data { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 6px 22px; margin-top: 5px; }
 .sy-ship-data .stat-chips { flex: 0 0 auto; }
-.sy-ship-data .weap-lines { flex: 1 1 auto; flex-basis: auto; margin-top: 0; min-width: 200px; }
+.sy-ship-data .weap-lines { flex: 1 1 auto; flex-basis: auto; margin-top: 0; min-width: 0; }
 
 /* A note replacing the list when No Limit is on (no shipyard is built in
    advance, so there is nothing to pre-buy). */
@@ -3708,7 +3719,9 @@ a .icon,
 .pf-glyph { color: var(--blue); display: inline-flex; }
 .pf-name { font-family: var(--display); font-weight: 800; font-size: 15px; }
 .pf-x { color: var(--blue); font-weight: 900; }
-.pf-stats { margin-bottom: 6px; }
+.pf-data { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 6px 22px; margin-bottom: 6px; }
+.pf-data .stat-chips { flex: 0 0 auto; }
+.pf-data .weap-lines { flex: 1 1 auto; margin-top: 0; min-width: 0; }
 .pf-carry { font-size: 11.5px; font-style: italic; color: var(--ink-2); margin-top: 5px; }
 .pf-track { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .pf-track-row { display: flex; flex-wrap: wrap; gap: 4px; }
