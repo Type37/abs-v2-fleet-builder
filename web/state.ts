@@ -198,8 +198,6 @@ export interface AppState {
     shipFilter?: ShipFilter;
     /** The Create-army panel is open on the Fleets page. */
     showCreate?: boolean;
-    /** Solo: the new-outfit setup form is open. */
-    soloNewOutfitOpen?: boolean;
     /** Builder credits popover: the Custom amount field is revealed. */
     limitCustomOpen?: boolean;
     /** An open modal dialog. */
@@ -222,7 +220,8 @@ export interface AppState {
            */
           libShown?: number;
         }
-      | { kind: "options" };
+      | { kind: "options" }
+      | { kind: "new-outfit" };
     /** In-progress first-visit coachmark tour, once the user has advanced past step 0. */
     tour?: { tourId: string; step: number };
     /** Print-setup options. Persisted (abs2.print.v1) so reprinting after an

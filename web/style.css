@@ -1689,6 +1689,14 @@ button { font-family: inherit; }
 .ocd-fill { display: block; height: 100%; background: var(--red); }
 .outfit-card-debt.is-clear .ocd-fill { background: var(--go); }
 .ocd-sub { font-size: 11px; color: var(--ink-3); margin-top: 5px; }
+/* Campaign clock: one square per game in the debt run, filled as each is played.
+   Small, flat, Swiss - no bar, no percentage. Reused on the outfit card and the
+   Campaign tab. Blue while running; green once the debt is cleared. */
+.game-ticks { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 8px 0 2px; }
+.game-tick { width: 12px; height: 12px; border: 1.5px solid var(--hair-soft); background: transparent; flex-shrink: 0; }
+.game-tick.is-played { background: var(--blue); border-color: var(--blue); }
+.outfit-card-debt.is-clear .game-tick.is-played, .debt-card.won .game-tick.is-played { background: var(--go); border-color: var(--go); }
+.game-ticks-label { font-family: var(--sans); font-size: 11px; font-weight: 700; color: var(--ink-3); margin-left: 4px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
 .outfit-card-actions { display: flex; gap: 6px; align-items: center; padding: 0 12px 12px; margin-top: auto; }
 .outfit-card-actions .ghost-btn:first-child { margin-right: auto; }
 
@@ -2539,6 +2547,7 @@ button { font-family: inherit; }
   background: var(--paper); border: 2px solid var(--color-line);
 }
 .opt-modal { width: min(460px, 100%); }
+.no-modal { width: min(420px, 100%); }
 .opt-body { gap: 24px; }
 .opt-section { display: flex; flex-direction: column; gap: 10px; }
 .opt-h { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--hair-soft); padding-bottom: 6px; }

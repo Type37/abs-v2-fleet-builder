@@ -38,6 +38,47 @@ export function outfitCost(o: SavedOutfit): number {
   return o.ships.reduce((sum, s) => sum + (shipById.get(s.shipClassId)?.cost ?? 0), 0);
 }
 
+// The campaign runs a fixed number of games (DEBT_CLEAR_GAMES) to clear the
+// debt. Show that as a row of ticks - one per game, filled as each is played -
+// rather than a "games left" countdown and a debt-percentage bar. The games ARE
+// the clock, so they get counted out where you can see all of them at once.
+function gameTicks(played: number, total: number): string {
+  const done = Math.max(0, Math.min(total, played));
+  const ticks = Array.from(
+    { length: total },
+    (_, i) => `<span class="game-tick ${i < done ? "is-played" : ""}"></span>`,
+  ).join("");
+  return `<div class="game-ticks" role="img" aria-label="${done} of ${total} games played">${ticks}<span class="game-ticks-label">${done}/${total} games</span></div>`;
+}
+
+// The Start-a-new-outfit dialog. Rendered globally (see render.ts) so it floats
+// over the solo list; a blank name is fine - the card falls back to "Unnamed
+// outfit". Outfits are salvage crews, not corporations, so no name is rolled.
+export function newOutfitModal(state: AppState): string {
+  const m = state.ui.modal;
+  if (!m || m.kind !== "new-outfit") return "";
+  return `
+  <div class="modal-root">
+    <div class="modal-backdrop" data-action="close-modal"></div>
+    <div class="modal-panel no-modal" role="dialog" aria-modal="true" aria-label="Start a new outfit">
+      <header class="modal-header">
+        <h2 class="modal-title">Start a new outfit</h2>
+        <button class="modal-close" data-action="close-modal" aria-label="Close">${icon("close", 18)}</button>
+      </header>
+      <div class="modal-body no-modal-body">
+        <label class="modal-field">
+          <span class="control-label">Outfit name</span>
+          <input class="new-outfit-name" type="text" placeholder="Unnamed outfit" autocomplete="off" data-action="solo-new-outfit-name" autofocus />
+        </label>
+      </div>
+      <footer class="modal-footer">
+        <button class="bar-btn" data-action="close-modal">Cancel</button>
+        <button class="cta-btn" data-action="solo-new-outfit-create">${icon("plus", 15)} Start</button>
+      </footer>
+    </div>
+  </div>`;
+}
+
 // ---------------------------------------------------------------------------
 // Solo list (dock of saved outfits + the pitch)
 // ---------------------------------------------------------------------------
@@ -48,8 +89,6 @@ export function soloListView(state: AppState): string {
     .map((o, i) => {
       const cleared = o.debtK <= 0;
       const paid = Math.max(0, STARTING_DEBT_K - Math.max(0, o.debtK));
-      const debtPct = Math.round((paid / STARTING_DEBT_K) * 100);
-      const gamesLeft = Math.max(0, DEBT_CLEAR_GAMES - o.gamesPlayed);
       return `
       <article class="outfit-card" style="--i:${i}">
         <a class="outfit-card-main" href="#/solo/${o.id}">
@@ -60,9 +99,8 @@ export function soloListView(state: AppState): string {
           </span>
         </a>
         <div class="outfit-card-debt ${cleared ? "is-clear" : ""}">
-          <div class="ocd-line"><span>${cleared ? "Debt cleared" : `${ck(o.debtK)} still owed`}</span><span>${cleared ? "🏆 you win" : `${gamesLeft} ${gamesLeft === 1 ? "game" : "games"} left`}</span></div>
-          <div class="ocd-bar"><span class="ocd-fill" style="width:${cleared ? 100 : debtPct}%"></span></div>
-          <div class="ocd-sub">${cleared ? `Cleared in ${o.gamesPlayed} of ${DEBT_CLEAR_GAMES} games` : `Paid ${ck(paid)} of ${ck(STARTING_DEBT_K)} · game ${o.gamesPlayed} of ${DEBT_CLEAR_GAMES}`}</div>
+          <div class="ocd-line"><span>${cleared ? "Debt cleared" : `${ck(o.debtK)} still owed`}</span><span>${cleared ? "🏆 you win" : `${ck(paid)} paid`}</span></div>
+          ${gameTicks(o.gamesPlayed, DEBT_CLEAR_GAMES)}
         </div>
         <div class="outfit-card-actions">
           <a class="ghost-btn" href="#/solo/${o.id}">${icon("chevronRight", 15)} Continue</a>
@@ -81,17 +119,7 @@ export function soloListView(state: AppState): string {
     <section class="commission-panel">
       <div class="solo-panel-head">
         <h2 class="panel-title">Your outfits</h2>
-        ${
-          state.ui.soloNewOutfitOpen
-            ? `<div class="new-outfit-form">
-                <input class="new-outfit-name" type="text" placeholder="Outfit name" autocomplete="off" data-action="solo-new-outfit-name" />
-                <div class="new-outfit-acts">
-                  <button class="cta-btn" data-action="solo-new-outfit-create">${icon("plus", 15)} Start</button>
-                  <button class="ghost-btn" data-action="solo-new-outfit-cancel">Cancel</button>
-                </div>
-              </div>`
-            : `<button class="cta-btn" data-action="solo-new-outfit-open">${icon("plus", 18)} Start a new outfit</button>`
-        }
+        <button class="cta-btn" data-action="solo-new-outfit-open">${icon("plus", 18)} Start a new outfit</button>
       </div>
       ${
         outfits.length === 0
@@ -276,7 +304,6 @@ function playTab(state: AppState, o: SavedOutfit): string {
 function campaignTab(o: SavedOutfit): string {
   const cleared = o.debtK <= 0;
   const paid = STARTING_DEBT_K - Math.max(0, o.debtK);
-  const pct = Math.min(100, (paid / STARTING_DEBT_K) * 100);
   const outOfGames = o.gamesPlayed >= DEBT_CLEAR_GAMES && !cleared;
 
   const log = o.gameLog
@@ -307,8 +334,8 @@ function campaignTab(o: SavedOutfit): string {
     <section class="solo-card debt-card ${cleared ? "won" : ""}">
       <h3 class="roster-section">Debt</h3>
       <p class="debt-figure">${cleared ? "Cleared" : ck(o.debtK)}</p>
-      <div class="alert-track"><div class="alert-fill go" style="width:${pct}%"></div></div>
-      <p class="panel-note">${paid} of ${STARTING_DEBT_K} paid down. Game ${o.gamesPlayed} of ${DEBT_CLEAR_GAMES}.</p>
+      ${gameTicks(o.gamesPlayed, DEBT_CLEAR_GAMES)}
+      <p class="panel-note">${ck(paid)} of ${ck(STARTING_DEBT_K)} paid down.</p>
       ${cleared ? '<p class="inspection-pass">You have cleared your debt. Campaign won.</p>' : ""}
       ${outOfGames ? '<p class="issue-error">Eight games are up with debt remaining. Some very unpleasant people pay a visit: the campaign is lost.</p>' : ""}
       <div class="roster-actions">

@@ -44,6 +44,8 @@ const PATHS: Record<string, string> = {
   // Static filled command-token delta (the final shape of commandToken, no
   // animation) - used beside the CMD count so the token reads as its own glyph.
   "cmd-delta": '<path fill="currentColor" stroke="none" d="M12 4 21.25 20 2.75 20Z"/>',
+  // A twelve-sided die showing "12": the roll behind the corp-name generator.
+  d12: '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M12 2L1.5 9.64L5.5 22h13l4-12.36zm5 18H7l-3.15-9.6L12 4.47l8.15 5.93zm0-4.25V17h-5.34v-1.09s3.57-3.46 3.57-4.51c0-1.28-1.05-1.15-1.05-1.15c-.68.05-1.18.62-1.18 1.3h-1.56c.06-1.46 1.28-2.61 2.83-2.55c2.47 0 2.5 1.85 2.5 2.3c0 1.77-3.19 4.47-3.19 4.47zM10.5 17H8.89v-6.11L7 11.47v-1.28L10.31 9h.19z"/>',
   close: '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
   check: '<polyline points="5 13 10 18 19 7"/>',
   warning: '<path d="M12 3 22 20 2 20 Z"/><line x1="12" y1="9.5" x2="12" y2="14.5"/><line x1="12" y1="17" x2="12" y2="17.01"/>',

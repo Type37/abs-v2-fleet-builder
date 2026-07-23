@@ -38,6 +38,7 @@ import {
 import type { AppState, LastRoll, PrintOpts, ShipFilter } from "./state.ts";
 import { RANDOM_BEHAVIOUR, GLITCH_BLIP, type RollRow } from "../src/data/junkspace-solo.ts";
 import { LIB_PAGE, libraryIcon, randomIconId } from "./emblems.ts";
+import { randomCorpName } from "../src/corp-names.ts";
 import { shareUrl } from "./share.ts";
 import { fleetToMarkdown } from "./export-text.ts";
 
@@ -359,6 +360,14 @@ function handleClick(e: MouseEvent): void {
       const sameFaction = state.lists.filter((l) => l.fleet.factionId === factionId);
       const ordinal = Math.max(1, sameFaction.findIndex((l) => l.id === id) + 1);
       const name = randomFleetName(factionId, ordinal);
+      store.setState((s) => updateFleet(s, id, (f) => ({ ...f, name })));
+      break;
+    }
+    case "reroll-corp-name": {
+      // Hypergrowth shipyard's d12 button: roll a fresh corporation name.
+      const id = currentListId();
+      if (!id) return;
+      const name = randomCorpName();
       store.setState((s) => updateFleet(s, id, (f) => ({ ...f, name })));
       break;
     }
@@ -902,19 +911,19 @@ function handleClick(e: MouseEvent): void {
       break;
     }
     case "solo-new-outfit-open":
-      store.setState((s) => ({ ...s, ui: { ...s.ui, soloNewOutfitOpen: true } }));
+      store.setState((s) => ({ ...s, ui: { ...s.ui, modal: { kind: "new-outfit" } } }));
       break;
     case "solo-new-outfit-cancel":
-      store.setState((s) => ({ ...s, ui: { ...s.ui, soloNewOutfitOpen: undefined } }));
+      store.setState((s) => ({ ...s, ui: { ...s.ui, modal: undefined } }));
       break;
     case "solo-new-outfit-create": {
-      const nameInput = target.closest(".new-outfit-form")?.querySelector<HTMLInputElement>(".new-outfit-name");
+      const nameInput = document.querySelector<HTMLInputElement>(".new-outfit-name");
       const name = (nameInput?.value ?? "").trim();
       const outfit = { ...createOutfit(), name };
       store.setState((s) => {
         const outfits = [...s.outfits, outfit];
         persistOutfits(outfits);
-        return { ...s, outfits, ui: { ...s.ui, soloNewOutfitOpen: undefined, soloTab: "outfit" } };
+        return { ...s, outfits, ui: { ...s.ui, modal: undefined, soloTab: "outfit" } };
       });
       location.hash = routeHash({ view: "solo-outfit", outfitId: outfit.id });
       break;
@@ -1161,6 +1170,9 @@ function handleClick(e: MouseEvent): void {
           list.emblemLib = mark;
           list.emblemImage = undefined;
         }
+        // A Hypergrowth fleet is a corporation: if the player named nothing,
+        // roll one from the corp-name generator so it never opens "Untitled".
+        if (!list.fleet.name) list.fleet.name = randomCorpName();
       }
       store.setState((s) => {
         const lists = [...s.lists, list];
@@ -1893,7 +1905,7 @@ export function wireActions(root: HTMLElement): void {
       const t = e.target as HTMLElement | null;
       if (t?.classList.contains("new-outfit-name")) {
         e.preventDefault();
-        (t.closest(".new-outfit-form")?.querySelector<HTMLButtonElement>('[data-action="solo-new-outfit-create"]'))?.click();
+        document.querySelector<HTMLButtonElement>('[data-action="solo-new-outfit-create"]')?.click();
         return;
       }
     }

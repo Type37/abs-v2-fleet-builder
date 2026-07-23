@@ -34,7 +34,7 @@ import { FACTION_LORE } from "./faction-lore.ts";
 import type { AppState } from "./state.ts";
 import { activeList, activeOutfit, DEFAULT_PRINT, PAPER } from "./state.ts";
 import type { SavedList } from "./storage.ts";
-import { soloListView, soloOutfitView } from "./solo.ts";
+import { soloListView, soloOutfitView, newOutfitModal } from "./solo.ts";
 import { activeTour } from "./tours.ts";
 
 // The whole app renders from state into #app. Interactive elements carry
@@ -665,7 +665,7 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
       <div class="modal-body nf-body">
         <div class="nf-controls">
           <div class="modal-field">
-            <span class="control-label">1 / Era</span>
+            <span class="control-label">Era</span>
             <div class="nf-eras" role="group" aria-label="Era">
               ${ERA_ORDER.map((era) => {
                 const build = era === "Hypergrowth" ? "Build a Shipyard" : "Build a Fleet List";
@@ -677,7 +677,7 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
             </div>
           </div>
           <div class="modal-field">
-            <span class="control-label">2 / Credits limit</span>
+            <span class="control-label">Credits limit</span>
             <div class="nf-opts">
               ${
                 // Hypergrowth is just two choices: ¢300bn or No Limit. No custom
@@ -696,7 +696,7 @@ function newFleetModal(state: AppState, customs: Faction[]): string {
             </div>
           </div>
           <div class="modal-field">
-            <span class="control-label">3 / Faction</span>
+            <span class="control-label">Faction</span>
             <!-- Fixed-height frame: switching era or toggling "More" changes how
                  many plaques there are, but never the modal's outer layout - it
                  scrolls inside this box instead of shoving everything below it. -->
@@ -1074,8 +1074,8 @@ function shipyardView(state: AppState): string {
     <header class="sy-head">
       <div class="sy-id">
         <span class="mf-emblem">${emblemPicker}</span>
-        <input class="mf-name sy-name" type="text" value="${escapeHtml(list.fleet.name ?? "")}" placeholder="Untitled fleet" data-action="fleet-name" />
-        <button class="mf-name-gen" data-action="gen-fleet-name" title="Roll a fleet name" aria-label="Roll a fleet name">${icon("die", 18)}</button>
+        <input class="mf-name sy-name" type="text" value="${escapeHtml(list.fleet.name ?? "")}" placeholder="Untitled company" data-action="fleet-name" />
+        <button class="mf-name-gen" data-action="reroll-corp-name" title="Roll a company name" aria-label="Roll a company name">${icon("d12", 18)}</button>
         ${moreMenu}
       </div>
       <div class="sy-fac">
@@ -3546,5 +3546,5 @@ export function render(state: AppState): string {
         return learnView(state);
     }
   })();
-  return `${body}${optionsModal(state)}${emblemModal(state)}${tourPopover(state)}`;
+  return `${body}${optionsModal(state)}${emblemModal(state)}${newOutfitModal(state)}${tourPopover(state)}`;
 }
